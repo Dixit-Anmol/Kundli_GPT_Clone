@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from backend.models.request import ChatRequest
-from backend.models.response import ChatResponse
+from models.request import ChatRequest
+from models.response import ChatResponse
 from services.memory.session import session_store
 from services.memory.history import ChatHistory
 from services.rag.bg_16 import BG16Pipeline

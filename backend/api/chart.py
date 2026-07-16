@@ -2,8 +2,8 @@ import requests
 import pytz
 from datetime import datetime
 from fastapi import APIRouter, HTTPException
-from backend.models.request import TimezoneRequest, ChartRequest
-from backend.models.response import TimezoneResponse, ChartResponse
+from models.request import TimezoneRequest, ChartRequest
+from models.response import TimezoneResponse, ChartResponse
 from services.astrology.horoscope import calculate_horoscope_data
 from services.memory.session import session_store
 

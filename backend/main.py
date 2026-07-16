@@ -1,13 +1,20 @@
 import os
+import sys
 from dotenv import load_dotenv
+
+# Ensure both backend directory and project root are in python path
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(backend_dir, ".."))
+sys.path.insert(0, backend_dir)
+sys.path.insert(0, project_root)
 
 # Load environment variables from .env file before other imports
 load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.api.chart import router as chart_router
-from backend.api.chat import router as chat_router
+from api.chart import router as chart_router
+from api.chat import router as chat_router
 
 app = FastAPI(
     title="Kundli AI API",
