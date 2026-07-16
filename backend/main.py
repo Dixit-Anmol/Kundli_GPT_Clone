@@ -25,7 +25,7 @@ app = FastAPI(
 # Enable CORS for React + Vite development server
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact domains
+    allow_origins=["http://localhost:5173","https://kundli-gpt-clone.onrender.com"],  # In production, specify exact domains
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
