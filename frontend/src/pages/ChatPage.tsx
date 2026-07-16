@@ -17,6 +17,10 @@ interface Message {
   content: string
 }
 
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8000'
+  : 'https://kundli-gpt-clone-back.onrender.com'
+
 export default function ChatPage() {
   const [sessionId] = useState(() => Math.random().toString(36).substring(7))
   const [inputValue, setInputValue] = useState('')
@@ -39,7 +43,7 @@ export default function ChatPage() {
 
     try {
       // 1. Fetch real chart data from FastAPI backend
-      const response = await fetch('http://localhost:8000/api/chart', {
+      const response = await fetch(`${API_BASE_URL}/api/chart`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -61,7 +65,7 @@ export default function ChatPage() {
 
         // 2. Fetch the initial birth chart interpretation response
         setLoadingChat(true)
-        const chatRes = await fetch('http://localhost:8000/api/chat', {
+        const chatRes = await fetch(`${API_BASE_URL}/api/chat`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -119,7 +123,7 @@ export default function ChatPage() {
     setLoadingChat(true)
 
     try {
-      const response = await fetch('http://localhost:8000/api/chat', {
+      const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

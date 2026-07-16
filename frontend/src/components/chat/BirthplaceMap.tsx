@@ -68,9 +68,8 @@ export default function BirthplaceMap({ onConfirm }: BirthplaceMapProps) {
 
   // Calculate bbox for OpenStreetMap Export embed
   const offset = 0.015
-  const bbox = `${coordinates.lon - offset}%2C${coordinates.lat - offset}%2C${
-    coordinates.lon + offset
-  }%2C${coordinates.lat + offset}`
+  const bbox = `${coordinates.lon - offset}%2C${coordinates.lat - offset}%2C${coordinates.lon + offset
+    }%2C${coordinates.lat + offset}`
   const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${coordinates.lat}%2C${coordinates.lon}`
 
   return (
