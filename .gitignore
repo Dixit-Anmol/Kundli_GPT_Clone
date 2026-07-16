@@ -1,0 +1,35 @@
+# Python Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python Compiled Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local Configuration
+.env
+.env.*
+!.env.example
+
+# Node / Frontend Build Assets
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+
+# Databases / Vector Store Storage
+backend/chroma_db/
+
+# Editor & OS Metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp

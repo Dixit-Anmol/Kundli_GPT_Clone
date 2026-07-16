@@ -1,0 +1,193 @@
+@import "tailwindcss";
+
+/* ========================================
+   KundliGPT Design System — Tailwind v4
+   ======================================== */
+
+@theme {
+  /* Colors — Vedic Kesari + Sandalwood palette */
+  --color-primary: #E67E22;
+  --color-primary-container: #C89B3C;
+  --color-on-primary: #ffffff;
+  --color-background: #FAF8F3;
+  --color-on-background: #2D2A26;
+  --color-surface: #ffffff;
+  --color-on-surface: #2D2A26;
+  --color-surface-variant: #F2E8D5;
+  --color-on-surface-variant: #6E6558;
+  --color-outline-variant: #E9DFC8;
+  --color-primary-fixed: #FFF3E6;
+  --color-on-primary-fixed: #7A3E0B;
+  --color-secondary-container: #F5F0E6;
+  --color-on-secondary-container: #6E6558;
+  --color-tertiary-fixed: #FDF2D9;
+  --color-on-tertiary-fixed: #5C4610;
+  --color-inverse-surface: #2D2A26;
+
+  /* Typography */
+  --font-body: "Inter", sans-serif;
+  --font-display: "EB Garamond", serif;
+}
+
+/* ========================================
+   Base Styles
+   ======================================== */
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-background);
+  color: var(--color-on-background);
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+}
+
+::selection {
+  background-color: var(--color-primary-fixed);
+  color: var(--color-primary);
+}
+
+/* ========================================
+   Component Classes
+   ======================================== */
+.glass {
+  background: rgba(255, 248, 243, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.celestial-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline-variant);
+  box-shadow: 0px 10px 30px rgba(230, 126, 34, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.celestial-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(230, 126, 34, 0.05) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(30%, -30%);
+  pointer-events: none;
+}
+
+/* Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-outline-variant);
+  border-radius: 10px;
+}
+
+/* Shimmer animation */
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(230, 126, 34, 0.05), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Ping animation for map marker */
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Spin animation for loader */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Pulse animation */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Staggered delays */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-500 { animation-delay: 500ms; }
+.delay-700 { animation-delay: 700ms; }
+.delay-1000 { animation-delay: 1000ms; }
+
+/* Markdown Styling inside assistant message bubbles */
+.markdown-container ul {
+  list-style-type: disc;
+  margin-left: 1.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.markdown-container ol {
+  list-style-type: decimal;
+  margin-left: 1.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.markdown-container li {
+  margin-bottom: 0.25rem;
+}
+.markdown-container p {
+  margin-bottom: 0.75rem;
+}
+.markdown-container p:last-child {
+  margin-bottom: 0;
+}
+.markdown-container strong {
+  font-weight: 600;
+  color: var(--color-on-background);
+}
+.markdown-container h3, 
+.markdown-container h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-primary);
+  font-size: 1.25rem;
+}
+.markdown-container h3:first-child, 
+.markdown-container h4:first-child {
+  margin-top: 0;
+}
