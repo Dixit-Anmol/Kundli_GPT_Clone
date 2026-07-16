@@ -61,9 +61,18 @@ def build_chart(req: ChartRequest):
         
         # Store in session memory
         session_store.save_chart(req.session_id, chart_data)
+        sess = session_store.get_session(req.session_id)
+        sess["profile"] = {
+            "name": req.name,
+            "date_of_birth": req.date_str,
+            "time_of_birth": req.time_str,
+            "latitude": req.latitude,
+            "longitude": req.longitude,
+            "timezone_offset": offset
+        }
         if req.api_key:
             # Save user API key for Anthropic/Groq calls if provided
-            session_store.get_session(req.session_id)["key"] = req.api_key
+            sess["key"] = req.api_key
             
         meta = chart_data["metadata"]
         

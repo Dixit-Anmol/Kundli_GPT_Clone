@@ -6,7 +6,7 @@ from services.memory.history import ChatHistory
 from services.rag.bg_16 import BG16Pipeline
 from services.prompts.system import get_system_prompt
 from services.prompts.horoscope import build_horoscope_prompt
-from services.prompts.geeta import build_geeta_prompt
+from services.prompts.geeta import build_geeta_prompt, assemble_unified_prompt
 from services.llm.factory import LLMFactory
 
 router = APIRouter()
@@ -34,25 +34,25 @@ def handle_chat(req: ChatRequest):
         # Retrieve relevant Bhagavad Gita verses using RAG
         gita_passages = rag_pipeline.search_wisdom(req.message, top_k=2)
         
+        profile = session.get("profile")
+        
         # Is this the initial analysis request?
-        is_initial = len(history) == 0 or "explain" in req.message.lower() or "chart" in req.message.lower()
+        is_initial = len(history) == 0
         
         if is_initial:
             user_prompt = build_horoscope_prompt(
-                name="Seeker", 
-                chart_data=chart_data
+                name=profile.get("name") if profile else "Seeker", 
+                chart_data=chart_data,
+                profile=profile
             )
         else:
-            # Format chat history for context
-            history_context = ChatHistory.format_history(history)
-            user_prompt = build_geeta_prompt(
-                name="Seeker",
+            user_prompt = assemble_unified_prompt(
                 query=req.message,
                 chart_data=chart_data,
+                profile=profile,
+                history=history,
                 passages=gita_passages
             )
-            # Append history reference to prompt
-            user_prompt += f"\n[Previous Conversation History]\n{history_context}"
             
         # 3. Invoke LLM (Groq or Claude based on setup)
         # Use session-saved API key if provided, else use system environment keys
