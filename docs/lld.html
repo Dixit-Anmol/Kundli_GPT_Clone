@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KundliGPT Clone — Low Level Design (LLD)</title>
+  <!-- Google Fonts: Inter for UI, EB Garamond for Vedic titles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Prism.js for code syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" />
+  
+  <!-- Mermaid.js for diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: { useMaxWidth: true, htmlLabels: true }
+    });
+  </script>
+
+  <style>
+    :root {
+      --bg-cream: #FAF8F3;
+      --surface-white: #FFFFFF;
+      --primary-kesari: #E67E22;
+      --secondary-gold: #C89B3C;
+      --on-primary: #FFFFFF;
+      --charcoal: #2D2A26;
+      --charcoal-muted: #6E6558;
+      --outline-sand: #E9DFC8;
+      --primary-fixed: #FFF3E6;
+      --on-primary-fixed: #7A3E0B;
+      --card-shadow: 0 4px 20px rgba(233, 223, 200, 0.4);
+      --success-green: #27AE60;
+      --sidebar-width: 280px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-cream);
+      color: var(--charcoal);
+      font-family: "Inter", sans-serif;
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid var(--outline-sand);
+      padding-bottom: 25px;
+    }
+
+    h1 {
+      font-family: "EB Garamond", serif;
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--primary-kesari);
+      margin-bottom: 8px;
+    }
+
+    h2, h3, h4, .font-display {
+      font-family: "EB Garamond", serif;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--charcoal-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    /* Docs Navigation Bar */
+    .docs-nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 30px;
+      padding: 14px 20px;
+      background: var(--surface-white);
+      border: 1px solid var(--outline-sand);
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(233, 223, 200, 0.3);
+    }
+
+    .docs-nav-label {
+      font-family: "EB Garamond", serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--charcoal-muted);
+      margin-right: 8px;
+    }
+
+    .docs-nav a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--charcoal-muted);
+      text-decoration: none;
+      border: 1px solid var(--outline-sand);
+      border-radius: 8px;
+      background: var(--bg-cream);
+      transition: all 0.25s ease;
+    }
+
+    .docs-nav a:hover {
+      border-color: var(--primary-kesari);
+      color: var(--primary-kesari);
+      background: var(--primary-fixed);
+      box-shadow: 0 3px 10px rgba(230, 126, 34, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .docs-nav a.active-page {
+      background: var(--primary-kesari);
+      color: var(--on-primary);
+      border-color: var(--primary-kesari);
+      box-shadow: 0 3px 10px rgba(230, 126, 34, 0.2);
+      cursor: default;
+    }
+
+    /* Layout Wrapper */
+    .docs-layout {
+      display: flex;
+      gap: 30px;
+      margin-top: 20px;
+    }
+
+    /* Sticky Sidebar Navigation */
+    .docs-sidebar {
+      width: var(--sidebar-width);
+      position: sticky;
+      top: 20px;
+      height: calc(100vh - 40px);
+      overflow-y: auto;
+      padding: 20px;
+      background: var(--surface-white);
+      border: 1px solid var(--outline-sand);
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+      flex-shrink: 0;
+    }
+
+    .sidebar-title {
+      font-family: "EB Garamond", serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--primary-kesari);
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--outline-sand);
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-item {
+      margin-bottom: 8px;
+    }
+
+    .sidebar-link {
+      display: block;
+      color: var(--charcoal-muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar-link:hover {
+      background: var(--primary-fixed);
+      color: var(--on-primary-fixed);
+      padding-left: 16px;
+    }
+
+    .sidebar-link.active {
+      background: var(--primary-kesari);
+      color: var(--on-primary);
+      font-weight: 600;
+    }
+
+    /* Content Area */
+    .docs-content {
+      flex-grow: 1;
+      min-width: 0;
+    }
+
+    /* Section Layouts */
+    section {
+      background: var(--surface-white);
+      border: 1px solid var(--outline-sand);
+      border-radius: 16px;
+      padding: 40px;
+      margin-bottom: 30px;
+      box-shadow: var(--card-shadow);
+      scroll-margin-top: 20px;
+    }
+
+    section h2 {
+      font-size: 2.2rem;
+      color: var(--primary-kesari);
+      margin-bottom: 25px;
+      border-bottom: 2px dashed var(--outline-sand);
+      padding-bottom: 12px;
+    }
+
+    section h3 {
+      font-size: 1.5rem;
+      color: var(--on-primary-fixed);
+      margin-top: 30px;
+      margin-bottom: 15px;
+    }
+
+    section p {
+      margin-bottom: 15px;
+      color: var(--charcoal);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--outline-sand);
+    }
+
+    th {
+      color: var(--on-primary-fixed);
+      background-color: var(--primary-fixed);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      font-size: 0.9rem;
+    }
+
+    tr:hover {
+      background-color: var(--primary-fixed);
+    }
+
+    /* Code styling */
+    pre[class*="language-"] {
+      border-radius: 8px;
+      border: 1px solid var(--outline-sand);
+      background: #FDFDFB !important;
+      margin: 20px 0;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 0.9rem;
+    }
+
+    /* Alert Badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-right: 4px;
+    }
+
+    .badge-get { background: var(--primary-fixed); color: var(--on-primary-fixed); border: 1px solid var(--outline-sand); }
+    .badge-post { background: var(--primary-kesari); color: var(--on-primary); }
+    .badge-delete { background: #E74C3C; color: #FFFFFF; }
+    .badge-success { background: rgba(39, 174, 96, 0.1); color: var(--success-green); border: 1px solid var(--success-green); }
+
+    .card {
+      background: var(--bg-cream);
+      border: 1px solid var(--outline-sand);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    ul, ol {
+      padding-left: 24px;
+      margin-bottom: 15px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    /* Collapsible Sections */
+    details {
+      border: 1px solid var(--outline-sand);
+      border-radius: 8px;
+      padding: 15px;
+      background: var(--bg-cream);
+      margin-bottom: 15px;
+    }
+
+    details summary {
+      font-weight: 600;
+      cursor: pointer;
+      font-family: "EB Garamond", serif;
+      font-size: 1.2rem;
+      color: var(--on-primary-fixed);
+    }
+
+    details[open] summary {
+      margin-bottom: 12px;
+      border-bottom: 1px dashed var(--outline-sand);
+      padding-bottom: 8px;
+    }
+
+    .mermaid {
+      background: #FFFFFF;
+      border: 1px solid var(--outline-sand);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 25px 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Back to HLD button floating */
+    .floating-back-btn {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: var(--primary-kesari);
+      color: var(--on-primary);
+      border: none;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 4px 15px rgba(230, 126, 34, 0.4);
+      z-index: 1000;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .floating-back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(230, 126, 34, 0.5);
+      background: #D35400;
+    }
+
+    @media (max-width: 900px) {
+      .docs-layout {
+        flex-direction: column;
+      }
+      .docs-sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        top: 0;
+      }
+    }
+
+    /* Print styling */
+    @media print {
+      body {
+        background: #FFFFFF;
+        color: #000000;
+        padding: 0;
+      }
+      .docs-sidebar, .docs-nav, .floating-back-btn {
+        display: none !important;
+      }
+      section {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin-bottom: 50px;
+        page-break-inside: avoid;
+      }
+      .docs-layout {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Kundli AI</h1>
+      <div class="subtitle">Low-Level Design (LLD) Specifications</div>
+    </header>
+
+    <!-- Documentation Pages Navigation -->
+    <nav class="docs-nav">
+      <span class="docs-nav-label">📄 Docs:</span>
+      <a href="index.html">🏛️ System Architecture</a>
+      <a href="divisional-charts.html">🔮 Divisional Charts</a>
+      <a href="lld.html" class="active-page">📋 Low-Level Design (LLD)</a>
+    </nav>
+
+    <div class="docs-layout">
+      
+      <!-- Left Sidebar Navigation -->
+      <aside class="docs-sidebar">
+        <div class="sidebar-title">LLD Directory</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="#cover" class="sidebar-link active">1. Cover Page</a></li>
+          <li class="sidebar-item"><a href="#revision" class="sidebar-link">2. Revision History</a></li>
+          <li class="sidebar-item"><a href="#toc" class="sidebar-link">3. Table of Contents</a></li>
+          <li class="sidebar-item"><a href="#overview" class="sidebar-link">4. System Overview</a></li>
+          <li class="sidebar-item"><a href="#folders" class="sidebar-link">5. Folder Structure</a></li>
+          <li class="sidebar-item"><a href="#modules" class="sidebar-link">6. Module Breakdown</a></li>
+          <li class="sidebar-item"><a href="#backend" class="sidebar-link">7. Backend Architecture</a></li>
+          <li class="sidebar-item"><a href="#frontend" class="sidebar-link">8. Frontend Architecture</a></li>
+          <li class="sidebar-item"><a href="#api" class="sidebar-link">9. API Documentation</a></li>
+          <li class="sidebar-item"><a href="#storage" class="sidebar-link">10. Storage Design</a></li>
+          <li class="sidebar-item"><a href="#rag" class="sidebar-link">11. RAG Pipeline</a></li>
+          <li class="sidebar-item"><a href="#horoscope" class="sidebar-link">12. Horoscope Pipeline</a></li>
+          <li class="sidebar-item"><a href="#prompt" class="sidebar-link">13. Prompt Compilation</a></li>
+          <li class="sidebar-item"><a href="#sequences" class="sidebar-link">14. Sequence Diagrams</a></li>
+          <li class="sidebar-item"><a href="#classes" class="sidebar-link">15. Class Diagrams</a></li>
+          <li class="sidebar-item"><a href="#interactions" class="sidebar-link">16. Component Interactions</a></li>
+          <li class="sidebar-item"><a href="#lifecycle" class="sidebar-link">17. Request Lifecycle</a></li>
+          <li class="sidebar-item"><a href="#errors" class="sidebar-link">18. Error Handling</a></li>
+          <li class="sidebar-item"><a href="#session" class="sidebar-link">19. Session Management</a></li>
+          <li class="sidebar-item"><a href="#security" class="sidebar-link">20. Security Specs</a></li>
+          <li class="sidebar-item"><a href="#deployment" class="sidebar-link">21. Deployment</a></li>
+          <li class="sidebar-item"><a href="#future" class="sidebar-link">22. Future Enhancements</a></li>
+          <li class="sidebar-item"><a href="#decisions" class="sidebar-link">23. Design Decisions</a></li>
+          <li class="sidebar-item"><a href="#limitations" class="sidebar-link">24. Known Limitations</a></li>
+          <li class="sidebar-item"><a href="#conclusion" class="sidebar-link">25. Conclusion</a></li>
+        </ul>
+      </aside>
+
+      <!-- Main LLD Documentation Sections -->
+      <main class="docs-content">
+
+        <!-- 1. Cover Page -->
+        <section id="cover">
+          <h2>1. Cover Page</h2>
+          <div class="card" style="text-align: center; padding: 50px 20px;">
+            <h1 style="font-size: 3.5rem; margin-bottom: 20px;">KundliGPT Clone</h1>
+            <p class="subtitle" style="font-size: 1.5rem; margin-bottom: 40px; color: var(--primary-kesari);">Low-Level Design (LLD)</p>
+            <div style="max-width: 500px; margin: 0 auto; text-align: left; border-top: 1px solid var(--outline-sand); padding-top: 30px;">
+              <table style="width: 100%; border: none;">
+                <tr style="background: none;"><td style="font-weight: 600;">Document Version:</td><td>v1.1.0</td></tr>
+                <tr style="background: none;"><td style="font-weight: 600;">Status:</td><td><span class="badge badge-success">Approved</span></td></tr>
+                <tr style="background: none;"><td style="font-weight: 600;">Author:</td><td>Lead Software Architect</td></tr>
+                <tr style="background: none;"><td style="font-weight: 600;">Date:</td><td>July 17, 2026</td></tr>
+                <tr style="background: none;"><td style="font-weight: 600;">Target Platform:</td><td>FastAPI (Python) + React (Vite/TS) + ChromaDB</td></tr>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. Revision History -->
+        <section id="revision">
+          <h2>2. Revision History</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Version</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Author</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>v1.0.0</strong></td>
+                <td>July 10, 2026</td>
+                <td>Initial release of Low-Level Design (LLD) document mapping core V1 modules.</td>
+                <td>Lead Architect</td>
+              </tr>
+              <tr>
+                <td><strong>v1.1.0</strong></td>
+                <td>July 17, 2026</td>
+                <td>Added anonymous profile persistence module, updated chart computation schemas for natal vs dynamic data, and mapped client session recovery paths.</td>
+                <td>Senior Engineer</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- 3. Table of Contents -->
+        <section id="toc">
+          <h2>3. Table of Contents</h2>
+          <div class="card">
+            <ol style="line-height: 2;">
+              <li><a href="#cover">Cover Page</a></li>
+              <li><a href="#revision">Revision History</a></li>
+              <li><a href="#toc">Table of Contents</a></li>
+              <li><a href="#overview">System Overview</a></li>
+              <li><a href="#folders">Folder Structure</a></li>
+              <li><a href="#modules">Module Breakdown</a></li>
+              <li><a href="#backend">Backend Architecture</a></li>
+              <li><a href="#frontend">Frontend Architecture</a></li>
+              <li><a href="#api">API Documentation</a></li>
+              <li><a href="#storage">Database / Storage Design</a></li>
+              <li><a href="#rag">RAG Pipeline</a></li>
+              <li><a href="#horoscope">Horoscope Pipeline</a></li>
+              <li><a href="#prompt">Prompt Compilation Pipeline</a></li>
+              <li><a href="#sequences">Sequence Diagrams</a></li>
+              <li><a href="#classes">Class Diagrams</a></li>
+              <li><a href="#interactions">Component Interaction Diagram</a></li>
+              <li><a href="#lifecycle">Request Lifecycle</a></li>
+              <li><a href="#errors">Error Handling</a></li>
+              <li><a href="#session">Session Management</a></li>
+              <li><a href="#security">Security Specs</a></li>
+              <li><a href="#deployment">Deployment Architecture</a></li>
+              <li><a href="#future">Future Enhancements</a></li>
+              <li><a href="#decisions">Design Decisions</a></li>
+              <li><a href="#limitations">Known Limitations</a></li>
+              <li><a href="#conclusion">Conclusion</a></li>
+            </ol>
+          </div>
+        </section>
+
+        <!-- 4. System Overview -->
+        <section id="overview">
+          <h2>4. System Overview</h2>
+          <p><strong>Purpose:</strong> Kundli AI is an advanced astrological mentoring platform that blends the mathematical precision of Vedic astrology (computations derived from the Swiss Ephemeris) with spiritual and philosophical counseling based on the Bhagavad Gita (specifically Chapter 16, which covers Divine and Demoniac qualities).</p>
+          
+          <p><strong>Objectives:</strong></p>
+          <ul>
+            <li>Perform high-fidelity sidereal calculations of planetary coordinates, ascendants, houses, yogas, and doshas based on user-supplied birth coordinates.</li>
+            <li>Maintain user context across browser refreshes and server restarts without requiring explicit email/social sign-ups.</li>
+            <li>Implement semantic text retrieval (RAG) using highly efficient, dependency-light local key-term embeddings and ChromaDB.</li>
+            <li>Structure prompt payloads logically in a designated block hierarchy before querying LLMs to guarantee high coherence and alignment with spiritual guidelines.</li>
+          </ul>
+
+          <p><strong>Scope:</strong> Computes birth charts, handles conversational Q&A under a warm, empathetic mentoring persona, runs local text searches over selected scriptures, and caches user profiles. Future expansions like complete multi-lingual support, voice integration, and full database persistence are scoped separately.</p>
+
+          <p><strong>Technology Stack & Core Dependencies:</strong></p>
+          <ul>
+            <li><strong>Frontend:</strong> React 19 (SPA), TypeScript, Tailwind CSS, Vite.</li>
+            <li><strong>Backend:</strong> FastAPI (Python 3.11), Uvicorn.</li>
+            <li><strong>Astrology Engines:</strong> Swiss Ephemeris (`pyswisseph` binding).</li>
+            <li><strong>Vector Databases:</strong> ChromaDB (`chromadb` client).</li>
+            <li><strong>LLM Connectors:</strong> Direct HTTP REST calls to Groq API (`llama-3.3-70b-versatile` model) with offline Claude prompts for safety fallback.</li>
+          </ul>
+        </section>
+
+        <!-- 5. Folder Structure -->
+        <section id="folders">
+          <h2>5. Folder Structure</h2>
+          <p>The code layout is strictly separated into frontend, backend api modules, core library configurations, and persistent assets:</p>
+          
+          <pre><code class="language-text">Kundli_GPT_Clone/
+├── backend/                       # FastAPI application core
+│   ├── api/                       # Endpoint routers
+│   │   ├── chart.py               # Horoscope calculations & timezone APIs
+│   │   ├── chat.py                # LLM conversation & RAG orchestration
+│   │   └── profile.py             # Anonymous profile lookups & deletion
+│   ├── core/                      # Configuration & settings
+│   │   ├── config.py              # Environment variables loader
+│   │   └── constants.py           # Vedic Constants & Significations
+│   ├── data/                      # File persistence folder
+│   │   ├── knowledge/             # Gita Chapter 16 source files (PDFs/JSON)
+│   │   └── profiles/              # Persistent anonymous user profiles ({uuid}.json)
+│   ├── models/                    # Pydantic request/response validation schemas
+│   │   ├── request.py             
+│   │   └── response.py            
+│   └── main.py                    # Entry point & CORS middleware mounting
+├── frontend/                      # React SPA (Vite + TypeScript)
+│   ├── src/
+│   │   ├── assets/                # CSS, fonts, and icons
+│   │   ├── components/            # Reusable UI widgets
+│   │   │   ├── chat/              # Chat components (InputBar, SuggestionChips, Form)
+│   │   │   └── layout/            # Navigation structure (Navbar.tsx)
+│   │   ├── pages/                 
+│   │   │   └── ChatPage.tsx       # Main workspace page with routing state machine
+│   │   ├── App.tsx                # App root component
+│   │   └── main.tsx               # DOM mounting entry point
+│   ├── package.json               # Package declarations
+│   └── vite.config.ts             # Bundler options
+├── services/                      # Shared business logic layer
+│   ├── astrology/                 # Vedic computational engine
+│   │   ├── swiss_ephemeris.py     # low-level Julian Day & planetary coords bindings
+│   │   ├── planets.py             # planetary zodiac degrees & Sanskrit names
+│   │   ├── houses.py              # Whole-Sign house placements & lordships
+│   │   ├── nakshatra.py           # Nakshatras & Pada math
+│   │   ├── yogas.py               # Dhana, Raja, & Gaja Kesari combinations
+│   │   └── doshas.py              # Manglik, Kaal Sarp & Sade Sati calculators
+│   ├── llm/                       # LLM client abstractions
+│   │   ├── factory.py             # LLM provider factory resolver
+│   │   ├── groq.py                # HTTP Groq API connector with offline fallback
+│   │   └── claude.py              # Offline backup prompt templates
+│   ├── memory/                    # Cache & state structures
+│   │   ├── session.py             # In-memory session store (transient chats)
+│   │   ├── history.py             # Chat message formatting utilities
+│   │   └── profile.py             # Atomic file writes for anonymous persistent profiles
+│   ├── prompts/                   # System prompt definitions & compilers
+│   │   ├── system.py              # Standard spiritual persona instructions
+│   │   ├── financial.py           # 18-section Vedic financial prompt
+│   │   ├── horoscope.py           # Initial reading configurations
+│   │   └── geeta.py               # Prompt compilation pipeline (13 ordered blocks)
+│   └── rag/                       # Retrieval Augmented Generation Engine
+│       ├── chroma_store.py        # persistent ChromaDB client bindings
+│       ├── embeddings.py          # key-term occurrence fallback embedder
+│       ├── chunker.py             # Character chunker with word-boundary checks
+│       ├── loader.py              # PDF parsing & JSON seeding fallbacks
+│       ├── query_engine.py        # semantic intent parser
+│       └── pipeline.py            # pipeline controller orchestration
+└── requirements.txt               # Backend Python library package list</code></pre>
+        </section>
+
+        <!-- 6. Module Breakdown -->
+        <section id="modules">
+          <h2>6. Module Breakdown</h2>
+          
+          <details>
+            <summary>Module: Services / Astrology</summary>
+            <div style="margin-top:10px;">
+              <p><strong>Purpose:</strong> Computes astronomical placements and translates them into Vedic interpretations (zodiac signs, nakshatras, yogas, doshas).</p>
+              <p><strong>Responsibilities:</strong> Bind with Swiss Ephemeris files, compute planetary angles, map houses, evaluate combinations, and identify afflictions.</p>
+              <ul>
+                <li><strong>Input:</strong> Year, month, day, hour, minute, second (UTC), latitude, longitude, and timezone offset.</li>
+                <li><strong>Output:</strong> Computed horoscope dictionary containing metadata, planets, houses, yogas, and doshas.</li>
+                <li><strong>Dependencies:</strong> `pyswisseph` (low-level binding).</li>
+                <li><strong>Core Functions:</strong> `calculate_horoscope_data(...)`</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Module: Services / RAG</summary>
+            <div style="margin-top:10px;">
+              <p><strong>Purpose:</strong> Embeds, indexes, and queries religious scriptures (specifically Bhagavad Gita) for contextual text injections.</p>
+              <p><strong>Responsibilities:</strong> Page extraction, sliding window chunking, computing key-term vector matrices, and executing database queries.</p>
+              <ul>
+                <li><strong>Input:</strong> Raw text queries, raw PDF/JSON document files.</li>
+                <li><strong>Output:</strong> List of top match text strings.</li>
+                <li><strong>Dependencies:</strong> `chromadb`, `pypdf`.</li>
+                <li><strong>Core Classes:</strong> `RAGPipeline`, `ChromaStore`, `Embedder`, `CharacterChunker`, `PDFDocumentLoader`, `Retriever`.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Module: Services / Prompts</summary>
+            <div style="margin-top:10px;">
+              <p><strong>Purpose:</strong> Formulates complete prompts based on structured contexts for ingestion by the active LLM client.</p>
+              <p><strong>Responsibilities:</strong> Synthesize system rules, format history logs, detect query intent, inject relevant scriptural verses, and compile the final block sequence.</p>
+              <ul>
+                <li><strong>Input:</strong> Raw query string, chart coordinates, user profile, chat history list, retrieved RAG passages.</li>
+                <li><strong>Output:</strong> Consolidated prompt string.</li>
+                <li><strong>Dependencies:</strong> `services/astrology`, `services/memory`.</li>
+                <li><strong>Core Functions:</strong> `assemble_unified_prompt(...)`, `is_financial_query(...)`.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Module: Services / Memory</summary>
+            <div style="margin-top:10px;">
+              <p><strong>Purpose:</strong> Manages in-memory chat sessions and coordinates filesystem storage for persistent users.</p>
+              <p><strong>Responsibilities:</strong> Thread-safe profile reading/writing (JSON), session creation, chat history formatting, and caching computed natal data.</p>
+              <ul>
+                <li><strong>Input:</strong> UUID strings, message payloads, computed chart dictionaries.</li>
+                <li><strong>Output:</strong> Loaded profile payload, formatted history logs, success status booleans.</li>
+                <li><strong>Dependencies:</strong> standard file I/O, `threading.Lock`.</li>
+                <li><strong>Core Classes:</strong> `ProfileStore`, `SessionStore`, `ChatHistory`.</li>
+              </ul>
+            </div>
+          </details>
+        </section>
+
+        <!-- 7. Backend Architecture -->
+        <section id="backend">
+          <h2>7. Backend Architecture</h2>
+          <p>The backend of Kundli AI is structured around a decoupled architecture designed to handle fast calculations, vector store lookups, and session management in a stateless hosting model:</p>
+          
+          <div class="card">
+            <h4>1. API Layer (Routers)</h4>
+            <p>Managed by FastAPI. It exposes specific JSON endpoints and maps parameters to typed Pydantic models. Routers are split by domains (astrology computation, conversational chat, and profile management).</p>
+          </div>
+
+          <div class="card">
+            <h4>2. Business Logic & Astrology Service</h4>
+            <p>Calculates planetary positions on the sidereal zodiac (using the Lahiri Ayanamsa). It evaluates house boundaries (using the Whole-Sign house system), nakshatra bounds, yoga alignments, and active doshas (like Sade Sati, Manglik, and Kaal Sarp).</p>
+          </div>
+
+          <div class="card">
+            <h4>3. Retrieval-Augmented Generation (RAG) Service</h4>
+            <p>Runs a custom vector-space search. It uses an occurrence frequency matrix over a predefined vocabulary of spiritual keywords, bypassing heavy deep-learning dependencies to maintain a fast, lightweight deployment runtime. Results are sorted based on cosine similarity scores.</p>
+          </div>
+
+          <div class="card">
+            <h4>4. Session & Memory Manager</h4>
+            <p>Uses a dual storage layout:
+              <ul>
+                <li><strong>Transient Session Cache:</strong> RAM-based dictionary tracking active chat logs per tab session.</li>
+                <li><strong>Persistent Profile Store:</strong> Disk-based JSON files linked to an anonymous client-side UUID, ensuring natal charts are persisted across server lifecycles.</li>
+              </ul>
+            </p>
+          </div>
+        </section>
+
+        <!-- 8. Frontend Architecture -->
+        <section id="frontend">
+          <h2>8. Frontend Architecture</h2>
+          <p>The frontend is built as a single-page application (SPA) focused on state management, visual polish, and performance:</p>
+          
+          <div class="card">
+            <h4>Component Hierarchy Tree</h4>
+            <pre><code class="language-text">App.tsx
+ └── ChatPage.tsx (Active State Machine)
+      ├── Navbar.tsx
+      ├── AssistantMessage.tsx (Rich markdown viewer + styling)
+      ├── BirthDetailsForm.tsx (Inputs validation: Name, DOB, TOB)
+      ├── BirthplaceMap.tsx (OSM Leaflet + Nominatim geocoding)
+      ├── ComputingCard.tsx (Visual feedback animation)
+      ├── HoroscopeSummary.tsx (Overview of Lagna, Rashi, and Nakshatra)
+      └── ChatInputBar.tsx (Floating input container)</code></pre>
+          </div>
+
+          <div class="card">
+            <h4>State & Storage Flow</h4>
+            <p>State is managed inside `ChatPage.tsx` using native React hooks (`useState`, `useEffect`).
+              <ul>
+                <li><strong>Profile Restoration:</strong> On mount, a `useEffect` reads `kundli_user_id` from `localStorage`. If found, it requests profile details from the backend and transitions immediately to the ready state, bypassing the form steps.</li>
+                <li><strong>Geocoding Resolution:</strong> Uses OpenStreetMap Nominatim APIs to convert plain text city inputs into geographic coordinates (latitude and longitude) for precise horoscope calculations.</li>
+              </ul>
+            </p>
+          </div>
+        </section>
+
+        <!-- 9. API Documentation -->
+        <section id="api">
+          <h2>9. API Documentation</h2>
+          
+          <details>
+            <summary>POST /api/chart ( Horoscopes Calculation )</summary>
+            <div style="margin-top:10px;">
+              <p><strong>Purpose:</strong> Computes sidereal planetary coordinates and returns the natal chart configuration.</p>
+              <p><strong>Headers:</strong> `Content-Type: application/json`</p>
+              <p><strong>JSON Request Payload:</strong></p>
+              <pre><code class="language-json">{
+  "name": "Arjun Sharma",
+  "date_str": "1995-10-25",
+  "time_str": "08:30:00",
+  "latitude": 28.6139,
+  "longitude": 77.2090,
+  "session_id": "ephemeral-tab-id-xyz",
+  "user_id": "persistent-uuid-1234-abcd"
+}</code></pre>
+              <p><strong>JSON Response:</strong></p>
+              <pre><code class="language-json">{
+  "name": "Arjun Sharma",
+  "ascendant_sign": "Scorpio",
+  "moon_sign": "Libra",
+  "nakshatra": "Vishakha",
+  "pada": 2,
+  "yogas": [
+    { "name": "Raja Yoga", "meaning": "Conjunction of quadrant and trine lords" }
+  ],
+  "doshas": {
+    "manglik": { "is_present": false, "description": "No affliction" },
+    "kaal_sarp": { "is_present": false, "description": "No affliction" },
+    "sade_sati": { "is_present": true, "description": "Transit Saturn is currently in 12th house from Moon" }
+  },
+  "raw_positions": {
+    "sun": { "name_sanskrit": "Surya", "degree": 191.5, "house": 12, "sign": "Libra" }
+  }
+}</code></pre>
+            </div>
+          </details>
+
+          <details>
+            <summary>POST /api/chat ( Conversation )</summary>
+            <div style="margin-top:10px;">
+              <p><strong>Purpose:</strong> Processes user questions, queries relevant scriptures (RAG), and returns the generated spiritual guidance.</p>
+              <p><strong>Headers:</strong> `Content-Type: application/json`</p>
+              <p><strong>JSON Request Payload:</strong></p>
+              <pre><code class="language-json">{
+  "session_id": "ephemeral-tab-id-xyz",
+  "user_id": "persistent-uuid-1234-abcd",
+  "message": "I am experiencing constant financial delays. What does my chart say?"
+}</code></pre>
+              <p><strong>JSON Response:</strong></p>
+              <pre><code class="language-json">{
+  "response": "## 💰 Overall Financial Potential\nYour chart indicates a steady wealth path, though delays are present...\n\n## 🏠 Wealth Houses Analysis\n* **2nd House (Sagittarius):** Owned by Jupiter, which is placed in...",
+  "session_count": 2
+}</code></pre>
+            </div>
+          </details>
+
+          <details>
+            <summary>GET /api/profile/{user_id} ( Profile Lookup )</summary>
+            <div style="margin-top:10px;">
+              <p><strong>Purpose:</strong> Checks for saved profiles and returns birth parameters alongside calculated charts to skip the setup wizard.</p>
+              <p><strong>JSON Response (If found):</strong></p>
+              <pre><code class="language-json">{
+  "exists": true,
+  "birth_details": {
+    "name": "Arjun Sharma",
+    "date_of_birth": "1995-10-25",
+    "time_of_birth": "08:30:00",
+    "latitude": 28.6139,
+    "longitude": 77.2090,
+    "timezone_offset": 5.5
+  },
+  "chart_summary": {
+    "ascendant_sign": "Scorpio",
+    "moon_sign": "Libra",
+    "nakshatra": "Vishakha",
+    "pada": 2
+  }
+}</code></pre>
+            </div>
+          </details>
+
+          <details>
+            <summary>DELETE /api/profile/{user_id} ( Deletion / Reset )</summary>
+            <div style="margin-top:10px;">
+              <p><strong>Purpose:</strong> Deletes saved profile JSON files from the backend storage disk to allow full context resets.</p>
+              <p><strong>JSON Response:</strong></p>
+              <pre><code class="language-json">{
+  "deleted": true
+}</code></pre>
+            </div>
+          </details>
+        </section>
+
+        <!-- 10. Database / Storage Design -->
+        <section id="storage">
+          <h2>10. Database / Storage Design</h2>
+          <p>Kundli AI uses a hybrid storage model designed to balance retrieval performance, filesystem caching, and session lifecycle requirements:</p>
+          
+          <div class="card">
+            <h4>Vector Database (ChromaDB) Collection Schema</h4>
+            <p>Scriptures are indexed in a local ChromaDB collection named `gita_ch16`. Each document chunk is stored with the following metadata fields to support precise matching:
+              <ul>
+                <li><strong>document_id:</strong> Unique identifier (`gita_ch16_chunk_{idx}`).</li>
+                <li><strong>document_content:</strong> Raw Sanskrit text, translation, and significance comments.</li>
+                <li><strong>metadata:</strong> Includes `source` (filename), `page_number`, and `chunk_index`.</li>
+                <li><strong>vector:</strong> Generated embedding array of length 39 (based on key-term vocabulary frequencies).</li>
+              </ul>
+            </p>
+          </div>
+
+          <div class="card">
+            <h4>JSON File Storage Schema</h4>
+            <p>Persistent user profiles are stored as JSON files on the server's filesystem under `backend/data/profiles/{uuid}.json`.
+              <pre><code class="language-json">{
+  "user_id": "uuid-string-here",
+  "birth_details": {
+    "name": "...",
+    "date_of_birth": "...",
+    "time_of_birth": "...",
+    "latitude": 0.0,
+    "longitude": 0.0,
+    "timezone_offset": 5.5
+  },
+  "natal_chart": {
+    "natal": {
+      "metadata": { ... },
+      "planets": { ... },
+      "houses": { ... },
+      "yogas": [ ... ],
+      "doshas": { ... }
+    }
+  },
+  "chart_response": { ... },
+  "created_at": "ISO-TIMESTAMP",
+  "updated_at": "ISO-TIMESTAMP"
+}</code></pre>
+            </p>
+          </div>
+        </section>
+
+        <!-- 11. RAG Pipeline -->
+        <section id="rag">
+          <h2>11. RAG Pipeline</h2>
+          <p>The scripture context retrieval workflow follows a structured pipelined approach to process queries and inject matching references:</p>
+
+          <div class="mermaid">
+flowchart TD
+    A[Gita Chapter 16 Source File] --> B[PDF/JSON Document Loader]
+    B --> C[Character Sliding Chunker]
+    C --> D[Keyword Embeddings Generator]
+    D --> E[Local ChromaDB Store]
+    
+    F[User Chat Message] --> G[Query Engine Preprocess]
+    G --> H[Keyword Embeddings Generator]
+    H --> I[Retriever Query search]
+    E -.-> I
+    I --> J[Prompt Builder Context Injection]
+    J --> K[Groq LLM API Request]
+    K --> L[Empathetic Answer Response]
+          </div>
+
+          <p><strong>Seeding:</strong> On application startup, the `RAGPipeline` checks the vector store count. If empty, the document loader parses Chapter 16 of the Bhagavad Gita, splits it into chunks of 500 characters (with a 50-character sliding overlap), generates embeddings, and saves the vectors to disk.</p>
+          
+          <p><strong>Querying:</strong> When the user submits a message, the system normalizes the query text, generates its embedding vector, performs a cosine-similarity search, and extracts the top 2 matching verses to inject into the LLM prompt context.</p>
+        </section>
+
+        <!-- 12. Horoscope Pipeline -->
+        <section id="horoscope">
+          <h2>12. Horoscope Pipeline</h2>
+          <p>Horoscope data flow is divided into a static calculation phase and a dynamic calculations phase to balance calculation accuracy with performance:</p>
+          
+          <div class="mermaid">
+flowchart LR
+    A[Birth Details Form] --> B[Swiss Ephemeris Calculator]
+    B --> C[Planetary Longitudes D1]
+    C --> D[Zodiac Houses Map]
+    C --> E[Nakshatra / Pada Math]
+    
+    D & E --> F[Yoga Combinations Evaluator]
+    D & E --> G[Natal Doshas Evaluator]
+    F & G --> H[Natal Chart Cache saved]
+    
+    I[Current Transit Saturn] --> J[Sade Sati Transit check]
+    H & J --> K[Compiled Prompt Synthesis]
+          </div>
+
+          <p>The static calculations compute the birth positions (Lagna sign, Nakshatras, and natal Yogas/Doshas like Manglik or Kaal Sarp). The dynamic calculations compute transit-dependent aspects on-demand (such as Sade Sati, which is calculated based on current Saturn transits relative to the natal Moon position).</p>
+        </section>
+
+        <!-- 13. Prompt Compilation Pipeline -->
+        <section id="prompt">
+          <h2>13. Prompt Compilation Pipeline</h2>
+          <p>Before querying the LLM, the backend compiles system rules, session data, and scripture context into a structured system prompt:</p>
+          
+          <div class="card">
+            <ol>
+              <li><strong>Conversation History:</strong> Inserts the last 5 chat turns to maintain conversational continuity.</li>
+              <li><strong>Conversation Summary:</strong> Adds a short summary of the previous assistant turn to keep the context size efficient.</li>
+              <li><strong>Intent Detection:</strong> Identifies query topics (e.g. Wealth, Career, Spirituality) to route queries (e.g., swapping to the specialized 18-section Financial System Prompt if wealth-related).</li>
+              <li><strong>User Profile:</strong> Injects birth coordinates and metadata.</li>
+              <li><strong>Horoscope Context:</strong> Appends the ascendant, moon sign, nakshatras, house lordships, and planetary degrees.</li>
+              <li><strong>Yogas & Doshas:</strong> Injects identified astrological combinations.</li>
+              <li><strong>Retrieved Gita context:</strong> Appends matching passages from the vector store search.</li>
+              <li><strong>User Question:</strong> Appends the active query.</li>
+            </ol>
+          </div>
+        </section>
+
+        <!-- 14. Sequence Diagrams -->
+        <section id="sequences">
+          <h2>14. Sequence Diagrams</h2>
+          
+          <details>
+            <summary>Horoscope Calculation & Seeding Flow</summary>
+            <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User
+    participant Frontend
+    participant API as FastAPI Backend
+    participant Ephem as Swiss Ephemeris
+    participant Disk as Profile File Store
+
+    User->>Frontend: Submit Birth Details Form
+    Frontend->>API: POST /api/chart (details)
+    API->>Ephem: Convert Date/Time to JD
+    API->>Ephem: Calculate Planetary Longitudes
+    API->>Ephem: Calculate House Cusps & Ascendant
+    API->>API: Compute Yogas & Natal Doshas
+    API->>Disk: Save Profile JSON (user_id.json)
+    API-->>Frontend: Return Chart Summary JSON
+    Frontend->>Frontend: Hydrate UI & Transition to Ready
+            </div>
+          </details>
+
+          <details>
+            <summary>Chat & Context Retrieval Flow</summary>
+            <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User
+    participant Frontend
+    participant API as FastAPI Backend
+    participant Chroma as ChromaDB Vector Store
+    participant Groq as Groq API endpoint
+
+    User->>Frontend: Enter chat question
+    Frontend->>API: POST /api/chat (message, session_id, user_id)
+    API->>API: Check session cache for chart data
+    Note over API: If empty, load from ProfileStore
+    API->>API: Query preprocessor (clean query)
+    API->>Chroma: Query collection (Gita Chapter 16)
+    Chroma-->>API: Return matching verses
+    API->>API: Compile prompt (13 blocks)
+    API->>Groq: HTTP POST Chat Completion API request
+    Groq-->>API: Generated text response
+    API->>API: Append turn to session memory history
+    API-->>Frontend: Deliver reply payload
+    Frontend->>User: Display response markdown
+            </div>
+          </details>
+
+          <details>
+            <summary>Session Restoration Flow</summary>
+            <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User
+    participant Browser as Client Browser
+    participant API as FastAPI Backend
+    participant Disk as Profile File Store
+
+    User->>Browser: Refresh page / Open tab
+    Browser->>Browser: Read user_id from localStorage
+    Browser->>API: GET /api/profile/{user_id}
+    API->>Disk: Check and load user_id.json
+    alt Profile Exists
+        Disk-->>API: Load JSON profile payload
+        API->>API: Hydrate transient SessionStore memory
+        API->>API: Compute current transits (Sade Sati)
+        API-->>Browser: Return ProfileResponse (exists=true, birth_details, chart_summary)
+        Browser->>Browser: Skip form, load chat interface
+    else Profile Not Found
+        API-->>Browser: Return ProfileResponse (exists=false)
+        Browser->>Browser: Show Welcome Message & Birth form
+    end
+            </div>
+          </details>
+        </section>
+
+        <!-- 15. Class Diagrams -->
+        <section id="classes">
+          <h2>15. Class Diagrams</h2>
+          <div class="mermaid">
+classDiagram
+  class RAGPipeline {
+    +collection_name: str
+    +data_file_path: str
+    +store: ChromaStore
+    +retriever: Retriever
+    +query_engine: QueryEngine
+    +__init__(collection_name, data_file_path)
+    +search_wisdom(query, top_k) list
+    -_seed_database()
+  }
+
+  class ChromaStore {
+    +collection_name: str
+    +db_path: str
+    +embedder: Embedder
+    +client: PersistentClient
+    +collection: Collection
+    +__init__(collection_name, db_path)
+    +add_documents(documents, metadatas, ids)
+    +query(query_text, top_k) list
+    +delete(ids)
+    +reset()
+    +count() int
+  }
+
+  class Embedder {
+    +vocabulary: list
+    +vocab_size: int
+    +__init__()
+    +get_embedding(text) list
+  }
+
+  class Retriever {
+    +store: ChromaStore
+    +__init__(store)
+    +retrieve(query, top_k) list
+  }
+
+  class ProfileStore {
+    +profiles_dir: str
+    -_lock: Lock
+    +__init__(profiles_dir)
+    +has_profile(user_id) bool
+    +save_profile(user_id, birth_details, natal_chart, chart_response)
+    +load_profile(user_id) dict
+    +delete_profile(user_id) bool
+    -_atomic_write(path, data)
+  }
+
+  class SessionStore {
+    +sessions: dict
+    +create_session(session_id, api_key) dict
+    +get_session(session_id) dict
+    +save_chart(session_id, chart_data)
+    +add_message(session_id, role, content)
+    +get_history(session_id) list
+    +clear_session(session_id)
+  }
+
+  RAGPipeline --> ChromaStore : uses
+  RAGPipeline --> Retriever : uses
+  ChromaStore --> Embedder : encodes with
+  Retriever --> ChromaStore : queries
+          </div>
+        </section>
+
+        <!-- 16. Component Interaction Diagram -->
+        <section id="interactions">
+          <h2>16. Component Interaction Diagram</h2>
+          <div class="mermaid">
+graph LR
+    subgraph Frontend Client
+        A[React UI] <--> B[Vite LocalStorage]
+        A <--> C[OSM Map Nominatim API]
+    end
+    subgraph FastAPI Backend App
+        D[FastAPI Router] <--> E[Vedic Astrology Engine]
+        D <--> F[Memory / Session Store]
+        D <--> G[RAG Service]
+        D <--> H[Profile Store]
+    end
+    subgraph External APIs
+        I[Swiss Ephemeris Bindings]
+        J[Groq Inference Server]
+    end
+    subgraph Local Disk Database
+        K[ChromaDB Vector SQLite]
+        L[JSON Profile Storage]
+    end
+    
+    A <-->|HTTP POST / GET| D
+    E <--> I
+    G <--> K
+    H <--> L
+    D <-->|HTTP API requests| J
+    F -.-> H
+          </div>
+        </section>
+
+        <!-- 17. Request Lifecycle -->
+        <section id="lifecycle">
+          <h2>17. Request Lifecycle</h2>
+          <p>Every chat request from the browser to the backend and back follows a structured step-by-step lifecycle:</p>
+          
+          <div class="card">
+            <ol>
+              <li><strong>Dispatch:</strong> The client triggers an asynchronous fetch request (`POST /api/chat`) containing the message payload and session tokens.</li>
+              <li><strong>Session Verification:</strong> The FastAPI backend intercepts the request and verifies the session token. If the session has expired, it attempts to restore the profile using the persistent user UUID.</li>
+              <li><strong>Intent Analysis:</strong> The system pre-processes the query to identify search intents (e.g. classifying "wealth" keywords to select the specialized financial prompt).</li>
+              <li><strong>Vector Store Query:</strong> The RAG engine calculates text query vectors, queries ChromaDB, and returns the top 2 matching verses from the Bhagavad Gita database.</li>
+              <li><strong>Prompt Compilation:</strong> The prompt builder synthesizes system personas, conversation history, user profiles, horoscope data, and retrieved scriptures.</li>
+              <li><strong>Inference Request:</strong> The backend dispatches the compiled prompt payload to the Groq API endpoint.</li>
+              <li><strong>Response Delivery:</strong> The server receives the text response, appends the turn to the session history cache, and returns the markdown response to the client UI.</li>
+            </ol>
+          </div>
+        </section>
+
+        <!-- 18. Error Handling -->
+        <section id="errors">
+          <h2>18. Error Handling</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Error Scenario</th>
+                <th>Detection System</th>
+                <th>System Fallback & Response</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Invalid Birth Details</strong></td>
+                <td>Pydantic / Date Parser</td>
+                <td>Catches parse exceptions and returns status `422 Unprocessable Entity` with details.</td>
+              </tr>
+              <tr>
+                <td><strong>Missing Location Coords</strong></td>
+                <td>Nominatim API / Form validator</td>
+                <td>The frontend blocks form submission and prompts the user to select a valid city from the map search.</td>
+              </tr>
+              <tr>
+                <td><strong>API / Groq Timeout</strong></td>
+                <td>Requests Session timeout</td>
+                <td>Retries using the backup API key. If both fail, it returns an offline Vedic response.</td>
+              </tr>
+              <tr>
+                <td><strong>Vector Database Empty</strong></td>
+                <td>Seeding checker</td>
+                <td>Automatically runs document loaders to parse scripture PDFs and re-index the database.</td>
+              </tr>
+              <tr>
+                <td><strong>No Search Matches</strong></td>
+                <td>Retriever empty list</td>
+                <td>Skips scripture sections in the prompt compiler and relies on default spiritual guidance.</td>
+              </tr>
+              <tr>
+                <td><strong>Invalid / Expired Session</strong></td>
+                <td>Session store query check</td>
+                <td>Checks the persistent profile store for the user's UUID and restores the profile state silently.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- 19. Session Management -->
+        <section id="session">
+          <h2>19. Session Management</h2>
+          <p>Session state is synchronized across frontend and backend environments:
+            <ul>
+              <li><strong>Persistent UUID:</strong> Generated via `crypto.randomUUID()` on first visit and stored in the browser's `localStorage` as `kundli_user_id`.</li>
+              <li><strong>Transient Session ID:</strong> Generated as a random alphanumeric string on page load to track separate conversations in the in-memory backend cache.</li>
+              <li><strong>Restore Flow:</strong> On page refresh, the client queries `/api/profile/{uuid}`. If found, the backend restores session state and the UI transitions to the ready state, skipping form wizard steps.</li>
+              <li><strong>Manual Resets:</strong> Clicking "Update Birth Details" sends a `DELETE` request, removes the persistent profile, clears session variables, and resets the UI state.</li>
+            </ul>
+          </p>
+        </section>
+
+        <!-- 20. Security Specs -->
+        <section id="security">
+          <h2>20. Security Specs</h2>
+          <p>Security protections are implemented across the stack:
+            <ul>
+              <li><strong>Input Validation:</strong> FastAPI uses Pydantic schemas to validate and sanitize incoming request parameters.</li>
+              <li><strong>Zodiac Calculation Sanity Checks:</strong> Coordinates are validated to ensure latitudes fall within `[-90, 90]` and longitudes fall within `[-180, 180]`.</li>
+              <li><strong>API Key Isolation:</strong> LLM keys are restricted to backend environment variables, shielding keys from client exposure.</li>
+              <li><strong>CORS Policy:</strong> FastAPI CORS middleware restricts API access to authorized domains (e.g. localhost during development, production host on Render).</li>
+              <li><strong>Prompt Formatting:</strong> Prompts are compiled inside structured block templates to prevent prompt injection attempts.</li>
+            </ul>
+          </p>
+        </section>
+
+        <!-- 21. Deployment Architecture -->
+        <section id="deployment">
+          <h2>21. Deployment Architecture</h2>
+          <p>Kundli AI is deployed in a unified production configuration on Render:
+            <ul>
+              <li><strong>React Client Page:</strong> Hosted as a Render Static Site, building from the React frontend folder.</li>
+              <li><strong>FastAPI Web Application:</strong> Deployed as a Render Web Service running Uvicorn.</li>
+              <li><strong>Database Persistence:</strong> ChromaDB vector stores and persistent profile JSON files are written directly to local folder paths (`backend/chroma_db/`, `backend/data/profiles/`).</li>
+              <li><strong>Storage Limitations:</strong> Since Render containers use ephemeral filesystems, files will reset on container restarts. This is noted in the roadmap to be migrated to cloud databases during the scaling phase.</li>
+            </ul>
+          </p>
+        </section>
+
+        <!-- 22. Future Enhancements -->
+        <section id="future">
+          <h2>22. Future Enhancements</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Feature Expansion</th>
+                <th>Technical Requirement</th>
+                <th>Target Phase</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Secure User Authentication</strong></td>
+                <td>OAuth 2.0 / JWT tokens integration</td>
+                <td>Scaling Phase 2</td>
+              </tr>
+              <tr>
+                <td><strong>Multi-Language Support</strong></td>
+                <td>Internationalization (i18n) translation libraries</td>
+                <td>Scaling Phase 2</td>
+              </tr>
+              <tr>
+                <td><strong>Voice Chat Integration</strong></td>
+                <td>Web Speech API / Speech-To-Text services</td>
+                <td>Scaling Phase 3</td>
+              </tr>
+                <td><strong>Cloud Vector Database</strong></td>
+                <td>Pinecone / Chroma Cloud storage migration</td>
+                <td>Scaling Phase 2</td>
+              </tr>
+              <tr>
+                <td><strong>Persistent Chat Log DB</strong></td>
+                <td>PostgreSQL / Redis session storage</td>
+                <td>Scaling Phase 2</td>
+              </tr>
+              <tr>
+                <td><strong>Inference Streaming</strong></td>
+                <td>FastAPI EventSource / Server-Sent Events (SSE)</td>
+                <td>Scaling Phase 3</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- 23. Design Decisions -->
+        <section id="decisions">
+          <h2>23. Design Decisions</h2>
+          
+          <details>
+            <summary>Design Decision: Why FastAPI instead of Django/Node?</summary>
+            <p style="margin-top:10px;">FastAPI provides high-performance asynchronous request handling and automatic OpenAPI documentation generation. It features native integration with Python's scientific ecosystem (e.g. `pyswisseph` bindings), making it a natural choice over Node or Django.</p>
+          </details>
+
+          <details>
+            <summary>Design Decision: Why ChromaDB local persistent files?</summary>
+            <p style="margin-top:10px;">ChromaDB offers a lightweight vector database that runs embedded in python processes. By storing indexes locally, we avoid the overhead and costs of managing external cloud vector services for single-chapter scripture searches.</p>
+          </details>
+
+          <details>
+            <summary>Design Decision: Why direct REST calls for LLM instead of LangChain?</summary>
+            <p style="margin-top:10px;">Direct HTTP requests reduce library dependencies, speed up application startup times, and provide complete control over prompt payloads without the complexity of heavy frameworks.</p>
+          </details>
+        </section>
+
+        <!-- 24. Known Limitations -->
+        <section id="limitations">
+          <h2>24. Known Limitations</h2>
+          <ul>
+            <li><strong>Scripture Coverage:</strong> The local vector store search is currently limited to Chapter 16 of the Bhagavad Gita. General queries fallback to default Vedic guidance.</li>
+            <li><strong>Disk Reset:</strong> Stored profile files are local. If the Render web service container restarts, local user profiles will clear unless persistent volume mounts are configured.</li>
+            <li><strong>Local Embeddings:</strong> The embedding system uses a custom term-frequency vectorizer. High-level conceptual matching (semantic synonyms) is limited compared to dense Transformers, but operates at virtually 0ms local compute overhead.</li>
+          </ul>
+        </section>
+
+        <!-- 25. Conclusion -->
+        <section id="conclusion">
+          <h2>25. Conclusion</h2>
+          <p>The Kundli AI platform features a robust, decoupled architecture that pairs sidereal Vedic computations with local semantic retrieval. By implementing client-side UUID persistence, the application matches modern user experience patterns by eliminating the friction of manual logins. The structured layout establishes a clear roadmap for scaling the database, storage, and agent components in future phases.</p>
+        </section>
+
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Floating Back to HLD button -->
+  <a href="index.html" class="floating-back-btn">
+    <span style="font-family: Arial, sans-serif;">←</span> Back to HLD
+  </a>
+
+  <!-- Prism.js for syntax highlighting -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+  <!-- Sidebar active section highlighter script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const sections = document.querySelectorAll('section');
+      const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+      window.addEventListener('scroll', () => {
+        let currentSectionId = '';
+        sections.forEach(section => {
+          const sectionTop = section.offsetTop;
+          const sectionHeight = section.clientHeight;
+          if (window.scrollY >= (sectionTop - 150)) {
+            currentSectionId = section.getAttribute('id');
+          }
+        });
+
+        sidebarLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${currentSectionId}`) {
+            link.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>
