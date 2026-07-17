@@ -79,15 +79,28 @@ def handle_chat(req: ChatRequest):
                 profile=profile
             )
         else:
-            user_prompt = assemble_unified_prompt(
-                query=req.message,
-                chart_data=chart_data,
-                profile=profile,
-                history=history,
-                passages=gita_passages,
-                intent=detected_intent,
-                selected_charts=selected_charts,
-            )
+            try:
+                user_prompt = assemble_unified_prompt(
+                    query=req.message,
+                    chart_data=chart_data,
+                    profile=profile,
+                    history=history,
+                    passages=gita_passages,
+                    intent=detected_intent,
+                    selected_charts=selected_charts,
+                )
+            except TypeError as e:
+                if "unexpected keyword argument" in str(e) or "selected_charts" in str(e):
+                    user_prompt = assemble_unified_prompt(
+                        query=req.message,
+                        chart_data=chart_data,
+                        profile=profile,
+                        history=history,
+                        passages=gita_passages,
+                        intent=detected_intent,
+                    )
+                else:
+                    raise e
             
         # 6. Invoke LLM (Groq or Claude based on setup)
         # Use session-saved API key if provided, else use system environment keys
