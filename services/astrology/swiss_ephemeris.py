@@ -149,7 +149,12 @@ def calculate_positions_raw(jd: float) -> dict:
 
 def get_sidereal_positions(jd: float) -> dict:
     """Calculate sidereal positions of planets using Lahiri Ayanamsa."""
-    ayanamsa = get_lahiri_ayanamsa(jd)
+    if SWISSEPH_AVAILABLE:
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
+        ayanamsa = swe.get_ayanamsa_ut(jd)
+    else:
+        ayanamsa = get_lahiri_ayanamsa(jd)
+        
     tropical_pos = calculate_positions_raw(jd)
     sidereal_pos = {}
     for name, long in tropical_pos.items():
@@ -158,36 +163,43 @@ def get_sidereal_positions(jd: float) -> dict:
 
 def get_house_cusps(jd: float, lat: float, lon: float) -> list:
     """Compute houses using Whole Sign system (standard in Vedic Astrology)."""
-    # First, calculate Ascendant (Lagna)
-    # The ascendant is calculated based on local sidereal time.
-    # Standard formula for Sidereal Time at Greenwich (GST) in hours:
-    # GST = 6.697374558 + 0.06570982441908 * d + 1.00273790935 * UT
-    # Where d is days since J2000.0
-    d = jd - 2451545.0
-    # Standard calculation for local ascendant:
-    t = d / 36525.0
-    # Local sidereal time
-    gst = (18.697374558 + 24.06570982441908 * d) % 24.0
-    lst = (gst + lon / 15.0) % 24.0
-    ramc = lst * 15.0 # Right Ascension of Meridian Cusp in degrees
-    
-    # Obliquity of ecliptic
-    eps = math.radians(23.4392911 - 46.8150 * t / 3600.0)
-    
-    # Ascendant formula
-    # tan(Asc) = -cos(RAMC) / (sin(RAMC)*cos(eps) + tan(lat)*sin(eps))
-    ramc_rad = math.radians(ramc)
-    lat_rad = math.radians(lat)
-    
-    numerator = -math.cos(ramc_rad)
-    denominator = math.sin(ramc_rad) * math.cos(eps) + math.tan(lat_rad) * math.sin(eps)
-    
-    ascendant_tropical = math.degrees(math.atan2(numerator, denominator)) % 360.0
-    
-    # Offset by Lahiri Ayanamsa for sidereal Ascendant
-    ayanamsa = get_lahiri_ayanamsa(jd)
-    ascendant_sidereal = (ascendant_tropical - ayanamsa) % 360.0
-    
+    if SWISSEPH_AVAILABLE:
+        ephem_path = os.path.join(os.path.dirname(__file__), '..', '..', 'backend', 'data', 'ephemeris')
+        if os.path.exists(ephem_path):
+            swe.set_ephe_path(ephem_path)
+            
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
+        ayanamsa = swe.get_ayanamsa_ut(jd)
+        
+        # Calculate house cusps and additional points (ascmc[0] is the Ascendant)
+        cusps, ascmc = swe.houses(jd, lat, lon, b'W')
+        ascendant_tropical = ascmc[0]
+        ascendant_sidereal = (ascendant_tropical - ayanamsa) % 360.0
+    else:
+        # Fallback to analytical model
+        # Calculate Ascendant (Lagna)
+        d = jd - 2451545.0
+        t = d / 36525.0
+        gst = (18.697374558 + 24.06570982441908 * d) % 24.0
+        lst = (gst + lon / 15.0) % 24.0
+        ramc = lst * 15.0 # Right Ascension of Meridian Cusp in degrees
+        
+        # Obliquity of ecliptic
+        eps = math.radians(23.4392911 - 46.8150 * t / 3600.0)
+        
+        # Standard Astronomical Ascendant formula (correcting quadrant signs)
+        ramc_rad = math.radians(ramc)
+        lat_rad = math.radians(lat)
+        
+        numerator = math.cos(ramc_rad)
+        denominator = -math.sin(ramc_rad) * math.cos(eps) - math.tan(lat_rad) * math.sin(eps)
+        
+        ascendant_tropical = math.degrees(math.atan2(numerator, denominator)) % 360.0
+        
+        # Offset by Lahiri Ayanamsa for sidereal Ascendant
+        ayanamsa = get_lahiri_ayanamsa(jd)
+        ascendant_sidereal = (ascendant_tropical - ayanamsa) % 360.0
+        
     # Whole Sign House System:
     # 1st house starts at 0 degrees of the sign of Ascendant.
     # House 1 = sign_idx of ascendant, House 2 = (sign_idx + 1) % 12, etc.
