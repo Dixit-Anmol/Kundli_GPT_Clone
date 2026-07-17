@@ -8,6 +8,11 @@ from services.astrology.horoscope import calculate_horoscope_data
 from services.memory.session import session_store
 from services.memory.profile_store import profile_store
 
+# New astrology engine imports
+from backend.astrology.types import BirthDetails
+from backend.astrology.chart_generator import generate_all_charts
+from backend.astrology.chart_storage import chart_cache
+
 router = APIRouter()
 
 def find_timezone_offset(lat: float, lon: float, date_str: str) -> tuple:
@@ -53,7 +58,7 @@ def build_chart(req: ChartRequest):
         dt = datetime.strptime(req.date_str, "%Y-%m-%d")
         tm = datetime.strptime(req.time_str, "%H:%M:%S")
         
-        # Calculate full horoscope data
+        # Calculate full horoscope data (legacy path, still used for session/response)
         chart_data = calculate_horoscope_data(
             year=dt.year, month=dt.month, day=dt.day,
             hour=tm.hour, minute=tm.minute, second=tm.second,
@@ -74,6 +79,29 @@ def build_chart(req: ChartRequest):
         if req.api_key:
             # Save user API key for Anthropic/Groq calls if provided
             sess["key"] = req.api_key
+
+        # ---------------------------------------------------------------
+        # NEW: Generate ALL divisional charts via the new astrology engine
+        # ---------------------------------------------------------------
+        birth = BirthDetails(
+            name=req.name,
+            date_of_birth=req.date_str,
+            time_of_birth=req.time_str,
+            latitude=req.latitude,
+            longitude=req.longitude,
+            timezone_offset=offset,
+        )
+
+        # Generate all 15 divisional charts + global calculations
+        bundle = generate_all_charts(birth)
+
+        # Cache the full bundle (keyed by session_id, or user_id if available)
+        cache_key = req.user_id or req.session_id
+        chart_cache.store(cache_key, bundle)
+
+        # Store the bundle dict in session for chat access
+        sess["chart_bundle"] = bundle.to_dict()
+        # ---------------------------------------------------------------
             
         meta = chart_data["metadata"]
         

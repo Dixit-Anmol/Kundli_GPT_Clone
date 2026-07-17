@@ -7,9 +7,13 @@ from services.memory.history import ChatHistory
 from services.rag.bg_16 import BG16Pipeline
 from services.prompts.system import get_system_prompt
 from services.prompts.horoscope import build_horoscope_prompt
-from services.prompts.geeta import build_geeta_prompt, assemble_unified_prompt
+from services.prompts.geeta import build_geeta_prompt, assemble_unified_prompt, classify_intent
 from services.prompts.financial import is_financial_query, get_financial_system_prompt
 from services.llm.factory import LLMFactory
+
+# New astrology engine imports
+from backend.astrology.chart_storage import chart_cache
+from backend.astrology.chart_selector import select_charts_for_topic
 
 router = APIRouter()
 
@@ -41,7 +45,19 @@ def handle_chat(req: ChatRequest):
                 "session_count": len(history)
             }
             
-        # 2. Determine prompt style based on context and history
+        # 2. Classify user intent for topic-based chart selection
+        detected_intent = classify_intent(req.message)
+        
+        # 3. Load the full chart bundle from cache (if available)
+        cache_key = req.user_id or req.session_id
+        chart_bundle = session.get("chart_bundle") or chart_cache.load(cache_key)
+        
+        # 4. Select topic-specific charts for the LLM
+        selected_charts = None
+        if chart_bundle:
+            selected_charts = select_charts_for_topic(detected_intent, chart_bundle)
+            
+        # 5. Determine prompt style based on context and history
         # Use specialised financial system prompt when the query is finance-related
         if not (len(history) == 0) and is_financial_query(req.message):
             system_prompt = get_financial_system_prompt()
@@ -68,10 +84,12 @@ def handle_chat(req: ChatRequest):
                 chart_data=chart_data,
                 profile=profile,
                 history=history,
-                passages=gita_passages
+                passages=gita_passages,
+                intent=detected_intent,
+                selected_charts=selected_charts,
             )
             
-        # 3. Invoke LLM (Groq or Claude based on setup)
+        # 6. Invoke LLM (Groq or Claude based on setup)
         # Use session-saved API key if provided, else use system environment keys
         api_key = session.get("key")
         
@@ -81,7 +99,7 @@ def handle_chat(req: ChatRequest):
             
         response_text = client.generate(system_prompt, user_prompt)
         
-        # 4. Save chat turn to session history
+        # 7. Save chat turn to session history
         session_store.add_message(req.session_id, "user", req.message)
         session_store.add_message(req.session_id, "assistant", response_text)
         
