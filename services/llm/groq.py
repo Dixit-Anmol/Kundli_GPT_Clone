@@ -11,6 +11,9 @@ class GroqClient:
         fallback_key = os.environ.get("GROQ_API_KEY_FALLBACK")
         if fallback_key and fallback_key != self.api_key:
             keys_to_try.append(fallback_key)
+        fallback_key2 = os.environ.get("GROQ_API_KEY_FALLBACK2")
+        if fallback_key2 and fallback_key2 not in keys_to_try:
+            keys_to_try.append(fallback_key2)
             
         last_error_message = "No API key configured."
         for key in keys_to_try:

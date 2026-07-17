@@ -81,7 +81,8 @@ def assemble_unified_prompt(
     profile: dict = None,
     history: list = None,
     passages: list = None,
-    intent: str = None
+    intent: str = None,
+    selected_charts: dict = None,
 ) -> str:
     """Assembles all horoscope, user profile, and Gita context into the exact 13 ordered sections."""
     # Support both new (natal/dynamic split) and legacy flat chart_data formats
@@ -172,9 +173,30 @@ def assemble_unified_prompt(
         active = "Active" if d_val.get("is_present") else "Not Active"
         doshas_info += f"- {d_name.capitalize()}: Status: {active} | Description: {d_val.get('description', 'No affliction detected.')}\n"
 
-    # 11. Dashas
-    # Fallback to general current dasha block for scalability
-    dashas_formatted = "Current Mahadasha: Jupiter | Remaining: Approx. 5 years (General reference)."
+    # 11. Dashas — use selected_charts if available
+    dashas_formatted = ""
+    if selected_charts and "dasha" in selected_charts:
+        dasha_info = selected_charts["dasha"]
+        maha = dasha_info.get("current_mahadasha")
+        antar = dasha_info.get("current_antardasha")
+        pratyantar = dasha_info.get("current_pratyantar")
+        if maha:
+            m_planet = maha.get("planet", "Unknown") if isinstance(maha, dict) else getattr(maha, 'planet', 'Unknown')
+            m_start = maha.get("start", "") if isinstance(maha, dict) else getattr(maha, 'start', '')
+            m_end = maha.get("end", "") if isinstance(maha, dict) else getattr(maha, 'end', '')
+            dashas_formatted += f"Mahadasha: {m_planet.capitalize()} ({m_start} to {m_end})\n"
+        if antar:
+            a_planet = antar.get("planet", "Unknown") if isinstance(antar, dict) else getattr(antar, 'planet', 'Unknown')
+            a_start = antar.get("start", "") if isinstance(antar, dict) else getattr(antar, 'start', '')
+            a_end = antar.get("end", "") if isinstance(antar, dict) else getattr(antar, 'end', '')
+            dashas_formatted += f"Antardasha: {a_planet.capitalize()} ({a_start} to {a_end})\n"
+        if pratyantar:
+            p_planet = pratyantar.get("planet", "Unknown") if isinstance(pratyantar, dict) else getattr(pratyantar, 'planet', 'Unknown')
+            p_start = pratyantar.get("start", "") if isinstance(pratyantar, dict) else getattr(pratyantar, 'start', '')
+            p_end = pratyantar.get("end", "") if isinstance(pratyantar, dict) else getattr(pratyantar, 'end', '')
+            dashas_formatted += f"Pratyantar Dasha: {p_planet.capitalize()} ({p_start} to {p_end})\n"
+    if not dashas_formatted:
+        dashas_formatted = "Current Mahadasha: (not computed)"
 
     # 12. Retrieved Bhagavad Gita Context
     gita_passages = ""
@@ -183,6 +205,56 @@ def assemble_unified_prompt(
             gita_passages += f"Verse Reference {idx+1}:\n{passg}\n\n"
     else:
         gita_passages = "No specific verse references available. Use general teachings of Karma Yoga and Self-Realization."
+
+    # 14. Divisional Charts (from topic-based selector)
+    divisional_info = ""
+    if selected_charts and "charts" in selected_charts:
+        for chart_name, chart_obj in selected_charts["charts"].items():
+            if chart_name == "D1":
+                continue  # D1 data is already rendered above in planetary positions and houses
+            divisional_info += f"\n--- {chart_name} Chart ---\n"
+            # Planet placements in this varga
+            p_positions = chart_obj.get("planet_positions", {})
+            p_house_map = chart_obj.get("planet_house_mapping", {})
+            p_sign_map = chart_obj.get("planet_sign_mapping", {})
+            if p_positions and isinstance(p_positions, dict):
+                for p_name, p_data in p_positions.items():
+                    if isinstance(p_data, dict):
+                        sign = p_data.get("sign", p_sign_map.get(p_name, "?"))
+                        house = p_data.get("house", p_house_map.get(p_name, "?"))
+                        dignity = p_data.get("dignity", "")
+                        divisional_info += f"  {p_name.capitalize()}: {sign} (House {house}) [{dignity}]\n"
+                    else:
+                        divisional_info += f"  {p_name.capitalize()}: Sign {p_sign_map.get(p_name, '?')} House {p_house_map.get(p_name, '?')}\n"
+            elif p_house_map:
+                for p_name, house in p_house_map.items():
+                    sign = p_sign_map.get(p_name, "?")
+                    divisional_info += f"  {p_name.capitalize()}: {sign} (House {house})\n"
+            # Yogas in this varga
+            v_yogas = chart_obj.get("yogas", [])
+            if v_yogas:
+                divisional_info += f"  Yogas: {', '.join(y.get('name', str(y)) if isinstance(y, dict) else str(y) for y in v_yogas)}\n"
+    if not divisional_info:
+        divisional_info = "No additional divisional charts selected for this topic."
+
+    # 15. Current Transits (Gochar)
+    gochar_info = ""
+    if selected_charts and "gochar" in selected_charts:
+        gochar = selected_charts["gochar"]
+        t_signs = gochar.get("transit_signs", {})
+        t_houses = gochar.get("transit_houses", {})
+        t_aspects = gochar.get("transit_aspects", [])
+        if t_signs:
+            gochar_info += "Current Planetary Transits:\n"
+            for p_name, sign in t_signs.items():
+                house = t_houses.get(p_name, "?")
+                gochar_info += f"  Transit {p_name.capitalize()}: {sign} (House {house})\n"
+        if t_aspects:
+            gochar_info += "Transit Aspects:\n"
+            for asp in t_aspects[:10]:  # Limit to 10 most important
+                gochar_info += f"  {asp}\n"
+    if not gochar_info:
+        gochar_info = "Transit data not available for this topic."
 
     # Future Scalability Marker
     scalability_marker = "[Future Extensibility: Sacred scriptures, bank statements, daily mood journals, health bio-data remain offline.]"
@@ -223,6 +295,12 @@ def assemble_unified_prompt(
 
 [13. RETRIEVED BHAGAVAD GITA CONTEXT]
 {gita_passages}
+
+[14. DIVISIONAL CHARTS]
+{divisional_info}
+
+[15. CURRENT TRANSITS (GOCHAR)]
+{gochar_info}
 
 {scalability_marker}
 
