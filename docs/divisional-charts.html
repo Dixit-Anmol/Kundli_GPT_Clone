@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Divisional Charts — The Layers of the Sky</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#F8F2E4;
+    --void-2:#EFE6CF;
+    --panel:#FFFDF7;
+    --parchment:#241F38;
+    --parchment-dim:#4A4460;
+    --gold:#B8863B;
+    --gold-bright:#8C6321;
+    --copper:#A85C32;
+    --copper-bright:#7C3F1E;
+    --ink:#FBF7EC;
+    --text-light:#241F38;
+    --text-muted:#6B6480;
+    --line:rgba(184,134,59,0.32);
+    --shadow-glow:0 14px 34px rgba(184,134,59,0.16);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--void);
+    color:var(--text-light);
+    font-family:'Inter',sans-serif;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--gold);color:var(--ink);}
+
+  /* starfield backdrop */
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(184,134,59,0.5) 50%, transparent 51%),
+      radial-gradient(1px 1px at 75% 15%, rgba(184,134,59,0.35) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 60% 70%, rgba(184,134,59,0.4) 50%, transparent 51%),
+      radial-gradient(1px 1px at 90% 55%, rgba(184,134,59,0.3) 50%, transparent 51%),
+      radial-gradient(1px 1px at 35% 85%, rgba(184,134,59,0.3) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 10% 65%, rgba(184,134,59,0.4) 50%, transparent 51%),
+      radial-gradient(1px 1px at 50% 45%, rgba(184,134,59,0.25) 50%, transparent 51%);
+    background-repeat:repeat;
+    background-size:600px 600px;
+    opacity:0.4;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:600;letter-spacing:0.01em;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.72rem;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--gold-bright);
+  }
+  code, .mono{font-family:'JetBrains Mono',monospace;}
+
+  section{position:relative; z-index:1;}
+
+  .wrap{max-width:1100px;margin:0 auto;padding:0 32px;}
+
+  /* NAV */
+  nav{
+    position:sticky; top:0; z-index:50;
+    backdrop-filter:blur(10px);
+    background:rgba(248,242,228,0.85);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Cormorant Garamond',serif;font-size:1.25rem;color:var(--parchment);}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--gold-bright);box-shadow:0 0 10px var(--gold-bright);}
+  nav ul{list-style:none;display:flex;gap:28px;}
+  nav a{color:var(--text-muted);text-decoration:none;font-size:0.85rem;letter-spacing:0.02em;transition:color .2s;}
+  nav a:hover{color:var(--gold-bright);}
+  @media (max-width:760px){ nav ul{display:none;} }
+
+  /* HERO */
+  .hero{padding:96px 0 60px;position:relative;}
+  .hero-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:center;}
+  @media (max-width:900px){ .hero-grid{grid-template-columns:1fr;} }
+  .hero h1{font-size:clamp(2.6rem,5vw,4.2rem);line-height:1.05;color:var(--parchment);margin:14px 0 22px;}
+  .hero h1 em{color:var(--gold-bright);font-style:italic;}
+  .hero p.lead{font-size:1.08rem;color:var(--text-muted);max-width:46ch;margin-bottom:28px;}
+  .scale-note{
+    display:inline-flex;gap:10px;align-items:center;
+    border:1px solid var(--line);
+    padding:10px 16px;border-radius:999px;
+    font-size:0.82rem;color:var(--text-muted);
+  }
+  .scale-note b{color:var(--gold-bright);font-weight:600;}
+
+  .orbit-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
+  .orbit-wrap svg{width:100%;max-width:480px;height:auto;}
+  .ring{fill:none;stroke:var(--gold);stroke-opacity:0.5;stroke-width:1;}
+  .ring-label{font-family:'JetBrains Mono',monospace;font-size:11px;fill:var(--text-muted);}
+  .ring-label.hi{fill:var(--gold-bright);}
+  .core{fill:var(--gold-bright);filter:drop-shadow(0 0 14px rgba(184,134,59,0.9));}
+  .spin-slow{transform-origin:300px 300px;animation:spin 140s linear infinite;}
+  .twinkle{animation:twinkle 3.4s ease-in-out infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes twinkle{0%,100%{opacity:0.5;}50%{opacity:1;}}
+  @media (prefers-reduced-motion:reduce){ .spin-slow,.twinkle{animation:none;} }
+
+  /* SECTION HEADERS */
+  .section-head{max-width:640px;margin-bottom:44px;}
+  .section-head h2{font-size:clamp(1.9rem,3vw,2.6rem);color:var(--parchment);margin-top:10px;}
+  .section-head p{color:var(--text-muted);margin-top:12px;font-size:1rem;}
+  section.block{padding:80px 0;}
+  section.block.alt{background:linear-gradient(180deg,transparent,rgba(22,26,66,0.5),transparent);}
+
+  /* MAP ANALOGY */
+  .zoom-path{
+    display:flex;align-items:center;flex-wrap:wrap;gap:0;
+    border:1px solid var(--line); border-radius:16px;
+    padding:28px; background:var(--panel);
+  }
+  .zoom-step{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    padding:10px 18px; flex:1; min-width:100px; text-align:center;
+  }
+  .zoom-step .lvl{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--parchment);}
+  .zoom-step .tag{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--gold-bright);letter-spacing:0.08em;}
+  .zoom-arrow{color:var(--copper-bright);font-size:1.3rem;opacity:0.7;}
+  @media (max-width:760px){ .zoom-arrow{transform:rotate(90deg);} }
+
+  /* CORRELATION EXAMPLE */
+  .correlation{display:grid;grid-template-columns:1fr;gap:16px;}
+  .broad-claim{
+    background:var(--parchment); color:var(--ink);
+    border-radius:14px; padding:22px 26px;
+    font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-style:italic;
+    position:relative;
+  }
+  .broad-claim::before{content:"D1 says";position:absolute;top:-11px;left:22px;background:var(--copper);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;padding:4px 10px;border-radius:999px;text-transform:uppercase;}
+  .confirm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:6px;}
+  @media (max-width:760px){ .confirm-grid{grid-template-columns:1fr;} }
+  .confirm-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px;
+  }
+  .confirm-card .code{color:var(--gold-bright);font-weight:600;}
+  .confirm-card p{color:var(--text-muted);font-size:0.92rem;margin-top:6px;}
+  .conclusion{
+    margin-top:8px; border-left:3px solid var(--gold);
+    padding:14px 20px; color:var(--parchment-dim); font-size:0.98rem; background:rgba(201,162,59,0.06);
+    border-radius:0 10px 10px 0;
+  }
+
+  /* VARGA CARD GRID */
+  .varga-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;}
+  .varga-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px;
+    transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+  }
+  .varga-card:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:var(--shadow-glow);}
+  .varga-card .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+  .varga-card .code{
+    font-family:'JetBrains Mono',monospace; font-size:1.5rem; color:var(--gold-bright); font-weight:500;
+  }
+  .varga-card .sanskrit{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--text-muted);font-size:0.95rem;margin-top:2px;}
+  .meter{display:flex;gap:3px;}
+  .meter span{width:7px;height:7px;border-radius:50%;background:rgba(201,162,59,0.2);}
+  .meter span.on{background:var(--gold-bright);box-shadow:0 0 6px rgba(184,134,59,0.7);}
+  .varga-card ul{list-style:none;margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;}
+  .varga-card li{
+    font-size:0.76rem; color:var(--parchment-dim);
+    background:rgba(34,29,53,0.06);
+    border:1px solid rgba(34,29,53,0.1);
+    padding:4px 10px; border-radius:999px;
+  }
+  .varga-card .note{
+    margin-top:14px; font-size:0.82rem; color:var(--copper-bright);
+    border-top:1px dashed var(--line); padding-top:10px;
+  }
+
+  /* TABLE */
+  .table-wrap{
+    border:1px solid var(--line); border-radius:14px; overflow:hidden;
+    background:var(--panel);
+  }
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    text-align:left; font-family:'JetBrains Mono',monospace; font-size:0.7rem;
+    letter-spacing:0.1em; text-transform:uppercase; color:var(--gold-bright);
+    padding:16px 20px; border-bottom:1px solid var(--line);
+    background:rgba(201,162,59,0.06);
+  }
+  tbody td{padding:14px 20px;border-bottom:1px solid rgba(201,162,59,0.08);font-size:0.92rem;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:rgba(201,162,59,0.05);}
+  .q-name{color:var(--parchment);font-weight:500;}
+  .pill{
+    display:inline-block; font-family:'JetBrains Mono',monospace; font-size:0.72rem;
+    background:rgba(201,162,59,0.12); color:var(--gold-bright);
+    padding:3px 9px; border-radius:6px; margin:2px 4px 2px 0;
+  }
+  .pill.extra{background:rgba(168,92,50,0.16);color:var(--copper-bright);}
+
+  /* PIPELINE */
+  .pipeline{display:flex;flex-direction:column;gap:0;}
+  .pstep{
+    display:grid; grid-template-columns:90px 1fr; gap:20px; align-items:flex-start;
+    padding:22px 0; border-bottom:1px solid var(--line); position:relative;
+  }
+  .pstep:last-child{border-bottom:none;}
+  .pstep .pnum{
+    font-family:'JetBrains Mono',monospace; color:var(--gold-bright); font-size:0.85rem;
+    display:flex; align-items:center; gap:10px;
+  }
+  .pstep .pnum::before{
+    content:""; width:10px; height:10px; border-radius:50%;
+    background:var(--void); border:2px solid var(--gold); flex-shrink:0;
+  }
+  .pstep h3{font-size:1.15rem;color:var(--parchment);margin-bottom:6px;}
+  .pstep p{color:var(--text-muted);font-size:0.92rem;}
+  .pstep .chips{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;}
+  .pstep .chips span{
+    font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--parchment-dim);
+    background:rgba(34,29,53,0.06); padding:3px 9px; border-radius:6px;
+    border:1px solid rgba(34,29,53,0.1);
+  }
+  .principle{
+    margin-top:26px; padding:20px 24px; border-radius:12px;
+    background:linear-gradient(135deg,rgba(201,162,59,0.1),rgba(168,92,50,0.08));
+    border:1px solid var(--line); font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-style:italic;
+    color:var(--parchment);
+  }
+
+  /* RECOMMENDATION */
+  .reco{display:grid;grid-template-columns:1.2fr 1fr;gap:28px;}
+  @media (max-width:900px){ .reco{grid-template-columns:1fr;} }
+  .core-list{display:flex;flex-direction:column;gap:12px;}
+  .core-item{
+    display:flex; gap:16px; align-items:center;
+    background:var(--panel); border:1px solid var(--gold); border-radius:12px;
+    padding:16px 18px;
+  }
+  .core-item .code{
+    font-family:'JetBrains Mono',monospace; color:var(--gold-bright); font-size:1.2rem;
+    width:46px; flex-shrink:0;
+  }
+  .core-item div p{font-size:0.85rem;color:var(--text-muted);}
+  .core-item div b{color:var(--parchment);font-weight:600;}
+  .side-box{
+    background:rgba(34,29,53,0.04); border:1px solid var(--line); border-radius:12px; padding:20px 22px;
+  }
+  .side-box h4{font-family:'JetBrains Mono',monospace;font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:12px;}
+  .side-box ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
+  .side-box li{font-size:0.9rem;color:var(--parchment-dim);padding-left:16px;position:relative;}
+  .side-box li::before{content:"✦";position:absolute;left:0;color:var(--copper-bright);font-size:0.7rem;top:4px;}
+  .side-box.later{margin-top:16px;}
+  .side-box.later li::before{content:"+";color:var(--text-muted);}
+
+  footer{padding:50px 0 70px;border-top:1px solid var(--line);margin-top:40px;}
+  footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+  footer p{font-size:0.82rem;color:var(--text-muted);}
+
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease, transform .7s ease;}
+  .reveal.in{opacity:1;transform:translateY(0);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span> Varga Vidya</div>
+    <ul>
+      <li><a href="index.html" style="color:var(--gold-bright);font-weight:600;">← System Architecture</a></li>
+      <li><a href="#why">Why</a></li>
+      <li><a href="#correlation">Correlation</a></li>
+      <li><a href="#charts">The 16 Charts</a></li>
+      <li><a href="#guide">Question Guide</a></li>
+      <li><a href="#pipeline">KundliGPT Pipeline</a></li>
+      <li><a href="#reco">Build Order</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">Vedic Astrology · Divisional Charts</div>
+      <h1>One birth chart.<br>Sixteen ways to <em>zoom in.</em></h1>
+      <p class="lead">The D1 chart is the master blueprint of a life. Varga charts re-divide that same blueprint to magnify one room at a time — marriage, wealth, career, children — the way a map zooms from a continent down to a single street.</p>
+      <div class="scale-note">D1 <b>= World Map</b> &nbsp;·&nbsp; D9 <b>= City</b> &nbsp;·&nbsp; D60 <b>= Street</b></div>
+    </div>
+    <div class="orbit-wrap">
+      <svg viewBox="0 0 600 600">
+        <g class="spin-slow">
+          <circle class="ring" cx="300" cy="300" r="40"/>
+          <circle class="ring" cx="300" cy="300" r="80"/>
+          <circle class="ring" cx="300" cy="300" r="120"/>
+          <circle class="ring" cx="300" cy="300" r="160"/>
+          <circle class="ring" cx="300" cy="300" r="205"/>
+          <circle class="ring" cx="300" cy="300" r="250"/>
+          <circle class="twinkle" cx="340" cy="260" r="2.2" fill="#8C6321"/>
+          <circle class="twinkle" cx="220" cy="380" r="1.8" fill="#8C6321" style="animation-delay:.6s"/>
+          <circle class="twinkle" cx="480" cy="220" r="1.6" fill="#8C6321" style="animation-delay:1.2s"/>
+          <circle class="twinkle" cx="150" cy="180" r="2" fill="#8C6321" style="animation-delay:1.8s"/>
+          <circle class="twinkle" cx="420" cy="470" r="1.7" fill="#8C6321" style="animation-delay:2.4s"/>
+        </g>
+        <circle class="core" cx="300" cy="300" r="9"/>
+        <text x="300" y="264" text-anchor="middle" class="ring-label hi">D1</text>
+        <text x="300" y="224" text-anchor="middle" class="ring-label">D2</text>
+        <text x="300" y="184" text-anchor="middle" class="ring-label hi">D9</text>
+        <text x="300" y="144" text-anchor="middle" class="ring-label hi">D10</text>
+        <text x="300" y="99" text-anchor="middle" class="ring-label">D30</text>
+        <text x="300" y="54" text-anchor="middle" class="ring-label hi">D60</text>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<section class="block" id="why">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Why divide the chart at all</div>
+      <h2>Same sky, sharper lens</h2>
+      <p>D1 alone gives broad strokes. Each further division re-slices the planetary positions to bring one theme into focus — the deeper the division, the finer the detail.</p>
+    </div>
+    <div class="zoom-path reveal">
+      <div class="zoom-step"><div class="lvl">World</div><div class="tag">D1</div></div>
+      <div class="zoom-arrow">→</div>
+      <div class="zoom-step"><div class="lvl">Country</div><div class="tag">D2 / D3</div></div>
+      <div class="zoom-arrow">→</div>
+      <div class="zoom-step"><div class="lvl">State</div><div class="tag">D4 – D7</div></div>
+      <div class="zoom-arrow">→</div>
+      <div class="zoom-step"><div class="lvl">City</div><div class="tag">D9</div></div>
+      <div class="zoom-arrow">→</div>
+      <div class="zoom-step"><div class="lvl">Street</div><div class="tag">D60</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="block alt" id="correlation">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Chart correlation</div>
+      <h2>One prediction becomes four confirmations</h2>
+      <p>A single broad claim in D1 turns into a layered, testable statement once the relevant Vargas are checked against it. More charts agreeing → higher confidence.</p>
+    </div>
+    <div class="correlation reveal">
+      <div class="broad-claim">"This person will become wealthy."</div>
+      <div class="confirm-grid">
+        <div class="confirm-card"><div class="code mono">D2</div><p>Wealth comes through business.</p></div>
+        <div class="confirm-card"><div class="code mono">D10</div><p>Career is extremely strong.</p></div>
+        <div class="confirm-card"><div class="code mono">D9</div><p>Jupiter becomes debilitated.</p></div>
+        <div class="confirm-card"><div class="code mono">Synthesis</div><p>Business outperforms a job — but growth arrives late, since Jupiter is weak.</p></div>
+      </div>
+      <div class="conclusion">Instead of one vague forecast, the reading now carries direction, mechanism, and timing — all from cross-checking Vargas against each other.</div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="charts">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">The Shodasha Vargas</div>
+      <h2>All sixteen, at a glance</h2>
+      <p>Each card carries the chart's purpose and an importance meter (out of five) — how often professional practice leans on it.</p>
+    </div>
+
+    <div class="varga-grid" id="vargaGrid"></div>
+  </div>
+</section>
+
+<section class="block alt" id="guide">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Practical lookup</div>
+      <h2>Which chart answers which question</h2>
+      <p>When a user asks about a life area, this is the combination worth pulling before writing anything.</p>
+    </div>
+    <div class="table-wrap reveal">
+      <table>
+        <thead><tr><th>User asks about</th><th>Charts to analyze</th></tr></thead>
+        <tbody id="guideBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="pipeline">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">System design</div>
+      <h2>Feeding this into KundliGPT</h2>
+      <p>Don't ask the LLM to infer astrology from a single chart. Compute the relevant Vargas first, extract structured facts, then hand all of it to the model.</p>
+    </div>
+    <div class="pipeline reveal" id="pipelineList"></div>
+    <div class="principle reveal">"The LLM should not calculate astrology — it should explain calculations produced by your astrology engine."</div>
+  </div>
+</section>
+
+<section class="block alt" id="reco">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Where to start</div>
+      <h2>The build order for a serious clone</h2>
+      <p>Five charts cover most of what people actually ask. Everything else can wait for version two.</p>
+    </div>
+    <div class="reco reveal">
+      <div class="core-list" id="coreList"></div>
+      <div>
+        <div class="side-box">
+          <h4>Always include alongside them</h4>
+          <ul>
+            <li>Vimshottari Dasha — timing of events</li>
+            <li>Gochar — current planetary transits</li>
+            <li>Nakshatras</li>
+            <li>Yogas</li>
+            <li>Shadbala — planetary strength</li>
+          </ul>
+        </div>
+        <div class="side-box later">
+          <h4>Add later to broaden the system</h4>
+          <ul>
+            <li>D4 — property &amp; assets</li>
+            <li>D7 — children &amp; family expansion</li>
+            <li>D24 — education &amp; higher studies</li>
+            <li>D60 — deep karmic detail (needs precise birth time)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Varga Vidya — a reference sheet for divisional charts in Vedic astrology.</p>
+    <p>Deeper division, sharper detail.</p>
+  </div>
+</footer>
+
+<script>
+  const vargas = [
+    {code:"D1", sk:"Rāśi", imp:5, purpose:["Everything","Master chart","Used in every prediction"]},
+    {code:"D2", sk:"Hora", imp:5, purpose:["Money","Savings","Income","Assets"], note:"Include in every finance prediction."},
+    {code:"D3", sk:"Drekkāṇa", imp:3, purpose:["Siblings","Courage","Initiative","Competition"]},
+    {code:"D4", sk:"Chaturthāṁśa", imp:4, purpose:["Property","House & land","Vehicles","Inheritance"]},
+    {code:"D7", sk:"Saptāṁśa", imp:4, purpose:["Children","Pregnancy","Family expansion"]},
+    {code:"D9", sk:"Navāṁśa", imp:5, purpose:["Marriage","Spouse","Planetary strength","Dharma & fortune"], note:"If D1 shows a strong planet but D9 shows it weak, confidence in that reading drops."},
+    {code:"D10", sk:"Daśāṁśa", imp:5, purpose:["Career","Promotion","Leadership","Business vs. job"], note:"Career analysis without D10 is considered incomplete."},
+    {code:"D12", sk:"Dvādaśāṁśa", imp:3, purpose:["Parents","Family lineage","Ancestral blessings"]},
+    {code:"D16", sk:"Ṣoḍaśāṁśa", imp:3, purpose:["Luxury","Comforts","Vehicles","Lifestyle"]},
+    {code:"D20", sk:"Viṁśāṁśa", imp:3, purpose:["Spirituality","Meditation","Religion"]},
+    {code:"D24", sk:"Chaturviṁśāṁśa", imp:4, purpose:["Education","Knowledge","Exams","Higher studies"]},
+    {code:"D27", sk:"Bhāṁśa", imp:3, purpose:["Physical strength","Mental strength","Hidden talents"]},
+    {code:"D30", sk:"Triṁśāṁśa", imp:4, purpose:["Diseases","Misfortunes","Accidents","Enemies"]},
+    {code:"D40", sk:"Khavedāṁśa", imp:2, purpose:["Maternal blessings","Karmic influences"]},
+    {code:"D45", sk:"Akṣavedāṁśa", imp:2, purpose:["Paternal blessings","Ancestral karma"]},
+    {code:"D60", sk:"Ṣaṣṭyāṁśa", imp:5, purpose:["Past-life karma","Hidden destiny","Deep life patterns"], note:"Only reliable with an exact birth time — a 1–2 minute error can shift it significantly."},
+  ];
+
+  const grid = document.getElementById('vargaGrid');
+  grid.innerHTML = vargas.map(v => `
+    <div class="varga-card">
+      <div class="top">
+        <div>
+          <div class="code">${v.code}</div>
+          <div class="sanskrit">${v.sk}</div>
+        </div>
+        <div class="meter">${[1,2,3,4,5].map(n => `<span class="${n<=v.imp?'on':''}"></span>`).join('')}</div>
+      </div>
+      <ul>${v.purpose.map(p => `<li>${p}</li>`).join('')}</ul>
+      ${v.note ? `<div class="note">${v.note}</div>` : ''}
+    </div>
+  `).join('');
+
+  const guide = [
+    ["Finance", ["D1","D2","D9","D10"]],
+    ["Career", ["D1","D10","D9"]],
+    ["Marriage", ["D1","D9"]],
+    ["Love", ["D1","D9","D7"]],
+    ["Children", ["D1","D7"]],
+    ["Property", ["D1","D4"]],
+    ["Education", ["D1","D24"]],
+    ["Health", ["D1","D30","D9"]],
+    ["Spirituality", ["D1","D20"]],
+    ["Luxury", ["D1","D16"]],
+    ["Parents", ["D1","D12"]],
+    ["Foreign settlement", ["D1","D9","D10","Dasha","Transits"]],
+    ["Business", ["D1","D2","D10"]],
+    ["Wealth timing", ["D1","D2","Dasha","Gochar"]],
+  ];
+  const coreCodes = new Set(["D1","D2","D9","D10"]);
+  document.getElementById('guideBody').innerHTML = guide.map(([q, charts]) => `
+    <tr>
+      <td class="q-name">${q}</td>
+      <td>${charts.map(c => `<span class="pill ${coreCodes.has(c) ? '' : 'extra'}">${c}</span>`).join('')}</td>
+    </tr>
+  `).join('');
+
+  const steps = [
+    ["01","Birth details","Exact date, time, and place of birth — the raw input every chart derives from.",[]],
+    ["02","Swiss Ephemeris / PyHora","Run planetary calculations through an astronomy engine, not the LLM.",[]],
+    ["03","Generate the Vargas","Compute all sixteen divisional charts from the same birth data.",["D1","D2","D4","D7","D9","D10","D12","D16","D20","D24","D27","D30","D40","D45","D60"]],
+    ["04","Extract structured facts","Pull the concrete data points an astrologer would actually read.",["House lords","Planet positions","Yogas","Aspects","Exaltation / debilitation","Shadbala","Nakshatra","Dasha","Gochar"]],
+    ["05","Pass to the LLM","Hand over the structured output — not raw birth data — as context.",[]],
+    ["06","Generate the explanation","The model writes the reading in plain language from what was already calculated.",[]],
+  ];
+  document.getElementById('pipelineList').innerHTML = steps.map(([n,title,desc,chips]) => `
+    <div class="pstep">
+      <div class="pnum">${n}</div>
+      <div>
+        <h3>${title}</h3>
+        <p>${desc}</p>
+        ${chips.length ? `<div class="chips">${chips.map(c=>`<span>${c}</span>`).join('')}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  const core = [
+    ["D1","Rāśi","The foundation every other reading is checked against."],
+    ["D2","Hora","Wealth and financial analysis."],
+    ["D9","Navāṁśa","Planetary strength, marriage, and confirmation of D1."],
+    ["D10","Daśāṁśa","Career and professional success."],
+    ["D30","Triṁśāṁśa","Health challenges and obstacles."],
+  ];
+  document.getElementById('coreList').innerHTML = core.map(([code,name,desc]) => `
+    <div class="core-item">
+      <div class="code">${code}</div>
+      <div><p><b>${name}</b> — ${desc}</p></div>
+    </div>
+  `).join('');
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, {threshold:0.15});
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>
