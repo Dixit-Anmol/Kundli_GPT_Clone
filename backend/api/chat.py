@@ -7,6 +7,7 @@ from services.rag.bg_16 import BG16Pipeline
 from services.prompts.system import get_system_prompt
 from services.prompts.horoscope import build_horoscope_prompt
 from services.prompts.geeta import build_geeta_prompt, assemble_unified_prompt
+from services.prompts.financial import is_financial_query, get_financial_system_prompt
 from services.llm.factory import LLMFactory
 
 router = APIRouter()
@@ -29,7 +30,11 @@ def handle_chat(req: ChatRequest):
             }
             
         # 2. Determine prompt style based on context and history
-        system_prompt = get_system_prompt()
+        # Use specialised financial system prompt when the query is finance-related
+        if not (len(history) == 0) and is_financial_query(req.message):
+            system_prompt = get_financial_system_prompt()
+        else:
+            system_prompt = get_system_prompt()
         
         # Retrieve relevant Bhagavad Gita verses using RAG
         gita_passages = rag_pipeline.search_wisdom(req.message, top_k=2)

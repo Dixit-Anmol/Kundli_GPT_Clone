@@ -13,7 +13,12 @@ def classify_intent(query: str) -> str:
         return "Health"
     if any(k in q for k in ["spirit", "god", "meditat", "yoga", "dharma", "guru", "moksha"]):
         return "Spirituality"
-    if any(k in q for k in ["money", "wealth", "finance", "rich", "debt", "loan", "savings"]):
+    if any(k in q for k in ["money", "wealth", "finance", "financial", "rich", "debt", "loan",
+                              "savings", "invest", "investment", "stock", "trading", "income",
+                              "earning", "salary", "profit", "business", "entrepreneur",
+                              "property", "real estate", "crypto", "mutual fund", "sip",
+                              "budget", "tax", "insurance", "pension", "retirement",
+                              "inheritance", "lottery", "bankruptcy", "dhan", "paisa", "kamai"]):
         return "Wealth"
     if any(k in q for k in ["study", "exam", "education", "college", "school", "degree", "learning"]):
         return "Education"
