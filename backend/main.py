@@ -15,6 +15,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.chart import router as chart_router
 from api.chat import router as chat_router
+from api.profile import router as profile_router
 
 app = FastAPI(
     title="Kundli AI API",
@@ -40,6 +41,7 @@ app.add_middleware(
 # Mount API Routers
 app.include_router(chart_router, prefix="/api", tags=["Astrology & Timezone"])
 app.include_router(chat_router, prefix="/api", tags=["Vedic Chat & RAG"])
+app.include_router(profile_router, prefix="/api", tags=["Profile"])
 
 @app.get("/")
 def root():

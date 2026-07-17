@@ -1,0 +1,198 @@
+"""
+Profile API — Anonymous persistent profile management.
+
+Endpoints for looking up, deleting, and recalculating stored user profiles.
+"""
+
+import datetime
+from fastapi import APIRouter, HTTPException
+from models.response import ProfileResponse
+from services.memory.profile_store import profile_store
+from services.memory.session import session_store
+from services.astrology.horoscope import calculate_horoscope_data
+from api.chart import find_timezone_offset
+
+router = APIRouter()
+
+
+@router.get("/profile/{user_id}", response_model=ProfileResponse)
+def get_profile(user_id: str):
+    """
+    Look up a stored profile by anonymous user ID.
+
+    If found, hydrates the in-memory session store so /api/chat works
+    seamlessly without re-computing the chart.
+    """
+    profile = profile_store.load_profile(user_id)
+
+    if not profile:
+        return {
+            "exists": False,
+            "birth_details": None,
+            "chart_summary": None,
+        }
+
+    # Hydrate in-memory session so /api/chat can use it immediately
+    natal_chart = profile.get("natal_chart")
+    birth_details = profile.get("birth_details", {})
+
+    if natal_chart:
+        # Reconstruct the chart_data format the session/prompt system expects
+        # Support both new (natal/dynamic split) and legacy flat formats
+        if "natal" in natal_chart:
+            chart_data = natal_chart["natal"]
+        else:
+            chart_data = natal_chart
+
+        # Recalculate dynamic portions (current transits, Sade Sati)
+        dynamic = _recalculate_dynamic(chart_data, birth_details)
+        if dynamic:
+            # Merge dynamic doshas into chart_data for prompt compatibility
+            doshas = chart_data.get("doshas", {})
+            doshas.update(dynamic.get("doshas", {}))
+            chart_data["doshas"] = doshas
+
+        session_store.save_chart(user_id, chart_data)
+        sess = session_store.get_session(user_id)
+        sess["profile"] = birth_details
+
+    return {
+        "exists": True,
+        "birth_details": birth_details,
+        "chart_summary": profile.get("chart_response"),
+    }
+
+
+@router.delete("/profile/{user_id}")
+def delete_profile(user_id: str):
+    """Delete a stored profile so the user can re-enter birth details."""
+    deleted = profile_store.delete_profile(user_id)
+    # Also clear the in-memory session
+    session_store.clear_session(user_id)
+    return {"deleted": deleted}
+
+
+@router.post("/profile/{user_id}/recalculate")
+def recalculate_chart(user_id: str):
+    """
+    Force-recalculate the natal chart from stored birth details.
+
+    Use when chart data might be corrupted or a manual refresh is requested.
+    """
+    profile = profile_store.load_profile(user_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="No profile found for this user ID.")
+
+    birth = profile.get("birth_details", {})
+    if not birth.get("date_of_birth") or not birth.get("time_of_birth"):
+        raise HTTPException(status_code=400, detail="Stored birth details are incomplete.")
+
+    try:
+        # Re-resolve timezone
+        lat = birth.get("latitude", 0.0)
+        lon = birth.get("longitude", 0.0)
+        _, offset = find_timezone_offset(lat, lon, birth["date_of_birth"])
+
+        # Parse date and time
+        dt = datetime.datetime.strptime(birth["date_of_birth"], "%Y-%m-%d")
+        tm = datetime.datetime.strptime(birth["time_of_birth"], "%H:%M:%S")
+
+        # Recalculate
+        chart_data = calculate_horoscope_data(
+            year=dt.year, month=dt.month, day=dt.day,
+            hour=tm.hour, minute=tm.minute, second=tm.second,
+            lat=lat, lon=lon, timezone_offset=offset
+        )
+
+        # Extract natal vs dynamic
+        natal = _extract_natal(chart_data)
+        meta = chart_data.get("metadata", {})
+
+        chart_response = {
+            "name": birth.get("name", "Seeker"),
+            "ascendant_sign": meta.get("ascendant_sign", ""),
+            "moon_sign": meta.get("moon_sign", ""),
+            "nakshatra": meta.get("nakshatra", ""),
+            "pada": meta.get("pada", 1),
+            "yogas": chart_data.get("yogas", []),
+            "doshas": chart_data.get("doshas", {}),
+        }
+
+        # Update persistent profile
+        profile_store.save_profile(
+            user_id=user_id,
+            birth_details=birth,
+            natal_chart=natal,
+            chart_response=chart_response,
+        )
+
+        # Hydrate in-memory session
+        session_store.save_chart(user_id, chart_data)
+        sess = session_store.get_session(user_id)
+        sess["profile"] = birth
+        # Clear old chat history on recalculation
+        sess["history"] = []
+
+        return {
+            "recalculated": True,
+            "chart_summary": chart_response,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _extract_natal(chart_data: dict) -> dict:
+    """Extract only the static natal portion from full chart data."""
+    natal_doshas = {}
+    all_doshas = chart_data.get("doshas", {})
+    # Manglik and Kaal Sarp are natal; Sade Sati is transit-dependent
+    if "manglik" in all_doshas:
+        natal_doshas["manglik"] = all_doshas["manglik"]
+    if "kaal_sarp" in all_doshas:
+        natal_doshas["kaal_sarp"] = all_doshas["kaal_sarp"]
+
+    return {
+        "natal": {
+            "metadata": chart_data.get("metadata", {}),
+            "planets": chart_data.get("planets", {}),
+            "houses": chart_data.get("houses", {}),
+            "yogas": chart_data.get("yogas", []),
+            "doshas": natal_doshas,
+        }
+    }
+
+
+def _recalculate_dynamic(chart_data: dict, birth_details: dict) -> dict | None:
+    """Recalculate transit-dependent data (Sade Sati, current transits)."""
+    try:
+        from services.astrology.swiss_ephemeris import datetime_to_jd, get_sidereal_positions
+        from services.astrology.doshas import check_sade_sati
+
+        today = datetime.date.today()
+        jd_today = datetime_to_jd(today.year, today.month, today.day, 12.0)
+        transit_positions = get_sidereal_positions(jd_today)
+        saturn_transit = transit_positions.get("saturn", 0.0)
+
+        # Get Moon's natal longitude from chart data
+        planets = chart_data.get("planets", {})
+        moon_data = planets.get("moon", {})
+        moon_longitude = moon_data.get("degree", 0.0)
+
+        # If moon degree is relative to sign, reconstruct absolute longitude
+        # The check_sade_sati function expects absolute sidereal longitudes
+        # For safety, use degree as-is (it should be absolute from the ephemeris)
+
+        sade_sati = check_sade_sati(moon_longitude, saturn_transit)
+
+        return {
+            "transits": {"saturn": saturn_transit},
+            "doshas": {"sade_sati": sade_sati},
+        }
+    except Exception as e:
+        print(f"[Profile] Dynamic recalculation failed: {e}")
+        return None

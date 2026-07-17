@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import Navbar from '../components/layout/Navbar'
 import ChatInputBar from '../components/chat/ChatInputBar'
@@ -10,7 +10,7 @@ import HoroscopeSummary from '../components/chat/HoroscopeSummary'
 import SuggestionChips from '../components/chat/SuggestionChips'
 import type { BirthData } from '../components/chat/BirthDetailsForm'
 
-type ChatStep = 'welcome' | 'birthplace' | 'computing' | 'ready'
+type ChatStep = 'loading' | 'welcome' | 'birthplace' | 'computing' | 'ready'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -21,22 +21,105 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
   ? 'http://localhost:8000'
   : 'https://kundli-gpt-clone-back.onrender.com'
 
+// ---------------------------------------------------------------------------
+// UUID Persistence — read or create the anonymous user identifier
+// ---------------------------------------------------------------------------
+function getOrCreateUserId(): string {
+  const STORAGE_KEY = 'kundli_user_id'
+  let userId = localStorage.getItem(STORAGE_KEY)
+  if (!userId) {
+    userId = crypto.randomUUID()
+    localStorage.setItem(STORAGE_KEY, userId)
+  }
+  return userId
+}
+
 export default function ChatPage() {
+  // Persistent anonymous UUID (survives page refreshes)
+  const [userId] = useState<string>(getOrCreateUserId)
+  // Ephemeral session ID — used by the in-memory backend session store
   const [sessionId] = useState(() => Math.random().toString(36).substring(7))
+
   const [inputValue, setInputValue] = useState('')
-  const [step, setStep] = useState<ChatStep>('welcome')
+  const [step, setStep] = useState<ChatStep>('loading')
   const [birthData, setBirthData] = useState<BirthData | null>(null)
-  
+
   // Real computed horoscope data from backend
   const [chartData, setChartData] = useState<any>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [loadingChat, setLoadingChat] = useState(false)
 
+  // -----------------------------------------------------------------------
+  // Profile check on mount — look up stored profile by UUID
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    let cancelled = false
+
+    async function checkProfile() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/profile/${userId}`)
+        if (!res.ok) {
+          if (!cancelled) setStep('welcome')
+          return
+        }
+        const data = await res.json()
+
+        if (data.exists && data.chart_summary && data.birth_details) {
+          // Restore saved state
+          if (!cancelled) {
+            const bd = data.birth_details
+            setBirthData({
+              fullName: bd.name || 'Seeker',
+              gender: bd.gender || 'other',
+              dateOfBirth: bd.date_of_birth || '',
+              timeOfBirth: (bd.time_of_birth || '').replace(/:00$/, ''),
+            })
+            setChartData(data.chart_summary)
+            setStep('ready')
+
+            // Fetch initial chart interpretation
+            setLoadingChat(true)
+            const chatRes = await fetch(`${API_BASE_URL}/api/chat`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                session_id: sessionId,
+                user_id: userId,
+                message: 'Analyze my birth chart and explain my placements.',
+              }),
+            })
+            if (chatRes.ok) {
+              const chatJson = await chatRes.json()
+              if (!cancelled) {
+                setMessages([{ role: 'assistant', content: chatJson.response }])
+              }
+            }
+            if (!cancelled) setLoadingChat(false)
+          }
+        } else {
+          if (!cancelled) setStep('welcome')
+        }
+      } catch {
+        // Backend unreachable — fall back to new-user flow
+        if (!cancelled) setStep('welcome')
+      }
+    }
+
+    checkProfile()
+    return () => { cancelled = true }
+  }, [userId, sessionId])
+
+  // -----------------------------------------------------------------------
+  // Birth details form submission
+  // -----------------------------------------------------------------------
   const handleBirthSubmit = (data: BirthData) => {
     setBirthData(data)
     setStep('birthplace')
   }
 
+  // -----------------------------------------------------------------------
+  // Birthplace confirmation → chart computation + profile persistence
+  // -----------------------------------------------------------------------
   const handleBirthplaceConfirm = async (_placeName: string, lat: number, lon: number) => {
     if (!birthData) return
     setStep('computing')
@@ -55,6 +138,7 @@ export default function ChatPage() {
           latitude: lat,
           longitude: lon,
           session_id: sessionId,
+          user_id: userId,       // ← Triggers profile persistence on backend
         }),
       })
 
@@ -72,6 +156,7 @@ export default function ChatPage() {
           },
           body: JSON.stringify({
             session_id: sessionId,
+            user_id: userId,
             message: "Analyze my birth chart and explain my placements.",
           }),
         })
@@ -112,6 +197,9 @@ export default function ChatPage() {
     }
   }
 
+  // -----------------------------------------------------------------------
+  // Chat message sending
+  // -----------------------------------------------------------------------
   const handleSend = async (messageText?: string) => {
     const textToSend = messageText || inputValue
     if (!textToSend.trim() || loadingChat) return
@@ -130,6 +218,7 @@ export default function ChatPage() {
         },
         body: JSON.stringify({
           session_id: sessionId,
+          user_id: userId,
           message: textToSend,
         }),
       })
@@ -162,6 +251,21 @@ export default function ChatPage() {
     handleSend(text)
   }
 
+  // -----------------------------------------------------------------------
+  // Update birth details — resets profile and shows form again
+  // -----------------------------------------------------------------------
+  const handleUpdateBirthDetails = async () => {
+    try {
+      await fetch(`${API_BASE_URL}/api/profile/${userId}`, { method: 'DELETE' })
+    } catch {
+      // Ignore network errors — we'll reset locally anyway
+    }
+    setChartData(null)
+    setBirthData(null)
+    setMessages([])
+    setStep('welcome')
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -169,11 +273,27 @@ export default function ChatPage() {
       {/* Main Chat Content */}
       <main className="relative z-10 max-w-[800px] mx-auto px-4 pt-12 pb-[180px]">
         <div className="space-y-6">
-          {/* Welcome Message */}
-          <AssistantMessage icon="star">
-            🙏 Namaste! Welcome. I'll prepare your personalized horoscope and become your spiritual
-            assistant. Before we begin, I need a few birth details.
-          </AssistantMessage>
+
+          {/* Loading State — checking for existing profile */}
+          {step === 'loading' && (
+            <AssistantMessage icon="hourglass_top">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100" />
+                <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200" />
+                <span className="text-on-surface-variant ml-2">Checking for your saved horoscope…</span>
+              </div>
+            </AssistantMessage>
+          )}
+
+          {/* Welcome Message — shown only when no profile found */}
+          {step !== 'loading' && (
+            <AssistantMessage icon="star">
+              {step === 'ready' && birthData
+                ? `🙏 Welcome back, ${birthData.fullName}! Your horoscope is ready.`
+                : '🙏 Namaste! Welcome. I\'ll prepare your personalized horoscope and become your spiritual assistant. Before we begin, I need a few birth details.'}
+            </AssistantMessage>
+          )}
 
           {/* Birth Details Form */}
           {step === 'welcome' && <BirthDetailsForm onSubmit={handleBirthSubmit} />}
@@ -216,6 +336,16 @@ export default function ChatPage() {
                 }
                 onViewComplete={() => console.log('View complete horoscope')}
               />
+
+              {/* Update Birth Details Button */}
+              <div className="flex justify-center">
+                <button
+                  onClick={handleUpdateBirthDetails}
+                  className="text-sm text-on-surface-variant hover:text-primary transition-colors underline underline-offset-4 decoration-outline-variant hover:decoration-primary"
+                >
+                  Update Birth Details
+                </button>
+              </div>
 
               {/* Chat Thread */}
               <div className="space-y-6 mt-10 border-t border-outline-variant/30 pt-10">

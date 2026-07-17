@@ -84,11 +84,22 @@ def assemble_unified_prompt(
     intent: str = None
 ) -> str:
     """Assembles all horoscope, user profile, and Gita context into the exact 13 ordered sections."""
-    meta = chart_data.get("metadata", {})
-    planets = chart_data.get("planets", {})
-    houses = chart_data.get("houses", {})
-    yogas = chart_data.get("yogas", [])
-    doshas = chart_data.get("doshas", {})
+    # Support both new (natal/dynamic split) and legacy flat chart_data formats
+    if "natal" in chart_data:
+        natal = chart_data["natal"]
+        dynamic = chart_data.get("dynamic", {})
+        meta = natal.get("metadata", {})
+        planets = natal.get("planets", {})
+        houses = natal.get("houses", {})
+        yogas = natal.get("yogas", [])
+        # Merge natal and dynamic doshas
+        doshas = {**natal.get("doshas", {}), **dynamic.get("doshas", {})}
+    else:
+        meta = chart_data.get("metadata", {})
+        planets = chart_data.get("planets", {})
+        houses = chart_data.get("houses", {})
+        yogas = chart_data.get("yogas", [])
+        doshas = chart_data.get("doshas", {})
 
     # 1. Conversation History
     hist_formatted = "None."

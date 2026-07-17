@@ -13,8 +13,10 @@ class ChartRequest(BaseModel):
     latitude: float
     longitude: float
     session_id: str
+    user_id: Optional[str] = None   # Anonymous persistent UUID from localStorage
     api_key: Optional[str] = None
 
 class ChatRequest(BaseModel):
     session_id: str
     message: str
+    user_id: Optional[str] = None   # For profile-store fallback loading

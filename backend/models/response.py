@@ -18,3 +18,9 @@ class ChartResponse(BaseModel):
 class ChatResponse(BaseModel):
     response: str
     session_count: int
+
+class ProfileResponse(BaseModel):
+    """Response from the profile lookup endpoint."""
+    exists: bool
+    birth_details: Optional[Dict[str, Any]] = None
+    chart_summary: Optional[Dict[str, Any]] = None

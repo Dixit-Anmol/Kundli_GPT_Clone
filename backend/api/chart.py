@@ -6,6 +6,7 @@ from models.request import TimezoneRequest, ChartRequest
 from models.response import TimezoneResponse, ChartResponse
 from services.astrology.horoscope import calculate_horoscope_data
 from services.memory.session import session_store
+from services.memory.profile_store import profile_store
 
 router = APIRouter()
 
@@ -76,7 +77,7 @@ def build_chart(req: ChartRequest):
             
         meta = chart_data["metadata"]
         
-        return {
+        chart_response = {
             "name": req.name,
             "ascendant_sign": meta["ascendant_sign"],
             "moon_sign": meta["moon_sign"],
@@ -86,5 +87,41 @@ def build_chart(req: ChartRequest):
             "doshas": chart_data["doshas"],
             "raw_positions": chart_data["planets"]
         }
+        
+        # Persist to profile store if user_id is provided (anonymous persistent profile)
+        if req.user_id:
+            birth_details = {
+                "name": req.name,
+                "date_of_birth": req.date_str,
+                "time_of_birth": req.time_str,
+                "latitude": req.latitude,
+                "longitude": req.longitude,
+                "timezone_offset": offset
+            }
+            # Save only the natal (static) portion to disk
+            natal_doshas = {}
+            all_doshas = chart_data.get("doshas", {})
+            if "manglik" in all_doshas:
+                natal_doshas["manglik"] = all_doshas["manglik"]
+            if "kaal_sarp" in all_doshas:
+                natal_doshas["kaal_sarp"] = all_doshas["kaal_sarp"]
+                
+            natal_chart = {
+                "natal": {
+                    "metadata": chart_data.get("metadata", {}),
+                    "planets": chart_data.get("planets", {}),
+                    "houses": chart_data.get("houses", {}),
+                    "yogas": chart_data.get("yogas", []),
+                    "doshas": natal_doshas,
+                }
+            }
+            profile_store.save_profile(
+                user_id=req.user_id,
+                birth_details=birth_details,
+                natal_chart=natal_chart,
+                chart_response=chart_response,
+            )
+        
+        return chart_response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
