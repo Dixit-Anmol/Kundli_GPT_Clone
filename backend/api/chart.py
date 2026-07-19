@@ -179,8 +179,10 @@ def build_chart(req: ChartRequest):
                     "houses": chart_data.get("houses", {}),
                     "yogas": chart_data.get("yogas", []),
                     "doshas": natal_doshas,
+                    "computed": computed,
                 }
             }
+
             profile_store.save_profile(
                 user_id=req.user_id,
                 birth_details=birth_details,

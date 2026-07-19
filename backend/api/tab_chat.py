@@ -42,10 +42,39 @@ def handle_tab_chat(req: TabChatRequest):
             }
 
         profile = session.get("profile")
-        computed = session.get("computed_analyses", {})
+        computed = session.get("computed_analyses") or chart_data.get("computed")
+        if not computed:
+            from services.astrology.prakriti import estimate_prakriti
+            from services.astrology.elements import calculate_element_distribution
+            from services.astrology.lucky import calculate_lucky_attributes
+            from services.astrology.planet_ranking import rank_planets
+            from services.astrology.remedies_calc import generate_remedy_data
 
-        # Get domain-specific system prompt
-        system_prompt = get_tab_system_prompt(req.tab)
+            prakriti = estimate_prakriti(chart_data)
+            elements = calculate_element_distribution(chart_data)
+            lucky = calculate_lucky_attributes(chart_data)
+            rankings = rank_planets(chart_data)
+            remedies = generate_remedy_data(chart_data, rankings)
+            computed = {
+                "prakriti": prakriti,
+                "elements": elements,
+                "lucky": lucky,
+                "planet_rankings": rankings,
+                "remedy_data": remedies,
+            }
+            session["computed_analyses"] = computed
+
+
+        # Determine if this is the initial tab overview reading or a follow-up user chat question
+        is_initial = bool(
+            req.is_initial
+            or req.message.startswith("Provide a detailed")
+            or len(history) == 0
+        )
+
+        # Get domain-specific system prompt (Initial Overview vs Focused Chat Q&A)
+        system_prompt = get_tab_system_prompt(req.tab, is_initial=is_initial)
+
 
         # Build domain-specific user context
         # For spiritual tab, include Bhagavad Gita RAG

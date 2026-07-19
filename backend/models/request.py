@@ -26,4 +26,6 @@ class TabChatRequest(BaseModel):
     message: str
     tab: str  # "overview" | "career" | "marriage" | "health" | "food" | "remedies" | "finance" | "personality" | "spiritual"
     user_id: Optional[str] = None
+    is_initial: Optional[bool] = False
+
 

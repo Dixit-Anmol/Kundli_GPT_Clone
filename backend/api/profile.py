@@ -12,7 +12,14 @@ from services.memory.session import session_store
 from services.astrology.horoscope import calculate_horoscope_data
 from api.chart import find_timezone_offset
 
+from services.astrology.prakriti import estimate_prakriti
+from services.astrology.elements import calculate_element_distribution
+from services.astrology.lucky import calculate_lucky_attributes
+from services.astrology.planet_ranking import rank_planets
+from services.astrology.remedies_calc import generate_remedy_data
+
 router = APIRouter()
+
 
 
 @router.get("/profile/{user_id}", response_model=ProfileResponse)
@@ -55,6 +62,24 @@ def get_profile(user_id: str):
         session_store.save_chart(user_id, chart_data)
         sess = session_store.get_session(user_id)
         sess["profile"] = birth_details
+
+        # Ensure computed_analyses is available in session
+        computed = chart_data.get("computed") or profile.get("chart_response", {}).get("computed")
+        if not computed:
+            prakriti = estimate_prakriti(chart_data)
+            elements = calculate_element_distribution(chart_data)
+            lucky = calculate_lucky_attributes(chart_data)
+            rankings = rank_planets(chart_data)
+            remedies = generate_remedy_data(chart_data, rankings)
+            computed = {
+                "prakriti": prakriti,
+                "elements": elements,
+                "lucky": lucky,
+                "planet_rankings": rankings,
+                "remedy_data": remedies,
+            }
+        sess["computed_analyses"] = computed
+
 
     return {
         "exists": True,
