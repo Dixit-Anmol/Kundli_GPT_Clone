@@ -3,6 +3,8 @@ import ReactMarkdown from 'react-markdown'
 import type { TabType } from './TabNavigation'
 import SummaryCards from './SummaryCards'
 import TabChat, { type Message } from './TabChat'
+import AnimatedKundliChart from './AnimatedKundliChart'
+import PlanetaryTable from './PlanetaryTable'
 
 export interface TabCacheItem {
   initialReading: string
@@ -135,6 +137,14 @@ export default function TabPanel({
     <div className="space-y-6 animate-fade-in-up">
       {/* Summary Cards */}
       <SummaryCards tab={tab} chartData={chartData} computed={computed} />
+
+      {/* Interactive Animated Kundli Chart (Overview Tab Only) */}
+      {tab === 'overview' && (
+        <>
+          <AnimatedKundliChart chartData={chartData} />
+          <PlanetaryTable chartData={chartData} />
+        </>
+      )}
 
       {/* Main Tab Initial Reading */}
       <div className="celestial-card p-6 rounded-3xl bg-surface border border-outline-variant/60 shadow-xs">

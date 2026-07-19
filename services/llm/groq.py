@@ -6,16 +6,23 @@ class GroqClient:
         self.api_key = api_key or os.environ.get("GROQ_API_KEY")
         
     def generate(self, system_prompt: str, user_prompt: str) -> str:
-        """Call Groq API using HTTP requests directly (saves install size), with offline fallback."""
-        keys_to_try = [self.api_key]
-        fallback_key = os.environ.get("GROQ_API_KEY_FALLBACK")
-        if fallback_key and fallback_key != self.api_key:
-            keys_to_try.append(fallback_key)
-        fallback_key2 = os.environ.get("GROQ_API_KEY_FALLBACK2")
-        if fallback_key2 and fallback_key2 not in keys_to_try:
-            keys_to_try.append(fallback_key2)
-            
+        """Call Groq API using HTTP requests directly (saves install size), with multi-key rotational fallback."""
+        raw_keys = [
+            self.api_key,
+            os.environ.get("GROQ_API_KEY_FALLBACK"),
+            os.environ.get("GROQ_API_KEY_FALLBACK2"),
+            os.environ.get("GROQ_API_KEY_FALLBACK3"),
+            os.environ.get("GROQ_API_KEY_FALLBACK4"),
+        ]
+
+        keys_to_try = []
+        for k in raw_keys:
+            if k and k not in keys_to_try:
+                keys_to_try.append(k)
+
+
         last_error_message = "No API key configured."
+
         for key in keys_to_try:
             if not key:
                 continue
