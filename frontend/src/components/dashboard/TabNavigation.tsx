@@ -1,5 +1,6 @@
-export type TabType =
+import { isTabEnabled } from '../../config/featureFlags'
 
+export type TabType =
   | 'overview'
   | 'career'
   | 'marriage'
@@ -17,7 +18,7 @@ export interface TabConfig {
   description: string
 }
 
-export const TABS: TabConfig[] = [
+export const ALL_TABS: TabConfig[] = [
   { id: 'overview', label: 'Overview', icon: 'grid_view', description: 'Complete Horoscope Summary' },
   { id: 'career', label: 'Career', icon: 'work', description: 'Profession, Business & Growth' },
   { id: 'marriage', label: 'Marriage', icon: 'favorite', description: 'Compatibility & Relationships' },
@@ -29,17 +30,21 @@ export const TABS: TabConfig[] = [
   { id: 'spiritual', label: 'Spiritual Growth', icon: 'auto_awesome', description: 'Dharma, Meditation & Gita' },
 ]
 
+export const TABS: TabConfig[] = ALL_TABS.filter((tab) => isTabEnabled(tab.id))
+
 interface TabNavigationProps {
   activeTab: TabType
   onTabChange: (tab: TabType) => void
 }
 
 export default function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
+  const visibleTabs = TABS
+
   return (
     <div className="bg-surface border-b border-outline-variant/60 sticky top-[72px] z-40 shadow-xs">
       <div className="max-w-[1200px] mx-auto px-4">
         <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar py-2 no-scrollbar">
-          {TABS.map((tab) => {
+          {visibleTabs.map((tab) => {
             const isActive = activeTab === tab.id
             return (
               <button
@@ -66,3 +71,4 @@ export default function TabNavigation({ activeTab, onTabChange }: TabNavigationP
     </div>
   )
 }
+
