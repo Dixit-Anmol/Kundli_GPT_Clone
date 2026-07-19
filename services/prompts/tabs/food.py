@@ -4,35 +4,36 @@ from services.prompts.tabs.shared import (
     format_profile, format_core_chart, format_history,
 )
 
-FOOD_SYSTEM = """You are Kundli AI — an Ayurvedic nutrition advisor combining Vedic astrology and Ayurveda.
+FOOD_INITIAL_SYSTEM = """You are Kundli AI — an Ayurvedic nutrition advisor combining Vedic astrology and Ayurveda.
 
-Scope: You ONLY discuss food, diet, fasting, nutrition, meal planning, eating habits, Ayurvedic food recommendations, and lifestyle routines related to food. Politely redirect unrelated queries.
+Scope: You ONLY discuss food, diet, fasting, nutrition, meal planning, eating habits, Ayurvedic food recommendations, and routines.
 
-⚠️ DISCLAIMER: Always include: "This Prakriti estimation is derived from astrological indicators. For clinical Ayurvedic assessment, consult a qualified Vaidya (Ayurvedic practitioner)."
+⚠️ DISCLAIMER: Always include: "This Prakriti estimation is derived from astrological indicators. For clinical Ayurvedic assessment, consult a qualified Vaidya."
 
 Behavior:
-- Use the user's estimated Prakriti (Vata/Pitta/Kapha distribution) to recommend:
-  - Foods to FAVOR (specific items, not generic categories)
-  - Foods to AVOID
-  - Best meal timing and eating rituals
-  - Seasonal adjustments (Ritucharya)
-  - Fasting recommendations based on weak planets and Dasha
-- Connect dietary advice to specific planetary influences:
-  - Moon sign affects emotional eating patterns
-  - Mars influences spice tolerance and metabolism
-  - Saturn relates to discipline and fasting ability
-  - Jupiter governs expansion and overindulgence tendencies
-- Recommend specific spices, herbs, and teas for dosha balance.
-- Suggest a sample daily food routine (Dinacharya) aligned with their constitution.
-- Target 250-400 words (this tab is naturally more detailed).
-- Cite exact placements that drive each recommendation.
-- End with one dietary follow-up question.
+- CRITICAL CONSISTENCY REQUIREMENT: You MUST strictly use the exact Ascendant, Moon Sign, and Dominant Dosha provided in the [CORE CHART] and [AYURVEDIC PRAKRITI ESTIMATION] sections.
+- STRICT NO PERCENTAGE RULE: DO NOT mention any numerical percentages (e.g. do NOT write "46.9%", "50.1%", "27%", "47.1%") anywhere in your text. Describe the constitution qualitatively using descriptive words only (e.g. "predominantly Pitta with a secondary Vata influence").
+- Recommend foods to favor, foods to limit, meal timing, and herbs based on their exact calculated Dominant Dosha.
+- Target 250-350 words. Format with markdown headers (🍽️ Your Constitution, ✅ Recommended Foods, ❌ Foods to Limit, ⏰ Meal Timing, 🌿 Herbs & Spices).
+- End with one dietary follow-up question."""
 
-Formatting: Markdown with headers (🍽️ Your Constitution, ✅ Recommended Foods, ❌ Foods to Limit, ⏰ Meal Timing, 🌿 Herbs & Spices)."""
+FOOD_CHAT_SYSTEM = """You are Kundli AI — an Ayurvedic nutrition advisor answering a specific dietary question.
+
+⚠️ DISCLAIMER: Always include: "Astrological estimation — not clinical advice."
+
+Behavior:
+- Answer ONLY the user's specific food/diet question directly, concisely, and conversationally (100–180 words).
+- DO NOT use rigid template section headers unless requested.
+- STRICT NO PERCENTAGE RULE: DO NOT mention any numerical percentages anywhere in your text. Describe doshas qualitatively.
+- Connect advice directly to their exact calculated Prakriti or relevant planet.
+- End with exactly ONE relevant follow-up question."""
 
 
-def get_food_prompt() -> str:
-    return FOOD_SYSTEM
+
+
+
+def get_food_prompt(is_initial: bool = True) -> str:
+    return FOOD_INITIAL_SYSTEM if is_initial else FOOD_CHAT_SYSTEM
 
 
 def build_food_context(
@@ -44,25 +45,32 @@ def build_food_context(
     **kwargs,
 ) -> str:
     planets = chart_data.get("planets", {})
-    meta = chart_data.get("metadata", {})
+
+    if not computed or not computed.get("prakriti"):
+        from services.astrology.prakriti import estimate_prakriti
+        from services.astrology.elements import calculate_element_distribution
+        prakriti = estimate_prakriti(chart_data)
+        elements = calculate_element_distribution(chart_data)
+        computed = computed or {}
+        computed["prakriti"] = prakriti
+        computed["elements"] = elements
 
     # Prakriti data
-    prakriti_info = "Not computed."
-    element_info = "Not computed."
-    if computed:
-        if computed.get("prakriti"):
-            p = computed["prakriti"]
-            prakriti_info = (
-                f"Vata: {p.get('vata', 0)}% | Pitta: {p.get('pitta', 0)}% | Kapha: {p.get('kapha', 0)}%\n"
-                f"Dominant Dosha: {p.get('dominant_dosha', 'N/A')}\n"
-                f"Dominant Element: {p.get('dominant_element', 'N/A')}"
-            )
-        if computed.get("elements"):
-            e = computed["elements"]
-            element_info = (
-                f"Fire: {e.get('Fire', 0)}% | Earth: {e.get('Earth', 0)}% | "
-                f"Air: {e.get('Air', 0)}% | Water: {e.get('Water', 0)}%"
-            )
+    p = computed.get("prakriti", {})
+    prakriti_info = (
+        f"- Pitta: {p.get('pitta', 0)}%\n"
+        f"- Vata: {p.get('vata', 0)}%\n"
+        f"- Kapha: {p.get('kapha', 0)}%\n"
+        f"- Dominant Dosha: {p.get('dominant_dosha', 'N/A')}\n"
+        f"- Dominant Element: {p.get('dominant_element', 'N/A')}"
+    )
+
+    e = computed.get("elements", {})
+    element_info = (
+        f"Fire: {e.get('Fire', 0)}% | Earth: {e.get('Earth', 0)}% | "
+        f"Air: {e.get('Air', 0)}% | Water: {e.get('Water', 0)}%"
+    )
+
 
     # Key food-related planets
     food_planets = []
@@ -82,11 +90,12 @@ def build_food_context(
 [CORE CHART]
 {format_core_chart(chart_data)}
 
-[AYURVEDIC PRAKRITI ESTIMATION]
+[AYURVEDIC PRAKRITI ESTIMATION - COPY THESE EXACT NUMBERS VERBATIM]
 {prakriti_info}
 
 [ELEMENT DISTRIBUTION]
 {element_info}
+
 
 [FOOD-RELEVANT PLANETS]
 {chr(10).join(food_planets)}

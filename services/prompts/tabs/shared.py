@@ -4,6 +4,18 @@ Shared context formatting helpers used by all tab prompt builders.
 from services.prompts.geeta import get_planet_strengths, calculate_vedic_aspects
 
 
+SIGN_HINDI_MAP = {
+    "Aries": "Mesh", "Taurus": "Vrishabha", "Gemini": "Mithun",
+    "Cancer": "Kark", "Leo": "Simha", "Virgo": "Kanya",
+    "Libra": "Tula", "Scorpio": "Vrishchik", "Sagittarius": "Dhanu",
+    "Capricorn": "Makar", "Aquarius": "Kumbh", "Pisces": "Meen",
+}
+
+def format_sign_hindi(sign: str) -> str:
+    hindi = SIGN_HINDI_MAP.get(sign)
+    return f"{sign} ({hindi})" if hindi else str(sign)
+
+
 def format_profile(profile: dict) -> str:
     """Format user profile block."""
     if not profile:
@@ -16,12 +28,21 @@ def format_profile(profile: dict) -> str:
 
 def format_core_chart(chart_data: dict) -> str:
     """Format the core ascendant/moon/nakshatra context block."""
-    meta = chart_data.get("metadata", {})
+    meta = chart_data.get("metadata") if isinstance(chart_data.get("metadata"), dict) and chart_data.get("metadata") else chart_data
+    asc = meta.get("ascendant_sign") or chart_data.get("ascendant_sign") or "Aries"
+    moon = meta.get("moon_sign") or chart_data.get("moon_sign") or "Cancer"
+    nak = meta.get("nakshatra") or chart_data.get("nakshatra") or "Pushya"
+    pada = meta.get("pada") or chart_data.get("pada") or 1
+    asc_deg = meta.get("ascendant_longitude", 0.0)
+
     return (
-        f"Ascendant (Lagna): {meta.get('ascendant_sign', 'Aries')} at {meta.get('ascendant_longitude', 0.0):.2f}°\n"
-        f"Moon Sign (Rashi): {meta.get('moon_sign', 'Cancer')}\n"
-        f"Nakshatra: {meta.get('nakshatra', 'Pushya')} (Pada {meta.get('pada', 1)})"
+        f"Ascendant (Lagna): {asc} at {asc_deg:.2f}°\n"
+        f"Moon Sign (Rashi): {moon}\n"
+        f"Nakshatra: {nak} (Pada {pada})"
     )
+
+
+
 
 
 def format_planets(planets: dict) -> str:

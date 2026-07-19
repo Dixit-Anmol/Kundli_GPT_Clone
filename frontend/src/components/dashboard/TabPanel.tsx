@@ -58,6 +58,7 @@ export default function TabPanel({
             user_id: userId,
             message: `Provide a detailed ${tab} analysis for my horoscope.`,
             tab: tab,
+            is_initial: true,
           }),
         })
 
@@ -105,8 +106,10 @@ export default function TabPanel({
           user_id: userId,
           message: text,
           tab: tab,
+          is_initial: false,
         }),
       })
+
 
       if (res.ok) {
         const data = await res.json()

@@ -1,4 +1,5 @@
 import type { TabType } from './TabNavigation'
+import { formatSignWithHindi, formatPlanetWithHindi } from '../../utils/hindiMapping'
 
 interface SummaryCardItem {
   label: string
@@ -35,7 +36,7 @@ export default function SummaryCards({ tab, chartData, computed }: SummaryCardsP
             )}
           </div>
           <div>
-            <p className="font-display text-2xl font-bold text-primary leading-tight">
+            <p className="font-display text-xl font-bold text-primary leading-tight">
               {card.value}
             </p>
             {card.subtext && (
@@ -65,49 +66,56 @@ function getCardsForTab(tab: TabType, chartData: any, computed?: any): SummaryCa
   const currentDasha = chartData?.current_dasha || 'Jupiter'
 
   switch (tab) {
-    case 'overview':
+    case 'overview': {
+      const lucky = getLuckyAttributes(comp, chartData)
       return [
-        { label: 'Lagna (Ascendant)', value: meta.ascendant_sign, icon: 'person', subtext: 'Core personality & body' },
-        { label: 'Moon Sign (Rashi)', value: meta.moon_sign, icon: 'brightness_3', subtext: 'Mind & emotions' },
+        { label: 'Lagna (Ascendant)', value: formatSignWithHindi(meta.ascendant_sign), icon: 'person', subtext: 'Core personality & body' },
+        { label: 'Moon Sign (Rashi)', value: formatSignWithHindi(meta.moon_sign), icon: 'brightness_3', subtext: 'Mind & emotions' },
         { label: 'Nakshatra', value: meta.nakshatra, icon: 'auto_awesome', subtext: `Pada ${meta.pada}` },
-        { label: 'Current Dasha', value: currentDasha, icon: 'schedule', subtext: 'Major life chapter' },
-        { label: 'Lucky Color', value: comp.lucky?.lucky_colors?.[0] || 'Gold', icon: 'palette' },
-        { label: 'Lucky Number', value: comp.lucky?.lucky_numbers?.[0] ?? 1, icon: 'pin' },
-        { label: 'Lucky Day', value: comp.lucky?.lucky_day || 'Sunday', icon: 'calendar_today' },
-        { label: 'Dominant Element', value: comp.elements?.dominant || 'Fire', icon: 'water_drop' },
+        { label: 'Current Dasha', value: formatPlanetWithHindi(currentDasha), icon: 'schedule', subtext: 'Major life chapter' },
+        { label: 'Lucky Color', value: lucky.colors?.[0] || lucky.lucky_colors?.[0] || 'Gold', icon: 'palette' },
+        { label: 'Lucky Number', value: lucky.numbers?.[0] ?? lucky.lucky_numbers?.[0] ?? 1, icon: 'pin' },
+        { label: 'Lucky Day', value: lucky.day || lucky.lucky_day || 'Sunday', icon: 'calendar_today' },
+        { label: 'Dominant Element', value: comp.elements?.dominant || getDominantElement(planets, meta), icon: 'water_drop' },
       ]
+    }
+
 
     case 'career':
       return [
-        { label: '10th House (Karma)', value: getHouseLord('10', chartData), icon: 'work', subtext: `Sign: ${houses['10']?.sign || 'N/A'}` },
-        { label: 'Sun Sign', value: planets.sun?.sign ? `${planets.sun.sign} (H${planets.sun.house || '?'})` : 'N/A', icon: 'wb_sunny', subtext: 'Authority & status' },
+        { label: '10th House (Karma)', value: formatPlanetWithHindi(getHouseLord('10', chartData)), icon: 'work', subtext: `Sign: ${formatSignWithHindi(houses['10']?.sign)}` },
+        { label: 'Sun Sign', value: planets.sun?.sign ? `${formatSignWithHindi(planets.sun.sign)} (H${planets.sun.house || '?'})` : 'N/A', icon: 'wb_sunny', subtext: 'Authority & status' },
         { label: 'Career Yogas', value: `${yogas.length} Active`, icon: 'stars', subtext: yogas[0]?.name || 'Raj Yoga' },
         { label: '10th Lord Status', value: getLordDignity('10', chartData, planets), icon: 'trending_up', subtext: 'Karma lord strength' },
       ]
 
     case 'marriage':
       return [
-        { label: '7th House Lord', value: getHouseLord('7', chartData), icon: 'favorite', subtext: `Sign: ${houses['7']?.sign || 'N/A'}` },
-        { label: 'Venus Placement', value: planets.venus?.sign ? `${planets.venus.sign} (H${planets.venus.house || '?'})` : 'N/A', icon: 'favorite_border', subtext: planets.venus?.dignity || 'Relationships' },
+        { label: '7th House Lord', value: formatPlanetWithHindi(getHouseLord('7', chartData)), icon: 'favorite', subtext: `Sign: ${formatSignWithHindi(houses['7']?.sign)}` },
+        { label: 'Venus Placement', value: planets.venus?.sign ? `${formatSignWithHindi(planets.venus.sign)} (H${planets.venus.house || '?'})` : 'N/A', icon: 'favorite_border', subtext: planets.venus?.dignity || 'Relationships' },
         { label: 'Manglik Status', value: doshas.manglik?.is_present ? 'Active' : 'Non-Manglik', icon: 'shield_moon', subtext: doshas.manglik?.is_present ? doshas.manglik.description || 'Mars in 7th' : 'No affliction' },
-        { label: '7th House Sign', value: houses['7']?.sign || 'N/A', icon: 'groups', subtext: 'Partnership Sign' },
+        { label: '7th House Sign', value: formatSignWithHindi(houses['7']?.sign), icon: 'groups', subtext: 'Partnership Sign' },
       ]
 
-    case 'health':
+    case 'health': {
+      const prakriti = getPrakriti(comp, chartData)
       return [
-        { label: '1st House Lord', value: getHouseLord('1', chartData), icon: 'fitness_center', subtext: 'Vitality Lord' },
-        { label: '6th House Lord', value: getHouseLord('6', chartData), icon: 'medical_services', subtext: 'Immunity Lord' },
-        { label: 'Dominant Dosha', value: comp.prakriti?.dominant_dosha || 'Kapha', icon: 'spa', subtext: `Vata ${comp.prakriti?.vata || 30}% | Pitta ${comp.prakriti?.pitta || 35}%` },
+        { label: '1st House Lord', value: formatPlanetWithHindi(getHouseLord('1', chartData)), icon: 'fitness_center', subtext: 'Vitality Lord' },
+        { label: '6th House Lord', value: formatPlanetWithHindi(getHouseLord('6', chartData)), icon: 'medical_services', subtext: 'Immunity Lord' },
+        { label: 'Dominant Dosha', value: prakriti.dominant_dosha, icon: 'spa', subtext: `Vata ${prakriti.vata}% | Pitta ${prakriti.pitta}%` },
         { label: 'Weakest Planet', value: comp.remedy_data?.weak_planets?.[0]?.display_name || 'Balanced', icon: 'warning', subtext: comp.remedy_data?.weak_planets?.[0]?.status || 'No severe affliction' },
       ]
+    }
 
-    case 'food':
+    case 'food': {
+      const prakriti = getPrakriti(comp, chartData)
       return [
-        { label: 'Vata Proportion', value: `${comp.prakriti?.vata ?? 33.3}%`, icon: 'air', subtext: 'Air & Ether element' },
-        { label: 'Pitta Proportion', value: `${comp.prakriti?.pitta ?? 33.3}%`, icon: 'local_fire_department', subtext: 'Fire & Water element' },
-        { label: 'Kapha Proportion', value: `${comp.prakriti?.kapha ?? 33.4}%`, icon: 'water', subtext: 'Earth & Water element' },
-        { label: 'Dominant Constitution', value: comp.prakriti?.dominant_dosha || 'Kapha', icon: 'restaurant', subtext: 'Prakriti Type' },
+        { label: 'Vata Proportion', value: `${prakriti.vata}%`, icon: 'air', subtext: 'Air & Ether element' },
+        { label: 'Pitta Proportion', value: `${prakriti.pitta}%`, icon: 'local_fire_department', subtext: 'Fire & Water element' },
+        { label: 'Kapha Proportion', value: `${prakriti.kapha}%`, icon: 'water', subtext: 'Earth & Water element' },
+        { label: 'Dominant Constitution', value: prakriti.dominant_dosha, icon: 'restaurant', subtext: 'Prakriti Type' },
       ]
+    }
 
     case 'remedies':
       return [
@@ -119,31 +127,117 @@ function getCardsForTab(tab: TabType, chartData: any, computed?: any): SummaryCa
 
     case 'finance':
       return [
-        { label: '2nd House (Wealth)', value: getHouseLord('2', chartData), icon: 'account_balance', subtext: `Sign: ${houses['2']?.sign || 'N/A'}` },
-        { label: '11th House (Gains)', value: getHouseLord('11', chartData), icon: 'payments', subtext: `Sign: ${houses['11']?.sign || 'N/A'}` },
-        { label: 'Jupiter Placement', value: planets.jupiter?.sign ? `${planets.jupiter.sign} (H${planets.jupiter.house || '?'})` : 'N/A', icon: 'monetization_on', subtext: 'Karak for Wealth' },
-        { label: '5th House (Investments)', value: getHouseLord('5', chartData), icon: 'pie_chart', subtext: `Sign: ${houses['5']?.sign || 'N/A'}` },
+        { label: '2nd House (Wealth)', value: formatPlanetWithHindi(getHouseLord('2', chartData)), icon: 'account_balance', subtext: `Sign: ${formatSignWithHindi(houses['2']?.sign)}` },
+        { label: '11th House (Gains)', value: formatPlanetWithHindi(getHouseLord('11', chartData)), icon: 'payments', subtext: `Sign: ${formatSignWithHindi(houses['11']?.sign)}` },
+        { label: 'Jupiter Placement', value: planets.jupiter?.sign ? `${formatSignWithHindi(planets.jupiter.sign)} (H${planets.jupiter.house || '?'})` : 'N/A', icon: 'monetization_on', subtext: 'Karak for Wealth' },
+        { label: '5th House (Investments)', value: formatPlanetWithHindi(getHouseLord('5', chartData)), icon: 'pie_chart', subtext: `Sign: ${formatSignWithHindi(houses['5']?.sign)}` },
       ]
 
     case 'personality':
       return [
-        { label: 'Ascendant Sign', value: meta.ascendant_sign, icon: 'face', subtext: 'Outer persona' },
-        { label: 'Moon Sign', value: meta.moon_sign, icon: 'psychology', subtext: 'Emotional core' },
-        { label: 'Mercury Sign', value: planets.mercury?.sign ? `${planets.mercury.sign} (H${planets.mercury.house || '?'})` : 'N/A', icon: 'chat', subtext: 'Intellect & Speech' },
-        { label: 'Mars Sign', value: planets.mars?.sign ? `${planets.mars.sign} (H${planets.mars.house || '?'})` : 'N/A', icon: 'bolt', subtext: 'Courage & Action' },
+        { label: 'Ascendant Sign', value: formatSignWithHindi(meta.ascendant_sign), icon: 'face', subtext: 'Outer persona' },
+        { label: 'Moon Sign', value: formatSignWithHindi(meta.moon_sign), icon: 'psychology', subtext: 'Emotional core' },
+        { label: 'Mercury Sign', value: planets.mercury?.sign ? `${formatSignWithHindi(planets.mercury.sign)} (H${planets.mercury.house || '?'})` : 'N/A', icon: 'chat', subtext: 'Intellect & Speech' },
+        { label: 'Mars Sign', value: planets.mars?.sign ? `${formatSignWithHindi(planets.mars.sign)} (H${planets.mars.house || '?'})` : 'N/A', icon: 'bolt', subtext: 'Courage & Action' },
       ]
 
     case 'spiritual':
       return [
-        { label: '9th House (Dharma)', value: getHouseLord('9', chartData), icon: 'auto_awesome', subtext: `Sign: ${houses['9']?.sign || 'N/A'}` },
-        { label: '12th House (Moksha)', value: getHouseLord('12', chartData), icon: 'self_improvement', subtext: `Sign: ${houses['12']?.sign || 'N/A'}` },
-        { label: 'Ketu Placement', value: planets.ketu?.sign ? `${planets.ketu.sign} (H${planets.ketu.house || '?'})` : 'N/A', icon: 'landscape', subtext: 'Detachment path' },
-        { label: 'Recommended Path', value: getSpiritualPath(comp.elements?.dominant), icon: 'menu_book', subtext: 'Based on element' },
+        { label: '9th House (Dharma)', value: formatPlanetWithHindi(getHouseLord('9', chartData)), icon: 'auto_awesome', subtext: `Sign: ${formatSignWithHindi(houses['9']?.sign)}` },
+        { label: '12th House (Moksha)', value: formatPlanetWithHindi(getHouseLord('12', chartData)), icon: 'self_improvement', subtext: `Sign: ${formatSignWithHindi(houses['12']?.sign)}` },
+        { label: 'Ketu Placement', value: planets.ketu?.sign ? `${formatSignWithHindi(planets.ketu.sign)} (H${planets.ketu.house || '?'})` : 'N/A', icon: 'landscape', subtext: 'Detachment path' },
+        { label: 'Recommended Path', value: getSpiritualPath(comp.elements?.dominant || getDominantElement(planets, meta)), icon: 'menu_book', subtext: 'Based on element' },
       ]
+
 
     default:
       return []
   }
+}
+
+/** Dynamic client-side Prakriti calculation matching backend algorithm exactly */
+function getPrakriti(comp: any, chartData: any) {
+  if (comp?.prakriti?.dominant_dosha && typeof comp.prakriti.vata === 'number') {
+    return comp.prakriti
+  }
+
+  const meta = {
+    ascendant_sign: chartData?.metadata?.ascendant_sign || chartData?.ascendant_sign || 'Aries',
+    nakshatra: chartData?.metadata?.nakshatra || chartData?.nakshatra || 'Ashwini',
+  }
+  const planets = chartData?.raw_positions || chartData?.planets || {}
+
+  const signElements: Record<string, string> = {
+    Aries: 'Fire', Leo: 'Fire', Sagittarius: 'Fire',
+    Taurus: 'Earth', Virgo: 'Earth', Capricorn: 'Earth',
+    Gemini: 'Air', Libra: 'Air', Aquarius: 'Air',
+    Cancer: 'Water', Scorpio: 'Water', Pisces: 'Water',
+  }
+
+  const elementDosha: Record<string, { vata: number; pitta: number; kapha: number }> = {
+    Fire:  { vata: 0.1, pitta: 0.7, kapha: 0.2 },
+    Earth: { vata: 0.1, pitta: 0.2, kapha: 0.7 },
+    Air:   { vata: 0.7, pitta: 0.2, kapha: 0.1 },
+    Water: { vata: 0.2, pitta: 0.3, kapha: 0.5 },
+  }
+
+  const planetWeights: Record<string, number> = {
+    sun: 2.0, moon: 2.5, mars: 1.5, mercury: 1.2, jupiter: 1.5, venus: 1.2, saturn: 1.5, rahu: 0.8, ketu: 0.8
+  }
+
+  let vata = 0, pitta = 0, kapha = 0
+
+  // 1. Ascendant (weight 3.0)
+  const ascElement = signElements[meta.ascendant_sign] || 'Fire'
+  const ascDosha = elementDosha[ascElement] || elementDosha.Fire
+  vata += ascDosha.vata * 3.0
+  pitta += ascDosha.pitta * 3.0
+  kapha += ascDosha.kapha * 3.0
+
+  // 2. Planets
+  Object.entries(planets).forEach(([pName, pData]: [string, any]) => {
+    const sign = pData?.sign || 'Aries'
+    const elem = signElements[sign] || 'Fire'
+    const d = elementDosha[elem] || elementDosha.Fire
+    const w = planetWeights[pName.toLowerCase()] || 1.0
+    vata += d.vata * w
+    pitta += d.pitta * w
+    kapha += d.kapha * w
+  })
+
+  const sum = vata + pitta + kapha || 1.0
+  const vataPct = Math.round((vata / sum) * 1000) / 10
+  const pittaPct = Math.round((pitta / sum) * 1000) / 10
+  const kaphaPct = Math.round((100 - vataPct - pittaPct) * 10) / 10
+
+  const doshas: Record<string, number> = { Vata: vataPct, Pitta: pittaPct, Kapha: kaphaPct }
+  const dominant_dosha = Object.entries(doshas).reduce((a, b) => (a[1] > b[1] ? a : b))[0]
+
+  return {
+    vata: vataPct,
+    pitta: pittaPct,
+    kapha: kaphaPct,
+    dominant_dosha,
+  }
+}
+
+function getDominantElement(planets: any, meta: any): string {
+  const signElements: Record<string, string> = {
+    Aries: 'Fire', Leo: 'Fire', Sagittarius: 'Fire',
+    Taurus: 'Earth', Virgo: 'Earth', Capricorn: 'Earth',
+    Gemini: 'Air', Libra: 'Air', Aquarius: 'Air',
+    Cancer: 'Water', Scorpio: 'Water', Pisces: 'Water',
+  }
+  const counts: Record<string, number> = { Fire: 0, Earth: 0, Air: 0, Water: 0 }
+  const ascElem = signElements[meta.ascendant_sign] || 'Fire'
+  counts[ascElem] += 3
+
+  Object.values(planets).forEach((p: any) => {
+    const elem = signElements[p?.sign]
+    if (elem) counts[elem] += 1
+  })
+
+  return Object.entries(counts).reduce((a, b) => (a[1] > b[1] ? a : b))[0]
 }
 
 function getHouseLord(houseNum: string, chartData: any): string {
@@ -177,3 +271,26 @@ function getSpiritualPath(element?: string): string {
       return 'Jnana & Self-Inquiry'
   }
 }
+
+function getLuckyAttributes(comp: any, chartData: any) {
+  if (comp?.lucky?.lucky_day) return comp.lucky
+
+  const moonSign = chartData?.metadata?.moon_sign || chartData?.moon_sign || 'Aries'
+  const luckyMap: Record<string, { colors: string[]; numbers: number[]; day: string; direction: string }> = {
+    Aries: { colors: ['Red', 'Coral'], numbers: [9, 18, 27], day: 'Tuesday', direction: 'East' },
+    Taurus: { colors: ['Pink', 'White'], numbers: [6, 15, 24], day: 'Friday', direction: 'South-East' },
+    Gemini: { colors: ['Green', 'Yellow'], numbers: [5, 14, 23], day: 'Wednesday', direction: 'North' },
+    Cancer: { colors: ['White', 'Silver'], numbers: [2, 11, 20], day: 'Monday', direction: 'North-West' },
+    Leo: { colors: ['Gold', 'Orange'], numbers: [1, 10, 19], day: 'Sunday', direction: 'East' },
+    Virgo: { colors: ['Green', 'Navy'], numbers: [5, 14, 23], day: 'Wednesday', direction: 'North' },
+    Libra: { colors: ['Royal Blue', 'White'], numbers: [6, 15, 24], day: 'Friday', direction: 'South-East' },
+    Scorpio: { colors: ['Deep Red', 'Maroon'], numbers: [9, 18, 27], day: 'Tuesday', direction: 'North' },
+    Sagittarius: { colors: ['Yellow', 'Gold'], numbers: [3, 12, 21], day: 'Thursday', direction: 'North-East' },
+    Capricorn: { colors: ['Navy Blue', 'Black'], numbers: [8, 17, 26], day: 'Saturday', direction: 'West' },
+    Aquarius: { colors: ['Electric Blue', 'Cyan'], numbers: [8, 17, 26], day: 'Saturday', direction: 'West' },
+    Pisces: { colors: ['Sea Green', 'Yellow'], numbers: [3, 12, 21], day: 'Thursday', direction: 'North-East' },
+  }
+
+  return luckyMap[moonSign] || luckyMap.Aries
+}
+

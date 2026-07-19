@@ -62,18 +62,19 @@ def estimate_prakriti(chart_data: dict) -> dict:
             "element_distribution": {"Fire": %, "Earth": %, "Air": %, "Water": %},
         }
     """
-    meta = chart_data.get("metadata", {})
-    planets = chart_data.get("planets", {})
-    
+    meta = chart_data.get("metadata") if isinstance(chart_data.get("metadata"), dict) and chart_data.get("metadata") else chart_data
+    planets = chart_data.get("raw_positions") or chart_data.get("planets", {})
+
     vata_score = 0.0
     pitta_score = 0.0
     kapha_score = 0.0
     total_weight = 0.0
-    
+
     element_scores = {"Fire": 0.0, "Earth": 0.0, "Air": 0.0, "Water": 0.0}
-    
+
     # 1. Ascendant sign contribution (weight 3.0)
-    asc_sign = meta.get("ascendant_sign", "Aries")
+    asc_sign = meta.get("ascendant_sign") or chart_data.get("ascendant_sign") or "Aries"
+
     asc_element = SIGN_ELEMENTS.get(asc_sign, "Fire")
     asc_dosha = ELEMENT_DOSHA.get(asc_element, ELEMENT_DOSHA["Fire"])
     asc_weight = 3.0
@@ -101,7 +102,8 @@ def estimate_prakriti(chart_data: dict) -> dict:
         total_weight += weight
     
     # 3. Moon nakshatra contribution (weight 1.5)
-    moon_nak = meta.get("nakshatra", "")
+    moon_nak = meta.get("nakshatra") or chart_data.get("nakshatra") or ""
+
     nak_dosha = NAKSHATRA_DOSHA.get(moon_nak, "vata")
     nak_weight = 1.5
     if nak_dosha == "vata":

@@ -4,6 +4,8 @@ import Navbar from '../components/layout/Navbar'
 import TabNavigation, { type TabType } from '../components/dashboard/TabNavigation'
 import TabPanel, { type TabCacheItem } from '../components/dashboard/TabPanel'
 import type { UserProfile } from '../types/profile'
+import { formatSignWithHindi } from '../utils/hindiMapping'
+
 
 interface DashboardPageProps {
   chartData: any
@@ -79,8 +81,9 @@ export default function DashboardPage({
               )}
             </div>
             <p className="text-xs text-on-surface-variant mt-1 font-medium">
-              Ascendant: <strong className="text-primary">{meta.ascendant_sign}</strong> · Moon Sign: <strong className="text-primary">{meta.moon_sign}</strong> · Nakshatra: <strong className="text-primary">{meta.nakshatra}</strong>
+              Ascendant (Lagna): <strong className="text-primary">{formatSignWithHindi(meta.ascendant_sign)}</strong> · Moon Sign (Rashi): <strong className="text-primary">{formatSignWithHindi(meta.moon_sign)}</strong> · Nakshatra: <strong className="text-primary">{meta.nakshatra}</strong>
             </p>
+
           </div>
 
           <button
