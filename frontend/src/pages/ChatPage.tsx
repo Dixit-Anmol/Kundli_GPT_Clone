@@ -1,113 +1,60 @@
 import { useState, useEffect } from 'react'
-import ReactMarkdown from 'react-markdown'
 import Navbar from '../components/layout/Navbar'
-import ChatInputBar from '../components/chat/ChatInputBar'
-import AssistantMessage from '../components/chat/AssistantMessage'
-import BirthDetailsForm from '../components/chat/BirthDetailsForm'
+import BirthDetailsForm, { type BirthData } from '../components/chat/BirthDetailsForm'
 import BirthplaceMap from '../components/chat/BirthplaceMap'
 import ComputingCard from '../components/chat/ComputingCard'
-import HoroscopeSummary from '../components/chat/HoroscopeSummary'
-import SuggestionChips from '../components/chat/SuggestionChips'
-import type { BirthData } from '../components/chat/BirthDetailsForm'
+import AssistantMessage from '../components/chat/AssistantMessage'
+import DashboardPage from './DashboardPage'
+
+import type { UserProfile } from '../types/profile'
+import {
+  getSavedProfiles,
+  getActiveProfileId,
+  setActiveProfileId,
+  saveProfile,
+  deleteProfile,
+  MAX_PROFILES,
+} from '../utils/profileManager'
 
 type ChatStep = 'loading' | 'welcome' | 'birthplace' | 'computing' | 'ready'
 
-interface Message {
-  role: 'user' | 'assistant'
-  content: string
-}
-
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:8000'
-  : 'https://kundli-gpt-clone-back.onrender.com'
-
-// ---------------------------------------------------------------------------
-// UUID Persistence — read or create the anonymous user identifier
-// ---------------------------------------------------------------------------
-function getOrCreateUserId(): string {
-  const STORAGE_KEY = 'kundli_user_id'
-  let userId = localStorage.getItem(STORAGE_KEY)
-  if (!userId) {
-    userId = crypto.randomUUID()
-    localStorage.setItem(STORAGE_KEY, userId)
-  }
-  return userId
-}
+const API_BASE_URL =
+  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8000'
+    : 'https://kundli-gpt-clone-back.onrender.com'
 
 export default function ChatPage() {
-  // Persistent anonymous UUID (survives page refreshes)
-  const [userId] = useState<string>(getOrCreateUserId)
-  // Ephemeral session ID — used by the in-memory backend session store
   const [sessionId] = useState(() => Math.random().toString(36).substring(7))
-
-  const [inputValue, setInputValue] = useState('')
   const [step, setStep] = useState<ChatStep>('loading')
-  const [birthData, setBirthData] = useState<BirthData | null>(null)
 
-  // Real computed horoscope data from backend
+  // Multi-profile state
+  const [profiles, setProfiles] = useState<UserProfile[]>([])
+  const [activeId, setActiveId] = useState<string | null>(null)
+
+  // Current active profile's chart and birth data
+  const [birthData, setBirthData] = useState<BirthData | null>(null)
   const [chartData, setChartData] = useState<any>(null)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [loadingChat, setLoadingChat] = useState(false)
 
   // -----------------------------------------------------------------------
-  // Profile check on mount — look up stored profile by UUID
+  // On Mount — Load saved profiles from localStorage
   // -----------------------------------------------------------------------
   useEffect(() => {
-    let cancelled = false
+    const saved = getSavedProfiles()
+    const savedActiveId = getActiveProfileId()
 
-    async function checkProfile() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/profile/${userId}`)
-        if (!res.ok) {
-          if (!cancelled) setStep('welcome')
-          return
-        }
-        const data = await res.json()
+    setProfiles(saved)
 
-        if (data.exists && data.chart_summary && data.birth_details) {
-          // Restore saved state
-          if (!cancelled) {
-            const bd = data.birth_details
-            setBirthData({
-              fullName: bd.name || 'Seeker',
-              gender: bd.gender || 'other',
-              dateOfBirth: bd.date_of_birth || '',
-              timeOfBirth: (bd.time_of_birth || '').replace(/:00$/, ''),
-            })
-            setChartData(data.chart_summary)
-            setStep('ready')
-
-            // Fetch initial chart interpretation
-            setLoadingChat(true)
-            const chatRes = await fetch(`${API_BASE_URL}/api/chat`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                session_id: sessionId,
-                user_id: userId,
-                message: 'Analyze my birth chart and explain my placements.',
-              }),
-            })
-            if (chatRes.ok) {
-              const chatJson = await chatRes.json()
-              if (!cancelled) {
-                setMessages([{ role: 'assistant', content: chatJson.response }])
-              }
-            }
-            if (!cancelled) setLoadingChat(false)
-          }
-        } else {
-          if (!cancelled) setStep('welcome')
-        }
-      } catch {
-        // Backend unreachable — fall back to new-user flow
-        if (!cancelled) setStep('welcome')
-      }
+    if (saved.length > 0) {
+      const active = saved.find((p) => p.id === savedActiveId) || saved[0]
+      setActiveId(active.id)
+      setActiveProfileId(active.id)
+      setBirthData(active.birthData)
+      setChartData(active.chartData)
+      setStep('ready')
+    } else {
+      setStep('welcome')
     }
-
-    checkProfile()
-    return () => { cancelled = true }
-  }, [userId, sessionId])
+  }, [])
 
   // -----------------------------------------------------------------------
   // Birth details form submission
@@ -118,11 +65,13 @@ export default function ChatPage() {
   }
 
   // -----------------------------------------------------------------------
-  // Birthplace confirmation → chart computation + profile persistence
+  // Birthplace confirmation → chart computation + multi-profile persistence
   // -----------------------------------------------------------------------
   const handleBirthplaceConfirm = async (_placeName: string, lat: number, lon: number) => {
     if (!birthData) return
     setStep('computing')
+
+    const newProfileId = crypto.randomUUID()
 
     try {
       // 1. Fetch real chart data from FastAPI backend
@@ -138,160 +87,177 @@ export default function ChatPage() {
           latitude: lat,
           longitude: lon,
           session_id: sessionId,
-          user_id: userId,       // ← Triggers profile persistence on backend
+          user_id: newProfileId,
         }),
       })
 
       if (response.ok) {
         const data = await response.json()
+
+        const newProfile: UserProfile = {
+          id: newProfileId,
+          name: birthData.fullName,
+          relationship: birthData.relationship || 'Self',
+          birthData: {
+            ...birthData,
+            placeName: _placeName,
+            latitude: lat,
+            longitude: lon,
+          },
+          chartData: data,
+          computed: data.computed,
+          createdAt: new Date().toISOString(),
+        }
+
+        const updatedProfiles = saveProfile(newProfile)
+        setProfiles(updatedProfiles)
+        setActiveId(newProfileId)
         setChartData(data)
         setStep('ready')
-
-        // 2. Fetch the initial birth chart interpretation response
-        setLoadingChat(true)
-        const chatRes = await fetch(`${API_BASE_URL}/api/chat`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            session_id: sessionId,
-            user_id: userId,
-            message: "Analyze my birth chart and explain my placements.",
-          }),
-        })
-
-        if (chatRes.ok) {
-          const chatDataJson = await chatRes.json()
-          setMessages([
-            { role: 'assistant', content: chatDataJson.response }
-          ])
-        }
       }
     } catch (err) {
       console.error('Failed to calculate horoscope chart:', err)
-      // Fallback for offline/development environments
-      setTimeout(() => {
-        setChartData({
-          ascendant_sign: 'Libra',
-          moon_sign: 'Cancer',
-          nakshatra: 'Pushya',
-          pada: 2,
-          yogas: [{ name: 'Gaja Kesari Yoga', meaning: 'Jupiter in Kendra from Moon' }],
-          doshas: {
-            manglik: { is_present: true, description: 'Mars in 7th house' },
-            kaal_sarp: { is_present: false },
-            sade_sati: { is_present: false }
-          }
-        })
-        setMessages([
-          { 
-            role: 'assistant', 
-            content: '🙏 Blessings. I have calculated your Vedic Birth Chart. Your Ascendant is Libra, Moon Sign is Cancer, and you are currently in a Jupiter Mahadasha. How may I guide you on your Dharma today?' 
-          }
-        ])
-        setStep('ready')
-      }, 2000)
-    } finally {
-      setLoadingChat(false)
-    }
-  }
-
-  // -----------------------------------------------------------------------
-  // Chat message sending
-  // -----------------------------------------------------------------------
-  const handleSend = async (messageText?: string) => {
-    const textToSend = messageText || inputValue
-    if (!textToSend.trim() || loadingChat) return
-
-    // Append user message immediately
-    const updatedMessages = [...messages, { role: 'user', content: textToSend } as Message]
-    setMessages(updatedMessages)
-    setInputValue('')
-    setLoadingChat(true)
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          session_id: sessionId,
-          user_id: userId,
-          message: textToSend,
-        }),
-      })
-
-      if (response.ok) {
-        const chatDataJson = await response.json()
-        setMessages(prev => [
-          ...prev,
-          { role: 'assistant', content: chatDataJson.response }
-        ])
+      // Fallback offline profile creation
+      const mockChart = {
+        name: birthData.fullName,
+        ascendant_sign: 'Scorpio',
+        moon_sign: 'Aries',
+        nakshatra: 'Ashwini',
+        pada: 2,
+        yogas: [{ name: 'Budhaditya Yoga', meaning: 'Sun-Mercury conjunction in 10th house' }],
+        doshas: { manglik: { is_present: true, description: 'Mars in 4th house' } },
+        planets: {},
+        houses: {},
       }
-    } catch (err) {
-      console.error('Failed to send message:', err)
-      // Mock fallback answer
-      setTimeout(() => {
-        setMessages(prev => [
-          ...prev,
-          { 
-            role: 'assistant', 
-            content: `Blessings. In response to your question: "${textToSend}", Vedic wisdom teaches us to focus on our action (Karma) without attachment to the results. Your Cancer Moon sign makes you highly sensitive; ground yourself in meditation.` 
-          }
-        ])
-      }, 1000)
-    } finally {
-      setLoadingChat(false)
+
+      const fallbackProfile: UserProfile = {
+        id: newProfileId,
+        name: birthData.fullName,
+        relationship: birthData.relationship || 'Self',
+        birthData: {
+          ...birthData,
+          placeName: _placeName,
+          latitude: lat,
+          longitude: lon,
+        },
+        chartData: mockChart,
+        createdAt: new Date().toISOString(),
+      }
+
+      const updatedProfiles = saveProfile(fallbackProfile)
+      setProfiles(updatedProfiles)
+      setActiveId(newProfileId)
+      setChartData(mockChart)
+      setStep('ready')
     }
   }
 
-  const handleSuggestion = (text: string) => {
-    handleSend(text)
+  // -----------------------------------------------------------------------
+  // Switch Active Profile (from Navbar Dropdown)
+  // -----------------------------------------------------------------------
+  const handleSelectProfile = (profileId: string) => {
+    const target = profiles.find((p) => p.id === profileId)
+    if (!target) return
+    setActiveId(profileId)
+    setActiveProfileId(profileId)
+    setBirthData(target.birthData)
+    setChartData(target.chartData)
+    setStep('ready')
   }
 
   // -----------------------------------------------------------------------
-  // Update birth details — resets profile and shows form again
+  // Add New Profile (from Navbar Dropdown)
   // -----------------------------------------------------------------------
-  const handleUpdateBirthDetails = async () => {
-    try {
-      await fetch(`${API_BASE_URL}/api/profile/${userId}`, { method: 'DELETE' })
-    } catch {
-      // Ignore network errors — we'll reset locally anyway
+  const handleAddNewProfile = () => {
+    if (profiles.length >= MAX_PROFILES) {
+      alert(`You have reached the maximum profile limit (${MAX_PROFILES}). Remove an existing profile to add a new one.`)
+      return
     }
-    setChartData(null)
     setBirthData(null)
-    setMessages([])
+    setChartData(null)
     setStep('welcome')
+  }
+
+  // -----------------------------------------------------------------------
+  // Delete Profile (from Navbar Dropdown)
+  // -----------------------------------------------------------------------
+  const handleDeleteProfile = async (profileId: string) => {
+    try {
+      await fetch(`${API_BASE_URL}/api/profile/${profileId}`, { method: 'DELETE' })
+    } catch {
+      // Ignore network errors
+    }
+
+    const updated = deleteProfile(profileId)
+    setProfiles(updated)
+
+    if (updated.length > 0) {
+      const active = updated.find((p) => p.id === getActiveProfileId()) || updated[0]
+      setActiveId(active.id)
+      setActiveProfileId(active.id)
+      setBirthData(active.birthData)
+      setChartData(active.chartData)
+      setStep('ready')
+    } else {
+      setActiveId(null)
+      setBirthData(null)
+      setChartData(null)
+      setStep('welcome')
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Render Dashboard Page if Chart Ready
+  // -----------------------------------------------------------------------
+  if (step === 'ready' && chartData && activeId) {
+    return (
+      <DashboardPage
+        chartData={chartData}
+        computed={chartData.computed}
+        birthData={birthData}
+        sessionId={sessionId}
+        userId={activeId}
+        apiBaseUrl={API_BASE_URL}
+        profiles={profiles}
+        activeProfileId={activeId}
+        onSelectProfile={handleSelectProfile}
+        onAddNewProfile={handleAddNewProfile}
+        onDeleteProfile={handleDeleteProfile}
+        onResetProfile={() => setStep('welcome')}
+      />
+    )
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <Navbar
+        profiles={profiles}
+        activeProfileId={activeId || undefined}
+        onSelectProfile={handleSelectProfile}
+        onAddNewProfile={handleAddNewProfile}
+        onDeleteProfile={handleDeleteProfile}
+      />
 
-      {/* Main Chat Content */}
       <main className="relative z-10 max-w-[800px] mx-auto px-4 pt-12 pb-[180px]">
         <div className="space-y-6">
-
-          {/* Loading State — checking for existing profile */}
+          {/* Loading State */}
           {step === 'loading' && (
             <AssistantMessage icon="hourglass_top">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
                 <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100" />
                 <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200" />
-                <span className="text-on-surface-variant ml-2">Checking for your saved horoscope…</span>
+                <span className="text-on-surface-variant ml-2">Checking saved horoscope profiles…</span>
               </div>
             </AssistantMessage>
           )}
 
-          {/* Welcome Message — shown only when no profile found */}
+          {/* Welcome Message */}
           {step !== 'loading' && (
             <AssistantMessage icon="star">
-              {step === 'ready' && birthData
-                ? `🙏 Welcome back, ${birthData.fullName}! Your horoscope is ready.`
-                : '🙏 Namaste! Welcome. I\'ll prepare your personalized horoscope and become your spiritual assistant. Before we begin, I need a few birth details.'}
+              {profiles.length > 0
+                ? '🙏 Namaste! Add a new profile for a family member or friend to analyze their Vedic birth chart.'
+                : '🙏 Namaste! Welcome to Kundli AI. I will calculate your personalized Vedic birth chart and store up to 5 profiles for you and your loved ones.'}
             </AssistantMessage>
           )}
 
@@ -302,8 +268,8 @@ export default function ChatPage() {
           {(step === 'birthplace' || step === 'computing') && (
             <>
               <AssistantMessage icon="location_on">
-                Great{birthData ? `, ${birthData.fullName}` : ''}! Now I need your birthplace.
-                Please search your city or drop a pin on the map.
+                Great{birthData ? `, ${birthData.fullName}` : ''}! Now I need the birthplace location.
+                Please search the city or drop a pin on the map.
               </AssistantMessage>
               {step === 'birthplace' && <BirthplaceMap onConfirm={handleBirthplaceConfirm} />}
             </>
@@ -311,96 +277,16 @@ export default function ChatPage() {
 
           {/* Computing State */}
           {step === 'computing' && (
-            <ComputingCard steps={[
-              { label: 'Finding Planetary Positions', status: 'active', progress: 45 },
-              { label: 'Calculating Houses', status: 'waiting' },
-              { label: 'Computing Nakshatras', status: 'waiting' },
-            ]} />
-          )}
-
-          {/* Horoscope Ready & Interactive Q&A */}
-          {step === 'ready' && chartData && (
-            <>
-              {/* Ready Summary Card */}
-              <HoroscopeSummary
-                details={[
-                  { label: 'Ascendant (Lagna)', value: chartData.ascendant_sign },
-                  { label: 'Moon Sign (Rashi)', value: chartData.moon_sign },
-                  { label: 'Current Dasha', value: 'Jupiter' },  // Can be calculated dynamically
-                  { label: 'Nakshatra', value: chartData.nakshatra },
-                ]}
-                todaysEnergy={
-                  chartData.doshas?.manglik?.is_present 
-                    ? '"Mars is active in your relationship quadrant. Focus on patience and non-violent communication. A good day for introspective studies."'
-                    : '"A harmonious day for ventures. Sun in your 10th house indicates focus and professional alignment. Stay committed to your path."'
-                }
-                onViewComplete={() => console.log('View complete horoscope')}
-              />
-
-              {/* Update Birth Details Button */}
-              <div className="flex justify-center">
-                <button
-                  onClick={handleUpdateBirthDetails}
-                  className="text-sm text-on-surface-variant hover:text-primary transition-colors underline underline-offset-4 decoration-outline-variant hover:decoration-primary"
-                >
-                  Update Birth Details
-                </button>
-              </div>
-
-              {/* Chat Thread */}
-              <div className="space-y-6 mt-10 border-t border-outline-variant/30 pt-10">
-                {messages.map((msg, i) => (
-                  msg.role === 'assistant' ? (
-                    <AssistantMessage key={i} icon="auto_awesome">
-                      <div className="font-body leading-relaxed text-on-surface markdown-container">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
-                      </div>
-                    </AssistantMessage>
-                  ) : (
-                    <div key={i} className="flex justify-end animate-fade-in-up">
-                      <div className="max-w-[85%] bg-primary-fixed border border-primary/20 text-on-primary-fixed rounded-2xl rounded-tr-none p-4 text-[16px] leading-6 shadow-sm font-medium">
-                        {msg.content}
-                      </div>
-                    </div>
-                  )
-                ))}
-                
-                {/* Typing Loader */}
-                {loadingChat && (
-                  <div className="flex gap-4 items-center pl-4 py-2 opacity-70">
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100" />
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200" />
-                  </div>
-                )}
-              </div>
-
-              {/* Suggestion Chips */}
-              {!loadingChat && (
-                <SuggestionChips
-                  suggestions={[
-                    'Explain my birth chart',
-                    'Career Guidance',
-                    'Marriage Compatibility',
-                    'Gemstone Recommendation',
-                    'Health Forecast',
-                  ]}
-                  onSelect={handleSuggestion}
-                />
-              )}
-            </>
+            <ComputingCard
+              steps={[
+                { label: 'Finding Sidereal Planetary Positions', status: 'active', progress: 45 },
+                { label: 'Calculating Houses & Lagna', status: 'waiting' },
+                { label: 'Computing Nakshatras & Yogas', status: 'waiting' },
+              ]}
+            />
           )}
         </div>
       </main>
-
-      {/* Floating Chat Input */}
-      {step === 'ready' && (
-        <ChatInputBar 
-          value={inputValue} 
-          onChange={setInputValue} 
-          onSend={() => handleSend()} 
-        />
-      )}
     </div>
   )
 }

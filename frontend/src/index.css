@@ -88,6 +88,14 @@ h1, h2, h3, .font-display {
   background: var(--color-outline-variant);
   border-radius: 10px;
 }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 
 /* Shimmer animation */
 .shimmer {

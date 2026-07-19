@@ -32,8 +32,9 @@ class GroqClient:
                         {"role": "user", "content": user_prompt}
                     ],
                     "temperature": 0.7,
-                    "max_tokens": 2048
+                    "max_tokens": 650
                 }
+
                 response = requests.post(url, headers=headers, json=data, timeout=30)
                 if response.ok:
                     res_data = response.json()

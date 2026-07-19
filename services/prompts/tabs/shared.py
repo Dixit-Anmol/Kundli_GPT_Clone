@@ -1,0 +1,92 @@
+"""
+Shared context formatting helpers used by all tab prompt builders.
+"""
+from services.prompts.geeta import get_planet_strengths, calculate_vedic_aspects
+
+
+def format_profile(profile: dict) -> str:
+    """Format user profile block."""
+    if not profile:
+        return "Name: Seeker"
+    name = profile.get("name", "Seeker")
+    dob = profile.get("date_of_birth", "N/A")
+    tob = profile.get("time_of_birth", "N/A")
+    return f"Name: {name}\nDate of Birth: {dob}\nTime of Birth: {tob}"
+
+
+def format_core_chart(chart_data: dict) -> str:
+    """Format the core ascendant/moon/nakshatra context block."""
+    meta = chart_data.get("metadata", {})
+    return (
+        f"Ascendant (Lagna): {meta.get('ascendant_sign', 'Aries')} at {meta.get('ascendant_longitude', 0.0):.2f}°\n"
+        f"Moon Sign (Rashi): {meta.get('moon_sign', 'Cancer')}\n"
+        f"Nakshatra: {meta.get('nakshatra', 'Pushya')} (Pada {meta.get('pada', 1)})"
+    )
+
+
+def format_planets(planets: dict) -> str:
+    """Format planetary positions with strengths."""
+    strengths = get_planet_strengths(planets)
+    lines = []
+    for p_name, p in planets.items():
+        state = "Retrograde" if p.get("retrograde") else "Direct"
+        combust = "Combust" if p.get("combust") else ""
+        str_val, str_desc = strengths.get(p_name, ("Neutral", ""))
+        status_parts = [s for s in [state, combust] if s]
+        lines.append(
+            f"- {p.get('name_sanskrit', p_name.capitalize())} ({p_name.capitalize()}): "
+            f"{p.get('sign', '?')} | {p.get('degree', 0):.1f}° | House {p.get('house', '?')} | "
+            f"Nak: {p.get('nakshatra', {}).get('name', '?')} | {', '.join(status_parts)} | {str_val}"
+        )
+    return "\n".join(lines)
+
+
+def format_houses_subset(houses: dict, planets: dict, house_numbers: list) -> str:
+    """Format only the specified house numbers."""
+    lines = []
+    for h_num in house_numbers:
+        h_key = str(h_num)
+        h = houses.get(h_key, {})
+        if not h:
+            continue
+        occupants = [p_name.capitalize() for p_name, p in planets.items() if str(p.get("house")) == h_key]
+        occ_str = ", ".join(occupants) if occupants else "Empty"
+        lines.append(
+            f"- House {h_num} ({h.get('sign', '?')}): Lord: {h.get('lord', '?').capitalize()} | "
+            f"Occupants: {occ_str} | {h.get('signification', '')}"
+        )
+    return "\n".join(lines)
+
+
+def format_all_houses(houses: dict, planets: dict) -> str:
+    """Format all 12 houses."""
+    return format_houses_subset(houses, planets, list(range(1, 13)))
+
+
+def format_yogas(yogas: list) -> str:
+    """Format yoga list."""
+    if not yogas:
+        return "None active."
+    lines = []
+    for y in yogas:
+        lines.append(f"- {y.get('name', '?')} ({y.get('type', '?')}): {y.get('meaning', '')}")
+    return "\n".join(lines)
+
+
+def format_doshas(doshas: dict) -> str:
+    """Format dosha status."""
+    lines = []
+    for d_name, d_val in doshas.items():
+        active = "Active" if d_val.get("is_present") else "Not Active"
+        lines.append(f"- {d_name.capitalize()}: {active} — {d_val.get('description', 'No affliction')}")
+    return "\n".join(lines) or "None detected."
+
+
+def format_history(history: list, last_n: int = 4) -> str:
+    """Format recent conversation history."""
+    if not history:
+        return "No previous conversation."
+    turns = []
+    for h in history[-last_n:]:
+        turns.append(f"{h['role'].capitalize()}: {h['content'][:200]}")
+    return "\n".join(turns)

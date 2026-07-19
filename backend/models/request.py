@@ -20,3 +20,10 @@ class ChatRequest(BaseModel):
     session_id: str
     message: str
     user_id: Optional[str] = None   # For profile-store fallback loading
+
+class TabChatRequest(BaseModel):
+    session_id: str
+    message: str
+    tab: str  # "overview" | "career" | "marriage" | "health" | "food" | "remedies" | "finance" | "personality" | "spiritual"
+    user_id: Optional[str] = None
+

@@ -13,7 +13,15 @@ from backend.astrology.types import BirthDetails
 from backend.astrology.chart_generator import generate_all_charts
 from backend.astrology.chart_storage import chart_cache
 
+# Dashboard calculation engine imports
+from services.astrology.prakriti import estimate_prakriti
+from services.astrology.elements import calculate_element_distribution
+from services.astrology.lucky import calculate_lucky_attributes
+from services.astrology.planet_ranking import rank_planets
+from services.astrology.remedies_calc import generate_remedy_data
+
 router = APIRouter()
+
 
 def find_timezone_offset(lat: float, lon: float, date_str: str) -> tuple:
     """Resolve the timezone name and historical UTC offset hours (standard or daylight saving time)."""
@@ -105,16 +113,46 @@ def build_chart(req: ChartRequest):
             
         meta = chart_data["metadata"]
         
+        # Compute domain-specific dashboard analyses
+        prakriti = estimate_prakriti(chart_data)
+        elements = calculate_element_distribution(chart_data)
+        lucky = calculate_lucky_attributes(chart_data)
+        rankings = rank_planets(chart_data)
+        remedies = generate_remedy_data(chart_data, rankings)
+
+        computed = {
+            "prakriti": prakriti,
+            "elements": elements,
+            "lucky": lucky,
+            "planet_rankings": rankings,
+            "remedy_data": remedies,
+        }
+        sess["computed_analyses"] = computed
+
+        # Dynamically calculate current Vimshottari Mahadasha planet
+        current_dasha_planet = (
+            bundle.dasha.current_mahadasha.planet.capitalize()
+            if bundle.dasha and bundle.dasha.current_mahadasha
+            else "Jupiter"
+        )
+
         chart_response = {
             "name": req.name,
             "ascendant_sign": meta["ascendant_sign"],
             "moon_sign": meta["moon_sign"],
             "nakshatra": meta["nakshatra"],
             "pada": meta["pada"],
+            "current_dasha": current_dasha_planet,
+            "metadata": meta,
+            "houses": chart_data["houses"],
+            "planets": chart_data["planets"],
             "yogas": chart_data["yogas"],
             "doshas": chart_data["doshas"],
-            "raw_positions": chart_data["planets"]
+            "raw_positions": chart_data["planets"],
+            "computed": computed,
         }
+
+
         
         # Persist to profile store if user_id is provided (anonymous persistent profile)
         if req.user_id:
