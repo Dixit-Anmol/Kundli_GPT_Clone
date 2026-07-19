@@ -1,50 +1,50 @@
-# 🕉️ Kundli GPT — AI-Powered Vedic Astrology & Ayurvedic Platform
+# Kundli GPT — Vedic Astrology & Ayurvedic Platform
 
-A state-of-the-art Vedic Astrology web application combining ancient **Jyotish Vidya** and **Ayurvedic Wisdom** with advanced AI intelligence. Kundli GPT delivers precise birth chart calculations, interactive animated horoscope visualizations, multi-profile family management, and domain-focused AI consultation.
+A Vedic Astrology web application combining Jyotish Vidya and Ayurvedic principles with an intelligent consultation engine. Kundli GPT provides birth chart calculations, interactive animated horoscope visualizations, multi-profile management, and domain-focused astrological consultation.
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 1. 📊 Interactive Animated North Indian Kundli Chart
-- **Stroke-by-Stroke Line Drawing Animation**: Experience the authentic creation of your D1 Janam Kundli with smooth line-by-line drawing animations.
-- **Dynamic House & Sign Indexing**: Displays exact zodiac sign numbers (1–12) calculated from your Ascendant sign following traditional North Indian counter-clockwise layout.
-- **Centroid Planet Placement**: Every Graha (*Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu, Ketu*) sits at its exact mathematical centroid with interactive hover tooltips (*degrees, house lords, nakshatras*).
-- **Graha Sthiti Table**: Comprehensive planetary position breakdown with dignity status (*Exalted, Own, Debilitated*) and *Retrograde [R]* indicators.
+### 1. Interactive Animated North Indian Kundli Chart
+- **Stroke-by-Stroke Line Drawing Animation**: Authentic visual creation of the D1 Janam Kundli chart through stroke animations.
+- **Dynamic House & Sign Indexing**: Displays exact zodiac sign numbers (1–12) calculated from the Ascendant sign following the traditional North Indian counter-clockwise layout.
+- **Centroid Planet Placement**: Every planet (*Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu, Ketu*) is placed at its exact mathematical centroid with interactive hover tooltips (*degrees, house lords, nakshatras*).
+- **Planetary Position Table**: Detailed breakdown of planetary positions, dignity status (*Exalted, Own, Debilitated*), and *Retrograde [R]* indicators.
 
-### 2. 👨‍👩‍👧‍👦 Multi-Profile Family & Friend Management
-- **Store Up to 5 Profiles**: Easily save and manage birth charts for yourself, family members, or friends in local browser storage.
-- **Relationship Tags**: Label profiles cleanly (*Self, Spouse, Child, Parent, Friend, Other*).
-- **Dynamic Navbar Switcher**: Instantly switch between saved profiles across all tabs without re-entering birth details.
+### 2. Multi-Profile Family & Friend Management
+- **Store Up to 5 Profiles**: Save and manage birth charts for yourself, family members, or friends in local browser storage.
+- **Relationship Tagging**: Categorize profiles cleanly (*Self, Spouse, Child, Parent, Friend, Other*).
+- **Dynamic Navbar Switcher**: Instantly switch active profiles across all tabs without re-entering birth details.
 
-### 3. 🎯 Specialized Domain Modules
-Explore deep astrological insights categorized across 6 dedicated domain hubs:
+### 3. Specialized Domain Modules
+Comprehensive astrological analysis organized into 6 core domain modules:
 
 | Module | Core Insights & Capabilities |
 | :--- | :--- |
-| **🌟 Overview** | Complete birth chart summary, Lagna personality, Moon sign, Nakshatra, Mahadasha timing, and interactive SVG Kundli chart. |
-| **💼 Career** | 10th House Karma analysis, professional strengths, career yogas, and timing for career advancements. |
-| **💍 Marriage** | 7th House partnership indicators, spouse traits, Manglik status assessment, and relationship dynamics. |
-| **🏥 Health** | 1st & 6th House vitality ratings, physical & mental wellbeing indicators, and immunity insights. |
-| **🍽️ Food & Diet** | Ayurvedic Prakriti estimation (**Vata**, **Pitta**, **Kapha** proportions) paired with personalized dietary guidance. |
-| **💰 Finance** | 2nd & 11th House wealth analysis, Dhana Yogas, investment tendencies, and favorable financial periods. |
+| **Overview** | Complete birth chart summary, Lagna personality, Moon sign, Nakshatra, Mahadasha timing, and interactive SVG Kundli chart. |
+| **Career** | 10th House Karma analysis, professional strengths, career yogas, and timing for career advancements. |
+| **Marriage** | 7th House partnership indicators, spouse traits, Manglik status assessment, and relationship dynamics. |
+| **Health** | 1st & 6th House vitality ratings, physical & mental wellbeing indicators, and immunity insights. |
+| **Food & Diet** | Ayurvedic Prakriti estimation (**Vata**, **Pitta**, **Kapha** proportions) paired with personalized dietary guidance. |
+| **Finance** | 2nd & 11th House wealth analysis, Dhana Yogas, investment tendencies, and favorable financial periods. |
 
-### 4. 🧠 Dual-Mode AI Consultation Engine
-- **Structured Overview Readings**: Rich, multi-section initial readings when opening any domain tab.
-- **Direct & Focused Q&A**: Follow-up chat queries yield concise, direct answers focused strictly on your specific question (100–180 words) without repeating unnecessary section headers.
-- **Traditional Hindi Terminology**: Features authentic Sanskrit/Hindi names alongside standard terms (*e.g., Scorpio (Vrishchik), Sun (Surya), Jupiter (Guru)*).
-
----
-
-## 🎨 Design System & Aesthetics
-
-- **Palette**: Crafted in **Vedic Kesari (`#E67E22`)** and warm **Sandalwood Cream (`#FAF8F3`)** with subtle glassmorphism and gold accents.
-- **Typography**: Paired Google Fonts — **EB Garamond** for classical headings and **Inter** for crisp UI body text.
-- **Responsive**: Fully optimized for Desktop, Tablet, and Mobile viewing.
+### 4. Consultation Engine
+- **Structured Overview Readings**: Comprehensive multi-section readings when opening any domain tab.
+- **Focused Q&A Responses**: Follow-up chat queries provide concise, direct answers focused specifically on the user's question without repeating template headers.
+- **Vedic Terminology**: Integrates traditional Sanskrit/Hindi names alongside standard astrological terms (*e.g., Scorpio (Vrishchik), Sun (Surya), Jupiter (Guru)*).
 
 ---
 
-## 🚀 Quick Start Guide
+## Design System & Architecture
+
+- **Color Palette**: Styled in Kesari (`#E67E22`) and Sandalwood Cream (`#FAF8F3`) with clean gold accents.
+- **Typography**: Uses EB Garamond for headings and Inter for user interface text.
+- **Responsive Layout**: Designed for seamless viewing across Desktop, Tablet, and Mobile devices.
+
+---
+
+## Local Development Setup
 
 ### Prerequisites
 - **Node.js** (v18+)
@@ -55,10 +55,10 @@ Explore deep astrological insights categorized across 6 dedicated domain hubs:
 # Install Python dependencies
 pip install -r requirements.txt
 
-# Start FastAPI backend server
+# Start FastAPI server
 uvicorn main:app --reload
 ```
-*Backend runs at: `http://127.0.0.1:8000`*
+*Backend server runs at: `http://127.0.0.1:8000`*
 
 ### 2. Frontend Setup
 ```bash
@@ -68,15 +68,15 @@ cd frontend
 # Install dependencies
 npm install
 
-# Start Vite dev server
+# Start development server
 npm run dev
 ```
 *Frontend runs at: `http://localhost:5173`*
 
 ---
 
-## 🛠️ Technology Stack
+## Technical Stack
 
-- **Frontend**: React, TypeScript, Vite, Tailwind CSS v4, Lucide & Material Symbols Icons, React Markdown.
-- **Backend**: Python 3.10, FastAPI, Uvicorn, Pydantic, HTTP client streaming.
-- **Astrology Engine**: Custom Sidereal Lahiri Ayanamsha Ephemeris engine computing exact planetary longitudes, house cusps, Nakshatras, and Ayurvedic Prakriti doshas.
+- **Frontend**: React, TypeScript, Vite, Tailwind CSS, Material Symbols Icons, React Markdown.
+- **Backend**: Python 3.10, FastAPI, Uvicorn, Pydantic.
+- **Astrology Engine**: Custom Sidereal Lahiri Ayanamsha Ephemeris engine calculating planetary longitudes, house cusps, Nakshatras, and Ayurvedic Prakriti doshas.
