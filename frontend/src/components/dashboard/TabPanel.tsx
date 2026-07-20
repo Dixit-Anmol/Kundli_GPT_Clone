@@ -11,6 +11,8 @@ import CareerSubTabNavigation, { type CareerSubTab } from './CareerSubTabNavigat
 import KalaVidyaDashboard from './KalaVidyaDashboard'
 import PrashnaDashboardView from './PrashnaDashboardView'
 import PersonalityDashboard from './PersonalityDashboard'
+import RemediesDashboard from './RemediesDashboard'
+
 
 
 export interface TabCacheItem {
@@ -230,6 +232,12 @@ export default function TabPanel({
       {tab === 'personality' && (
         <PersonalityDashboard chartData={chartData} computed={computed} />
       )}
+
+      {/* Active Major Mahadasha & Specific Planetary Remedies Dashboard (Remedies Tab Only) */}
+      {tab === 'remedies' && (
+        <RemediesDashboard chartData={chartData} computed={computed} />
+      )}
+
 
 
 
