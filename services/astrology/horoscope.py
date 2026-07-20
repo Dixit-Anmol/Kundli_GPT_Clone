@@ -1,5 +1,5 @@
 import datetime
-from services.astrology.swiss_ephemeris import datetime_to_jd, get_sidereal_positions, get_house_cusps
+from services.astrology.swiss_ephemeris import datetime_to_jd, get_sidereal_positions, get_house_cusps, get_lahiri_ayanamsa
 from services.astrology.planets import get_planet_details
 from services.astrology.houses import calculate_planet_houses, get_house_lordships
 from services.astrology.nakshatra import get_all_planet_nakshatras
@@ -11,26 +11,22 @@ def calculate_horoscope_data(
     hour: int, minute: int, second: int,
     lat: float, lon: float, timezone_offset: float
 ) -> dict:
-    """Orchestrate the calculation of the full sidereal birth chart and horoscope details (Step 2)."""
+    """Orchestrate the calculation of the full sidereal birth chart and horoscope details."""
     
-    # 1. Convert local time to UTC decimal hour
-    # Local Time = UTC + Offset -> UTC = Local Time - Offset
-    local_decimal_hour = hour + minute / 60.0 + second / 3600.0
-    utc_decimal_hour = (local_decimal_hour - timezone_offset) % 24.0
+    # 1. Convert local datetime to UTC using timedelta
+    local_dt = datetime.datetime(year, month, day, hour, minute, second)
+    utc_dt = local_dt - datetime.timedelta(hours=timezone_offset)
     
-    # Handle day shift if timezone boundary is crossed
-    day_shift = int((local_decimal_hour - timezone_offset) // 24.0)
-    birth_date = datetime.date(year, month, day)
-    if day_shift != 0:
-        birth_date = birth_date + datetime.timedelta(days=day_shift)
-        
-    # 2. Calculate Julian Day
-    jd = datetime_to_jd(birth_date.year, birth_date.month, birth_date.day, utc_decimal_hour)
+    utc_decimal_hour = utc_dt.hour + utc_dt.minute / 60.0 + utc_dt.second / 3600.0 + utc_dt.microsecond / 3600000000.0
+    
+    # 2. Calculate Julian Day Number
+    jd = datetime_to_jd(utc_dt.year, utc_dt.month, utc_dt.day, utc_decimal_hour)
+    ayanamsa = get_lahiri_ayanamsa(jd)
     
     # 3. Calculate sidereal positions of all planets
     planet_positions = get_sidereal_positions(jd)
     
-    # 4. Calculate Ascendant and House Cusps
+    # 4. Calculate true Sidereal Ascendant and House Cusps
     ascendant, house_cusps = get_house_cusps(jd, lat, lon)
     
     # 5. Extract planet properties (Sanskrit name, sign, degree, dignity)
@@ -58,7 +54,6 @@ def calculate_horoscope_data(
     kaal_sarp = check_kaal_sarp(planet_details)
     
     # Sade Sati - requires current transit of Saturn
-    # Use Saturn's coordinate on current date (or fallback J2000.0 / approximate)
     today = datetime.date.today()
     jd_today = datetime_to_jd(today.year, today.month, today.day, 12.0)
     transit_positions = get_sidereal_positions(jd_today)
@@ -74,7 +69,7 @@ def calculate_horoscope_data(
             "moon_sign": planet_details["moon"]["sign"],
             "nakshatra": planet_details["moon"]["nakshatra"]["name"],
             "pada": planet_details["moon"]["nakshatra"]["pada"],
-            "ayanamsa": (planet_positions["sun"] - planet_positions["sun"]) % 360.0 # Placeholder/0 relative
+            "ayanamsa": ayanamsa
         },
         "planets": planet_details,
         "houses": {str(k): v for k, v in house_details.items()},
@@ -85,5 +80,6 @@ def calculate_horoscope_data(
             "sade_sati": sade_sati
         }
     }
+
     
     return chart_context

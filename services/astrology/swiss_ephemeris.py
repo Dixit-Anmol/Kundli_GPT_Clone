@@ -61,13 +61,17 @@ def get_sidereal_positions(jd: float) -> dict:
 
 
 def get_house_cusps(jd: float, lat: float, lon: float) -> tuple:
-    """Compute Whole Sign house positions and sidereal Ascendant using Swiss Ephemeris."""
-    # Calculate houses using b'W' (Whole Sign) in sidereal mode
+    """Compute Whole Sign house positions and true Sidereal Ascendant using Swiss Ephemeris."""
+    ayanamsa = get_lahiri_ayanamsa(jd)
     # houses_ex returns (cusps, ascmc)
     cusps, ascmc = swe.houses_ex(jd, lat, lon, b'W', swe.FLG_SIDEREAL)
     
-    # Extract sidereal Ascendant
-    ascendant_sidereal = ascmc[0]
-    house_cusps_sidereal = list(cusps)
+    # Extract true sidereal Ascendant (ascmc[0] in Swiss Ephemeris is Tropical; subtract Lahiri Ayanamsha)
+    ascendant_sidereal = (ascmc[0] - ayanamsa) % 360.0
+    
+    # Calculate Whole Sign house boundaries based on sidereal Ascendant sign
+    asc_sign_idx = int(ascendant_sidereal // 30)
+    house_cusps_sidereal = [(asc_sign_idx * 30.0 + i * 30.0) % 360.0 for i in range(12)]
     
     return ascendant_sidereal, house_cusps_sidereal
+

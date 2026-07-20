@@ -38,11 +38,11 @@ export default function DashboardPage({
 }: DashboardPageProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
 
-  // Persistent cache for tab readings and chat messages across tab switches
-  const [tabCache, setTabCache] = useState<Partial<Record<TabType, TabCacheItem>>>({})
+  // Granular persistent cache for tab readings, sub-tabs, and chat messages across switches
+  const [tabCache, setTabCache] = useState<Record<string, TabCacheItem>>({})
 
-  const handleUpdateCache = (tab: TabType, item: TabCacheItem) => {
-    setTabCache((prev) => ({ ...prev, [tab]: item }))
+  const handleUpdateCacheByKey = (key: string, item: TabCacheItem) => {
+    setTabCache((prev) => ({ ...prev, [key]: item }))
   }
 
   const meta = {
@@ -103,9 +103,10 @@ export default function DashboardPage({
           sessionId={sessionId}
           userId={userId}
           apiBaseUrl={apiBaseUrl}
-          cachedData={tabCache[activeTab]}
-          onUpdateCache={(data) => handleUpdateCache(activeTab, data)}
+          tabCacheMap={tabCache}
+          onUpdateCacheByKey={handleUpdateCacheByKey}
         />
+
       </main>
     </div>
   )

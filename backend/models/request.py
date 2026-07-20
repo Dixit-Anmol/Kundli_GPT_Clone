@@ -27,5 +27,9 @@ class TabChatRequest(BaseModel):
     tab: str  # "overview" | "career" | "marriage" | "health" | "food" | "remedies" | "finance" | "personality" | "spiritual"
     user_id: Optional[str] = None
     is_initial: Optional[bool] = False
+    relationship_type: Optional[str] = "spouse"  # father, mother, siblings, spouse, children, friends, boss, mentors, inlaws
+    sub_tab: Optional[str] = "overview"  # "overview" | "kala_vidya"
+
+
 
 

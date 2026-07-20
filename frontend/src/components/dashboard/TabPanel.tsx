@@ -5,6 +5,10 @@ import SummaryCards from './SummaryCards'
 import TabChat, { type Message } from './TabChat'
 import AnimatedKundliChart from './AnimatedKundliChart'
 import PlanetaryTable from './PlanetaryTable'
+import RelationshipTargetSelector, { type RelationshipTarget } from './RelationshipTargetSelector'
+import RelationshipScoreCard from './RelationshipScoreCard'
+import CareerSubTabNavigation, { type CareerSubTab } from './CareerSubTabNavigation'
+import KalaVidyaDashboard from './KalaVidyaDashboard'
 
 export interface TabCacheItem {
   initialReading: string
@@ -18,8 +22,8 @@ interface TabPanelProps {
   sessionId: string
   userId?: string
   apiBaseUrl: string
-  cachedData?: TabCacheItem
-  onUpdateCache: (data: TabCacheItem) => void
+  tabCacheMap?: Record<string, TabCacheItem>
+  onUpdateCacheByKey?: (key: string, data: TabCacheItem) => void
 }
 
 export default function TabPanel({
@@ -29,38 +33,61 @@ export default function TabPanel({
   sessionId,
   userId,
   apiBaseUrl,
-  cachedData,
-  onUpdateCache,
+  tabCacheMap = {},
+  onUpdateCacheByKey,
 }: TabPanelProps) {
-  // Restore from parent cache if present
-  const [messages, setMessages] = useState<Message[]>(cachedData?.messages || [])
-  const [initialReading, setInitialReading] = useState<string>(cachedData?.initialReading || '')
-  const [loadingInitial, setLoadingInitial] = useState<boolean>(!cachedData?.initialReading)
+  const [relationshipTarget, setRelationshipTarget] = useState<RelationshipTarget>('spouse')
+  const [careerSubTab, setCareerSubTab] = useState<CareerSubTab>('overview')
+
+  // Compute unique key for granular caching
+  const getCacheKey = () => {
+    if (tab === 'marriage') return `marriage_${relationshipTarget}`
+    if (tab === 'career') return `career_${careerSubTab}`
+    return tab
+  }
+
+  const cacheKey = getCacheKey()
+  const cachedItem = tabCacheMap[cacheKey]
+
+  const [messages, setMessages] = useState<Message[]>(cachedItem?.messages || [])
+  const [initialReading, setInitialReading] = useState<string>(cachedItem?.initialReading || '')
+  const [loadingInitial, setLoadingInitial] = useState<boolean>(!cachedItem?.initialReading)
   const [loadingChat, setLoadingChat] = useState<boolean>(false)
 
-  // Fetch initial domain reading ONLY if not already cached
+  // Sync state if cached item exists or cache key changes
   useEffect(() => {
     let cancelled = false
+    const currentKey = getCacheKey()
+    const existing = tabCacheMap[currentKey]
+
+    if (existing?.initialReading) {
+      setInitialReading(existing.initialReading)
+      setMessages(existing.messages || [])
+      setLoadingInitial(false)
+      return
+    }
 
     async function fetchTabReading() {
-      if (cachedData?.initialReading) {
-        setInitialReading(cachedData.initialReading)
-        setMessages(cachedData.messages || [])
-        setLoadingInitial(false)
-        return
-      }
-
       setLoadingInitial(true)
       try {
+        let queryMsg = `Provide a detailed ${tab} analysis for my horoscope.`
+        if (tab === 'marriage') {
+          queryMsg = `Provide a detailed ${relationshipTarget} relationship analysis for my horoscope.`
+        } else if (tab === 'career' && careerSubTab === 'kala_vidya') {
+          queryMsg = `Provide a detailed Kala and Vidya natural talents and learning aptitude mentorship for my horoscope.`
+        }
+
         const res = await fetch(`${apiBaseUrl}/api/tab-chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             session_id: sessionId,
             user_id: userId,
-            message: `Provide a detailed ${tab} analysis for my horoscope.`,
+            message: queryMsg,
             tab: tab,
             is_initial: true,
+            relationship_type: relationshipTarget,
+            sub_tab: careerSubTab,
           }),
         })
 
@@ -68,8 +95,10 @@ export default function TabPanel({
           const data = await res.json()
           if (!cancelled) {
             setInitialReading(data.response)
-            setMessages([]) // Initial reading is displayed in top card only — not duplicated in chat thread!
-            onUpdateCache({ initialReading: data.response, messages: [] })
+            setMessages([])
+            if (onUpdateCacheByKey) {
+              onUpdateCacheByKey(currentKey, { initialReading: data.response, messages: [] })
+            }
           }
         }
       } catch (err) {
@@ -78,7 +107,9 @@ export default function TabPanel({
           const fallback = getFallbackReading(tab, chartData)
           setInitialReading(fallback)
           setMessages([])
-          onUpdateCache({ initialReading: fallback, messages: [] })
+          if (onUpdateCacheByKey) {
+            onUpdateCacheByKey(currentKey, { initialReading: fallback, messages: [] })
+          }
         }
       } finally {
         if (!cancelled) setLoadingInitial(false)
@@ -89,7 +120,7 @@ export default function TabPanel({
     return () => {
       cancelled = true
     }
-  }, [tab, sessionId, userId, apiBaseUrl, cachedData?.initialReading])
+  }, [tab, relationshipTarget, careerSubTab, sessionId, userId, apiBaseUrl])
 
   // Handle user chat message within this tab
   const handleSendMessage = async (text: string) => {
@@ -109,6 +140,8 @@ export default function TabPanel({
           message: text,
           tab: tab,
           is_initial: false,
+          relationship_type: relationshipTarget,
+          sub_tab: careerSubTab,
         }),
       })
 
@@ -117,7 +150,9 @@ export default function TabPanel({
         const data = await res.json()
         const updatedMsgs = [...newMsgs, { role: 'assistant', content: data.response } as Message]
         setMessages(updatedMsgs)
-        onUpdateCache({ initialReading, messages: updatedMsgs })
+        if (onUpdateCacheByKey) {
+          onUpdateCacheByKey(getCacheKey(), { initialReading, messages: updatedMsgs })
+        }
       }
     } catch (err) {
       console.error(`Failed to send message in tab ${tab}:`, err)
@@ -127,14 +162,25 @@ export default function TabPanel({
       } as Message
       const updatedMsgs = [...newMsgs, errorMsg]
       setMessages(updatedMsgs)
-      onUpdateCache({ initialReading, messages: updatedMsgs })
+      if (onUpdateCacheByKey) {
+        onUpdateCacheByKey(getCacheKey(), { initialReading, messages: updatedMsgs })
+      }
     } finally {
+
       setLoadingChat(false)
     }
   }
 
   return (
     <div className="space-y-6 animate-fade-in-up">
+      {/* Sub-Tab Navigation for Career Module */}
+      {tab === 'career' && (
+        <CareerSubTabNavigation
+          activeSubTab={careerSubTab}
+          onSubTabChange={setCareerSubTab}
+        />
+      )}
+
       {/* Summary Cards */}
       <SummaryCards tab={tab} chartData={chartData} computed={computed} />
 
@@ -146,12 +192,32 @@ export default function TabPanel({
         </>
       )}
 
+      {/* Interactive Multi-Target Relationship Engine (Marriage Tab Only) */}
+      {tab === 'marriage' && (
+        <>
+          <RelationshipTargetSelector
+            selectedTarget={relationshipTarget}
+            onSelectTarget={setRelationshipTarget}
+          />
+          <RelationshipScoreCard
+            target={relationshipTarget}
+            chartData={chartData}
+          />
+        </>
+      )}
+
+      {/* Kala & Vidya Interactive Dashboard (Career Sub-Tab Only) */}
+      {tab === 'career' && careerSubTab === 'kala_vidya' && (
+        <KalaVidyaDashboard chartData={chartData} />
+      )}
+
       {/* Main Tab Initial Reading */}
       <div className="celestial-card p-6 rounded-3xl bg-surface border border-outline-variant/60 shadow-xs">
         <div className="flex items-center justify-between border-b border-outline-variant/40 pb-4 mb-4">
           <h2 className="font-display text-2xl font-bold text-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-2xl">auto_awesome</span>
-            Detailed {tab.charAt(0).toUpperCase() + tab.slice(1)} Analysis
+            Detailed {tab === 'marriage' ? 'Relationships' : tab.charAt(0).toUpperCase() + tab.slice(1)} Analysis
+
           </h2>
           <span className="text-xs text-on-surface-variant bg-surface-variant px-3 py-1 rounded-full font-medium">
             Grounded Reading

@@ -1,0 +1,939 @@
+{
+  "user_id": "7688013b-eaa9-402a-9189-f8b0cd43b384",
+  "birth_details": {
+    "name": "Anmol Dixit",
+    "date_of_birth": "2003-09-14",
+    "time_of_birth": "00:50:00",
+    "latitude": 25.9863918,
+    "longitude": 79.4534538,
+    "timezone_offset": 5.5
+  },
+  "natal_chart": {
+    "natal": {
+      "metadata": {
+        "julian_day": 2452896.3055555555,
+        "ascendant_longitude": 77.79259431953082,
+        "ascendant_sign": "Gemini",
+        "moon_sign": "Aries",
+        "nakshatra": "Ashwini",
+        "pada": 1,
+        "ayanamsa": 0.0
+      },
+      "planets": {
+        "sun": {
+          "name_sanskrit": "Surya",
+          "longitude": 145.79887170896416,
+          "sign": "Leo",
+          "degree": 25.798871708964157,
+          "dignity": "Own Sign",
+          "house": 3,
+          "nakshatra": {
+            "name": "Purva Phalguni",
+            "lord": "venus",
+            "deity": "Bhaga",
+            "pada": 4,
+            "longitude": 145.79887170896416
+          }
+        },
+        "moon": {
+          "name_sanskrit": "Chandra",
+          "longitude": 1.450264822546276,
+          "sign": "Aries",
+          "degree": 1.450264822546276,
+          "dignity": "Neutral",
+          "house": 11,
+          "nakshatra": {
+            "name": "Ashwini",
+            "lord": "ketu",
+            "deity": "Ashwini Kumaras",
+            "pada": 1,
+            "longitude": 1.450264822546276
+          }
+        },
+        "mercury": {
+          "name_sanskrit": "Budh",
+          "longitude": 140.56485844667247,
+          "sign": "Leo",
+          "degree": 20.564858446672474,
+          "dignity": "Neutral",
+          "house": 3,
+          "nakshatra": {
+            "name": "Purva Phalguni",
+            "lord": "venus",
+            "deity": "Bhaga",
+            "pada": 3,
+            "longitude": 140.56485844667247
+          }
+        },
+        "venus": {
+          "name_sanskrit": "Shukra",
+          "longitude": 152.90154902483002,
+          "sign": "Virgo",
+          "degree": 2.901549024830018,
+          "dignity": "Debilitated Sign",
+          "house": 4,
+          "nakshatra": {
+            "name": "Uttara Phalguni",
+            "lord": "sun",
+            "deity": "Aryaman",
+            "pada": 2,
+            "longitude": 152.90154902483002
+          }
+        },
+        "mars": {
+          "name_sanskrit": "Mangal",
+          "longitude": 306.51418773159554,
+          "sign": "Aquarius",
+          "degree": 6.514187731595541,
+          "dignity": "Neutral",
+          "house": 9,
+          "nakshatra": {
+            "name": "Dhanishta",
+            "lord": "mars",
+            "deity": "Vasus",
+            "pada": 4,
+            "longitude": 306.51418773159554
+          }
+        },
+        "jupiter": {
+          "name_sanskrit": "Guru",
+          "longitude": 128.9731118902742,
+          "sign": "Leo",
+          "degree": 8.973111890274197,
+          "dignity": "Neutral",
+          "house": 3,
+          "nakshatra": {
+            "name": "Magha",
+            "lord": "ketu",
+            "deity": "Pitris",
+            "pada": 3,
+            "longitude": 128.9731118902742
+          }
+        },
+        "saturn": {
+          "name_sanskrit": "Shani",
+          "longitude": 76.86173847248071,
+          "sign": "Gemini",
+          "degree": 16.86173847248071,
+          "dignity": "Neutral",
+          "house": 1,
+          "nakshatra": {
+            "name": "Ardra",
+            "lord": "rahu",
+            "deity": "Rudra",
+            "pada": 4,
+            "longitude": 76.86173847248071
+          }
+        },
+        "rahu": {
+          "name_sanskrit": "Rahu",
+          "longitude": 27.38774780246301,
+          "sign": "Aries",
+          "degree": 27.38774780246301,
+          "dignity": "Neutral",
+          "house": 11,
+          "nakshatra": {
+            "name": "Krittika",
+            "lord": "sun",
+            "deity": "Agni",
+            "pada": 1,
+            "longitude": 27.38774780246301
+          }
+        },
+        "ketu": {
+          "name_sanskrit": "Ketu",
+          "longitude": 207.38774780246302,
+          "sign": "Libra",
+          "degree": 27.387747802463025,
+          "dignity": "Neutral",
+          "house": 5,
+          "nakshatra": {
+            "name": "Vishakha",
+            "lord": "jupiter",
+            "deity": "Indra-Agni",
+            "pada": 3,
+            "longitude": 207.38774780246302
+          }
+        }
+      },
+      "houses": {
+        "1": {
+          "sign": "Gemini",
+          "lord": "mercury",
+          "signification": "Self, personality, physical body, appearance, health, beginning of life."
+        },
+        "2": {
+          "sign": "Cancer",
+          "lord": "moon",
+          "signification": "Wealth, family, speech, primary education, food, assets, face."
+        },
+        "3": {
+          "sign": "Leo",
+          "lord": "sun",
+          "signification": "Courage, short travels, siblings, communication, writing, efforts, hands."
+        },
+        "4": {
+          "sign": "Virgo",
+          "lord": "mercury",
+          "signification": "Mother, home, happiness, vehicle, lands, emotions, heart, inner peace."
+        },
+        "5": {
+          "sign": "Libra",
+          "lord": "venus",
+          "signification": "Intellect, children, creativity, past life merits (Purvapunya), romance, speculation."
+        },
+        "6": {
+          "sign": "Scorpio",
+          "lord": "mars",
+          "signification": "Debts, enemies, diseases, service, daily routine, competition, obstacles."
+        },
+        "7": {
+          "sign": "Sagittarius",
+          "lord": "jupiter",
+          "signification": "Spouse, partnership, business partners, relationship, travel, public life."
+        },
+        "8": {
+          "sign": "Capricorn",
+          "lord": "saturn",
+          "signification": "Longevity, secrets, inheritance, sudden transformations, occult, mysteries."
+        },
+        "9": {
+          "sign": "Aquarius",
+          "lord": "saturn",
+          "signification": "Dharma, fortune (Bhagya), father, higher education, long journeys, philosophy, religion."
+        },
+        "10": {
+          "sign": "Pisces",
+          "lord": "jupiter",
+          "signification": "Career, status, reputation, public life, authority, karma, actions in society."
+        },
+        "11": {
+          "sign": "Aries",
+          "lord": "mars",
+          "signification": "Gains, desires fulfillment, friends, elder siblings, cash flow, achievements."
+        },
+        "12": {
+          "sign": "Taurus",
+          "lord": "venus",
+          "signification": "Losses, liberation (Moksha), foreign travels, isolation, dreams, bedroom pleasures."
+        }
+      },
+      "yogas": [
+        {
+          "name": "Budhaditya Yoga",
+          "meaning": "Sun and Mercury conjunction. Gives intelligence, learning ability, professional success, and mental agility.",
+          "type": "Intellectual"
+        }
+      ],
+      "doshas": {
+        "manglik": {
+          "is_present": false,
+          "house": 9,
+          "description": "No Manglik Dosha found."
+        },
+        "kaal_sarp": {
+          "is_present": false,
+          "description": "No Kaal Sarp Dosha found."
+        }
+      },
+      "computed": {
+        "prakriti": {
+          "vata": 31.7,
+          "pitta": 50.4,
+          "kapha": 17.9,
+          "dominant_dosha": "Pitta",
+          "dominant_element": "Fire",
+          "element_distribution": {
+            "Fire": 51.8,
+            "Earth": 7.2,
+            "Air": 41.0,
+            "Water": 0.0
+          }
+        },
+        "elements": {
+          "Fire": 47.1,
+          "Earth": 7.1,
+          "Air": 40.0,
+          "Water": 0.0,
+          "Ether": 5.9,
+          "dominant": "Fire"
+        },
+        "lucky": {
+          "lucky_colors": [
+            "Green",
+            "Emerald",
+            "Red",
+            "Coral"
+          ],
+          "lucky_numbers": [
+            5,
+            14,
+            23
+          ],
+          "lucky_day": "Wednesday",
+          "lucky_direction": "North"
+        },
+        "planet_rankings": [
+          {
+            "planet": "sun",
+            "display_name": "Surya",
+            "score": 5.5,
+            "status": "Strong",
+            "sign": "Leo",
+            "house": 3,
+            "reasons": [
+              "Own Sign dignity in Leo",
+              "Upachaya placement (House 3)"
+            ],
+            "rank": 1
+          },
+          {
+            "planet": "saturn",
+            "display_name": "Shani",
+            "score": 5.0,
+            "status": "Strong",
+            "sign": "Gemini",
+            "house": 1,
+            "reasons": [
+              "Kendra placement (House 1)"
+            ],
+            "rank": 2
+          },
+          {
+            "planet": "mars",
+            "display_name": "Mangal",
+            "score": 4.5,
+            "status": "Strong",
+            "sign": "Aquarius",
+            "house": 9,
+            "reasons": [
+              "Trikona placement (House 9)"
+            ],
+            "rank": 3
+          },
+          {
+            "planet": "ketu",
+            "display_name": "Ketu",
+            "score": 4.5,
+            "status": "Strong",
+            "sign": "Libra",
+            "house": 5,
+            "reasons": [
+              "Trikona placement (House 5)"
+            ],
+            "rank": 4
+          },
+          {
+            "planet": "moon",
+            "display_name": "Chandra",
+            "score": 3.5,
+            "status": "Moderate",
+            "sign": "Aries",
+            "house": 11,
+            "reasons": [
+              "Upachaya placement (House 11)"
+            ],
+            "rank": 5
+          },
+          {
+            "planet": "mercury",
+            "display_name": "Budh",
+            "score": 3.5,
+            "status": "Moderate",
+            "sign": "Leo",
+            "house": 3,
+            "reasons": [
+              "Upachaya placement (House 3)"
+            ],
+            "rank": 6
+          },
+          {
+            "planet": "venus",
+            "display_name": "Shukra",
+            "score": 3.5,
+            "status": "Moderate",
+            "sign": "Virgo",
+            "house": 4,
+            "reasons": [
+              "Debilitated Sign in Virgo",
+              "Kendra placement (House 4)"
+            ],
+            "rank": 7
+          },
+          {
+            "planet": "jupiter",
+            "display_name": "Guru",
+            "score": 3.5,
+            "status": "Moderate",
+            "sign": "Leo",
+            "house": 3,
+            "reasons": [
+              "Upachaya placement (House 3)"
+            ],
+            "rank": 8
+          },
+          {
+            "planet": "rahu",
+            "display_name": "Rahu",
+            "score": 3.5,
+            "status": "Moderate",
+            "sign": "Aries",
+            "house": 11,
+            "reasons": [
+              "Upachaya placement (House 11)"
+            ],
+            "rank": 9
+          }
+        ],
+        "remedy_data": {
+          "weak_planets": [],
+          "afflicted_houses": [],
+          "general_remedies": [
+            {
+              "dosha": "Sade Sati (Saturn Transit)",
+              "remedy": "Recite Shani Stotra or Hanuman Chalisa on Saturdays. Donate black sesame and mustard oil. Wear dark blue or black on Saturdays."
+            }
+          ]
+        }
+      }
+    }
+  },
+  "chart_response": {
+    "name": "Anmol Dixit",
+    "ascendant_sign": "Gemini",
+    "moon_sign": "Aries",
+    "nakshatra": "Ashwini",
+    "pada": 1,
+    "current_dasha": "Venus",
+    "metadata": {
+      "julian_day": 2452896.3055555555,
+      "ascendant_longitude": 77.79259431953082,
+      "ascendant_sign": "Gemini",
+      "moon_sign": "Aries",
+      "nakshatra": "Ashwini",
+      "pada": 1,
+      "ayanamsa": 0.0
+    },
+    "houses": {
+      "1": {
+        "sign": "Gemini",
+        "lord": "mercury",
+        "signification": "Self, personality, physical body, appearance, health, beginning of life."
+      },
+      "2": {
+        "sign": "Cancer",
+        "lord": "moon",
+        "signification": "Wealth, family, speech, primary education, food, assets, face."
+      },
+      "3": {
+        "sign": "Leo",
+        "lord": "sun",
+        "signification": "Courage, short travels, siblings, communication, writing, efforts, hands."
+      },
+      "4": {
+        "sign": "Virgo",
+        "lord": "mercury",
+        "signification": "Mother, home, happiness, vehicle, lands, emotions, heart, inner peace."
+      },
+      "5": {
+        "sign": "Libra",
+        "lord": "venus",
+        "signification": "Intellect, children, creativity, past life merits (Purvapunya), romance, speculation."
+      },
+      "6": {
+        "sign": "Scorpio",
+        "lord": "mars",
+        "signification": "Debts, enemies, diseases, service, daily routine, competition, obstacles."
+      },
+      "7": {
+        "sign": "Sagittarius",
+        "lord": "jupiter",
+        "signification": "Spouse, partnership, business partners, relationship, travel, public life."
+      },
+      "8": {
+        "sign": "Capricorn",
+        "lord": "saturn",
+        "signification": "Longevity, secrets, inheritance, sudden transformations, occult, mysteries."
+      },
+      "9": {
+        "sign": "Aquarius",
+        "lord": "saturn",
+        "signification": "Dharma, fortune (Bhagya), father, higher education, long journeys, philosophy, religion."
+      },
+      "10": {
+        "sign": "Pisces",
+        "lord": "jupiter",
+        "signification": "Career, status, reputation, public life, authority, karma, actions in society."
+      },
+      "11": {
+        "sign": "Aries",
+        "lord": "mars",
+        "signification": "Gains, desires fulfillment, friends, elder siblings, cash flow, achievements."
+      },
+      "12": {
+        "sign": "Taurus",
+        "lord": "venus",
+        "signification": "Losses, liberation (Moksha), foreign travels, isolation, dreams, bedroom pleasures."
+      }
+    },
+    "planets": {
+      "sun": {
+        "name_sanskrit": "Surya",
+        "longitude": 145.79887170896416,
+        "sign": "Leo",
+        "degree": 25.798871708964157,
+        "dignity": "Own Sign",
+        "house": 3,
+        "nakshatra": {
+          "name": "Purva Phalguni",
+          "lord": "venus",
+          "deity": "Bhaga",
+          "pada": 4,
+          "longitude": 145.79887170896416
+        }
+      },
+      "moon": {
+        "name_sanskrit": "Chandra",
+        "longitude": 1.450264822546276,
+        "sign": "Aries",
+        "degree": 1.450264822546276,
+        "dignity": "Neutral",
+        "house": 11,
+        "nakshatra": {
+          "name": "Ashwini",
+          "lord": "ketu",
+          "deity": "Ashwini Kumaras",
+          "pada": 1,
+          "longitude": 1.450264822546276
+        }
+      },
+      "mercury": {
+        "name_sanskrit": "Budh",
+        "longitude": 140.56485844667247,
+        "sign": "Leo",
+        "degree": 20.564858446672474,
+        "dignity": "Neutral",
+        "house": 3,
+        "nakshatra": {
+          "name": "Purva Phalguni",
+          "lord": "venus",
+          "deity": "Bhaga",
+          "pada": 3,
+          "longitude": 140.56485844667247
+        }
+      },
+      "venus": {
+        "name_sanskrit": "Shukra",
+        "longitude": 152.90154902483002,
+        "sign": "Virgo",
+        "degree": 2.901549024830018,
+        "dignity": "Debilitated Sign",
+        "house": 4,
+        "nakshatra": {
+          "name": "Uttara Phalguni",
+          "lord": "sun",
+          "deity": "Aryaman",
+          "pada": 2,
+          "longitude": 152.90154902483002
+        }
+      },
+      "mars": {
+        "name_sanskrit": "Mangal",
+        "longitude": 306.51418773159554,
+        "sign": "Aquarius",
+        "degree": 6.514187731595541,
+        "dignity": "Neutral",
+        "house": 9,
+        "nakshatra": {
+          "name": "Dhanishta",
+          "lord": "mars",
+          "deity": "Vasus",
+          "pada": 4,
+          "longitude": 306.51418773159554
+        }
+      },
+      "jupiter": {
+        "name_sanskrit": "Guru",
+        "longitude": 128.9731118902742,
+        "sign": "Leo",
+        "degree": 8.973111890274197,
+        "dignity": "Neutral",
+        "house": 3,
+        "nakshatra": {
+          "name": "Magha",
+          "lord": "ketu",
+          "deity": "Pitris",
+          "pada": 3,
+          "longitude": 128.9731118902742
+        }
+      },
+      "saturn": {
+        "name_sanskrit": "Shani",
+        "longitude": 76.86173847248071,
+        "sign": "Gemini",
+        "degree": 16.86173847248071,
+        "dignity": "Neutral",
+        "house": 1,
+        "nakshatra": {
+          "name": "Ardra",
+          "lord": "rahu",
+          "deity": "Rudra",
+          "pada": 4,
+          "longitude": 76.86173847248071
+        }
+      },
+      "rahu": {
+        "name_sanskrit": "Rahu",
+        "longitude": 27.38774780246301,
+        "sign": "Aries",
+        "degree": 27.38774780246301,
+        "dignity": "Neutral",
+        "house": 11,
+        "nakshatra": {
+          "name": "Krittika",
+          "lord": "sun",
+          "deity": "Agni",
+          "pada": 1,
+          "longitude": 27.38774780246301
+        }
+      },
+      "ketu": {
+        "name_sanskrit": "Ketu",
+        "longitude": 207.38774780246302,
+        "sign": "Libra",
+        "degree": 27.387747802463025,
+        "dignity": "Neutral",
+        "house": 5,
+        "nakshatra": {
+          "name": "Vishakha",
+          "lord": "jupiter",
+          "deity": "Indra-Agni",
+          "pada": 3,
+          "longitude": 207.38774780246302
+        }
+      }
+    },
+    "yogas": [
+      {
+        "name": "Budhaditya Yoga",
+        "meaning": "Sun and Mercury conjunction. Gives intelligence, learning ability, professional success, and mental agility.",
+        "type": "Intellectual"
+      }
+    ],
+    "doshas": {
+      "manglik": {
+        "is_present": false,
+        "house": 9,
+        "description": "No Manglik Dosha found."
+      },
+      "kaal_sarp": {
+        "is_present": false,
+        "description": "No Kaal Sarp Dosha found."
+      },
+      "sade_sati": {
+        "is_present": true,
+        "phase": "First Phase (12th from Moon)",
+        "description": "Saturn is in the sign before your natal Moon. Focus on managing expenses and mental peace."
+      }
+    },
+    "raw_positions": {
+      "sun": {
+        "name_sanskrit": "Surya",
+        "longitude": 145.79887170896416,
+        "sign": "Leo",
+        "degree": 25.798871708964157,
+        "dignity": "Own Sign",
+        "house": 3,
+        "nakshatra": {
+          "name": "Purva Phalguni",
+          "lord": "venus",
+          "deity": "Bhaga",
+          "pada": 4,
+          "longitude": 145.79887170896416
+        }
+      },
+      "moon": {
+        "name_sanskrit": "Chandra",
+        "longitude": 1.450264822546276,
+        "sign": "Aries",
+        "degree": 1.450264822546276,
+        "dignity": "Neutral",
+        "house": 11,
+        "nakshatra": {
+          "name": "Ashwini",
+          "lord": "ketu",
+          "deity": "Ashwini Kumaras",
+          "pada": 1,
+          "longitude": 1.450264822546276
+        }
+      },
+      "mercury": {
+        "name_sanskrit": "Budh",
+        "longitude": 140.56485844667247,
+        "sign": "Leo",
+        "degree": 20.564858446672474,
+        "dignity": "Neutral",
+        "house": 3,
+        "nakshatra": {
+          "name": "Purva Phalguni",
+          "lord": "venus",
+          "deity": "Bhaga",
+          "pada": 3,
+          "longitude": 140.56485844667247
+        }
+      },
+      "venus": {
+        "name_sanskrit": "Shukra",
+        "longitude": 152.90154902483002,
+        "sign": "Virgo",
+        "degree": 2.901549024830018,
+        "dignity": "Debilitated Sign",
+        "house": 4,
+        "nakshatra": {
+          "name": "Uttara Phalguni",
+          "lord": "sun",
+          "deity": "Aryaman",
+          "pada": 2,
+          "longitude": 152.90154902483002
+        }
+      },
+      "mars": {
+        "name_sanskrit": "Mangal",
+        "longitude": 306.51418773159554,
+        "sign": "Aquarius",
+        "degree": 6.514187731595541,
+        "dignity": "Neutral",
+        "house": 9,
+        "nakshatra": {
+          "name": "Dhanishta",
+          "lord": "mars",
+          "deity": "Vasus",
+          "pada": 4,
+          "longitude": 306.51418773159554
+        }
+      },
+      "jupiter": {
+        "name_sanskrit": "Guru",
+        "longitude": 128.9731118902742,
+        "sign": "Leo",
+        "degree": 8.973111890274197,
+        "dignity": "Neutral",
+        "house": 3,
+        "nakshatra": {
+          "name": "Magha",
+          "lord": "ketu",
+          "deity": "Pitris",
+          "pada": 3,
+          "longitude": 128.9731118902742
+        }
+      },
+      "saturn": {
+        "name_sanskrit": "Shani",
+        "longitude": 76.86173847248071,
+        "sign": "Gemini",
+        "degree": 16.86173847248071,
+        "dignity": "Neutral",
+        "house": 1,
+        "nakshatra": {
+          "name": "Ardra",
+          "lord": "rahu",
+          "deity": "Rudra",
+          "pada": 4,
+          "longitude": 76.86173847248071
+        }
+      },
+      "rahu": {
+        "name_sanskrit": "Rahu",
+        "longitude": 27.38774780246301,
+        "sign": "Aries",
+        "degree": 27.38774780246301,
+        "dignity": "Neutral",
+        "house": 11,
+        "nakshatra": {
+          "name": "Krittika",
+          "lord": "sun",
+          "deity": "Agni",
+          "pada": 1,
+          "longitude": 27.38774780246301
+        }
+      },
+      "ketu": {
+        "name_sanskrit": "Ketu",
+        "longitude": 207.38774780246302,
+        "sign": "Libra",
+        "degree": 27.387747802463025,
+        "dignity": "Neutral",
+        "house": 5,
+        "nakshatra": {
+          "name": "Vishakha",
+          "lord": "jupiter",
+          "deity": "Indra-Agni",
+          "pada": 3,
+          "longitude": 207.38774780246302
+        }
+      }
+    },
+    "computed": {
+      "prakriti": {
+        "vata": 31.7,
+        "pitta": 50.4,
+        "kapha": 17.9,
+        "dominant_dosha": "Pitta",
+        "dominant_element": "Fire",
+        "element_distribution": {
+          "Fire": 51.8,
+          "Earth": 7.2,
+          "Air": 41.0,
+          "Water": 0.0
+        }
+      },
+      "elements": {
+        "Fire": 47.1,
+        "Earth": 7.1,
+        "Air": 40.0,
+        "Water": 0.0,
+        "Ether": 5.9,
+        "dominant": "Fire"
+      },
+      "lucky": {
+        "lucky_colors": [
+          "Green",
+          "Emerald",
+          "Red",
+          "Coral"
+        ],
+        "lucky_numbers": [
+          5,
+          14,
+          23
+        ],
+        "lucky_day": "Wednesday",
+        "lucky_direction": "North"
+      },
+      "planet_rankings": [
+        {
+          "planet": "sun",
+          "display_name": "Surya",
+          "score": 5.5,
+          "status": "Strong",
+          "sign": "Leo",
+          "house": 3,
+          "reasons": [
+            "Own Sign dignity in Leo",
+            "Upachaya placement (House 3)"
+          ],
+          "rank": 1
+        },
+        {
+          "planet": "saturn",
+          "display_name": "Shani",
+          "score": 5.0,
+          "status": "Strong",
+          "sign": "Gemini",
+          "house": 1,
+          "reasons": [
+            "Kendra placement (House 1)"
+          ],
+          "rank": 2
+        },
+        {
+          "planet": "mars",
+          "display_name": "Mangal",
+          "score": 4.5,
+          "status": "Strong",
+          "sign": "Aquarius",
+          "house": 9,
+          "reasons": [
+            "Trikona placement (House 9)"
+          ],
+          "rank": 3
+        },
+        {
+          "planet": "ketu",
+          "display_name": "Ketu",
+          "score": 4.5,
+          "status": "Strong",
+          "sign": "Libra",
+          "house": 5,
+          "reasons": [
+            "Trikona placement (House 5)"
+          ],
+          "rank": 4
+        },
+        {
+          "planet": "moon",
+          "display_name": "Chandra",
+          "score": 3.5,
+          "status": "Moderate",
+          "sign": "Aries",
+          "house": 11,
+          "reasons": [
+            "Upachaya placement (House 11)"
+          ],
+          "rank": 5
+        },
+        {
+          "planet": "mercury",
+          "display_name": "Budh",
+          "score": 3.5,
+          "status": "Moderate",
+          "sign": "Leo",
+          "house": 3,
+          "reasons": [
+            "Upachaya placement (House 3)"
+          ],
+          "rank": 6
+        },
+        {
+          "planet": "venus",
+          "display_name": "Shukra",
+          "score": 3.5,
+          "status": "Moderate",
+          "sign": "Virgo",
+          "house": 4,
+          "reasons": [
+            "Debilitated Sign in Virgo",
+            "Kendra placement (House 4)"
+          ],
+          "rank": 7
+        },
+        {
+          "planet": "jupiter",
+          "display_name": "Guru",
+          "score": 3.5,
+          "status": "Moderate",
+          "sign": "Leo",
+          "house": 3,
+          "reasons": [
+            "Upachaya placement (House 3)"
+          ],
+          "rank": 8
+        },
+        {
+          "planet": "rahu",
+          "display_name": "Rahu",
+          "score": 3.5,
+          "status": "Moderate",
+          "sign": "Aries",
+          "house": 11,
+          "reasons": [
+            "Upachaya placement (House 11)"
+          ],
+          "rank": 9
+        }
+      ],
+      "remedy_data": {
+        "weak_planets": [],
+        "afflicted_houses": [],
+        "general_remedies": [
+          {
+            "dosha": "Sade Sati (Saturn Transit)",
+            "remedy": "Recite Shani Stotra or Hanuman Chalisa on Saturdays. Donate black sesame and mustard oil. Wear dark blue or black on Saturdays."
+          }
+        ]
+      }
+    }
+  },
+  "created_at": "2026-07-20T06:27:37.465157+00:00",
+  "updated_at": "2026-07-20T06:27:37.465157+00:00"
+}

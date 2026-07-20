@@ -25,10 +25,13 @@ TAB_REGISTRY = {
 }
 
 
-def get_tab_system_prompt(tab: str, is_initial: bool = True) -> str:
+def get_tab_system_prompt(tab: str, is_initial: bool = True, sub_tab: str = "overview") -> str:
     """Return the system prompt for a given tab, switching between initial overview and chat mode."""
     entry = TAB_REGISTRY.get(tab, TAB_REGISTRY["overview"])
+    if tab == "career":
+        return entry["system"](is_initial=is_initial, sub_tab=sub_tab)
     return entry["system"](is_initial=is_initial)
+
 
 
 

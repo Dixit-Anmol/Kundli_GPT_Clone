@@ -73,8 +73,7 @@ def handle_tab_chat(req: TabChatRequest):
         )
 
         # Get domain-specific system prompt (Initial Overview vs Focused Chat Q&A)
-        system_prompt = get_tab_system_prompt(req.tab, is_initial=is_initial)
-
+        system_prompt = get_tab_system_prompt(req.tab, is_initial=is_initial, sub_tab=req.sub_tab)
 
         # Build domain-specific user context
         # For spiritual tab, include Bhagavad Gita RAG
@@ -90,7 +89,11 @@ def handle_tab_chat(req: TabChatRequest):
             history=history,
             computed=computed,
             passages=passages,
+            relationship_type=req.relationship_type,
+            sub_tab=req.sub_tab,
         )
+
+
 
         # Invoke LLM
         client = LLMFactory.get_client()

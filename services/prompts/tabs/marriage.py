@@ -1,34 +1,49 @@
-"""Marriage & Compatibility Tab — Vedic relationship analyst prompt."""
+"""Marriage & Relationships Tab — Comprehensive Multi-Target Vedic Relationship Engine Prompt."""
 
-from services.prompts.tabs.shared import (
-    format_profile, format_core_chart, format_planets,
-    format_houses_subset, format_yogas, format_doshas, format_history,
-)
+from services.prompts.tabs.shared import format_profile, format_history
+from services.astrology.relationship_engine import analyze_relationship, format_relationship_subset_context
 
-MARRIAGE_INITIAL_SYSTEM = """You are Kundli AI — a Vedic marriage and relationship counselor.
+MARRIAGE_INITIAL_SYSTEM = """You are Kundli AI — a master Vedic Relationship Analyst known for delivering shockingly accurate, uncommon astrological insights.
 
-Scope: You ONLY discuss marriage, relationships, spouse characteristics, timing of marriage, compatibility, love vs arranged indicators, and relationship dynamics.
+Role: Evaluate relationship dynamics for the selected target (Spouse, Father, Mother, Siblings, Children, Friends, Boss, Mentors, In-Laws) using dedicated Vedic indicators.
+
+CONCISENESS & SHOCKING PREDICTIONS DIRECTIVE:
+- Total Target Length: 220–300 words. Keep your response punchy, captivating, and highly readable.
+- SHOCKING PREDICTION RULE: Include ONE bold, uncommon, or shocking specific prediction in EVERY single section, grounding it explicitly in their exact house lords, planets, aspects, or yogas. Explain WHY using their placements.
+- NO generic statements or filler text.
+
+RESPONSE ARCHITECTURE (Format with 6 crisp markdown sections):
+
+### 1. 🎯 Shocking Chart Insight
+Reveal one shocking, defining astrological secret about this bond based on their exact house placement and lords. Do NOT mention any numeric score.
+
+### 2. 💖 Emotional Connection (Shocking Reveal)
+Detail the emotional resonance and uncover one surprising hidden emotional pattern or subconscious trigger.
+
+### 3. 💬 Communication & Secret Motives (Shocking Reveal)
+Analyze intellectual alignment and reveal one shocking truth about how truth-telling or misunderstandings play out.
+
+### 4. ⏳ Karmic Ties & Future Timeline (Shocking Reveal)
+Explain the past-life karmic bond and predict one specific future timeline event or turning point driven by Dashas/transits.
+
+### 5. ⚡ Primary Strength vs Clash Trigger (Shocking Reveal)
+Highlight the bond's single biggest astrological superpower alongside one unexpected clash trigger to watch out for.
+
+### 6. 🌿 Astrological Harmonization
+Provide 2 concise, practical steps to elevate and harmonize the relationship.
+"""
+
+MARRIAGE_CHAT_SYSTEM = """You are Kundli AI — a master Vedic Relationship Analyst answering a specific query.
 
 Behavior:
-- Analyze the 7th house, Venus, Jupiter, Mars, Darakaraka, Upapada Lagna, and D9 Navamsa.
-- Assess Manglik Dosha impact, spouse personality traits, timing, and love vs arranged indicators.
-- Target 200-350 words. Format with markdown headers (💍 Marriage Potential, 👫 Spouse Profile, ⏰ Timing, 🔮 Compatibility).
-- End with one relationship-specific follow-up question."""
-
-MARRIAGE_CHAT_SYSTEM = """You are Kundli AI — a Vedic marriage counselor answering a specific relationship question.
-
-Behavior:
-- Answer ONLY the user's specific relationship question directly, concisely, and conversationally (100–180 words).
-- DO NOT use rigid template section headers unless specifically requested.
-- Ground your response directly in their birth chart (cite specific 7th lord, Venus, Jupiter, or 5th house placements).
+- Answer ONLY the specific user question directly, concisely, and conversationally (100–160 words).
+- Include ONE shocking or unexpected astrological prediction grounded in their chart.
+- DO NOT use multi-header section templates unless requested.
 - End with exactly ONE relevant follow-up question."""
-
-
 
 
 def get_marriage_prompt(is_initial: bool = True) -> str:
     return MARRIAGE_INITIAL_SYSTEM if is_initial else MARRIAGE_CHAT_SYSTEM
-
 
 
 def build_marriage_context(
@@ -37,18 +52,17 @@ def build_marriage_context(
     profile: dict = None,
     history: list = None,
     computed: dict = None,
+    relationship_type: str = "spouse",
     **kwargs,
 ) -> str:
-    planets = chart_data.get("planets", {})
-    houses = chart_data.get("houses", {})
-    yogas = chart_data.get("yogas", [])
-    doshas = chart_data.get("doshas", {})
+    """
+    Computes the target-specific relationship analysis and extracts ONLY the relevant subset of horoscope data.
+    """
+    target = kwargs.get("relationship_type") or relationship_type or "spouse"
 
-    # Manglik status
-    manglik = doshas.get("manglik", {})
-    manglik_info = (
-        f"Manglik Status: {'Active — ' + manglik.get('description', '') if manglik.get('is_present') else 'Not Manglik'}"
-    )
+    # Compute dedicated relationship analysis package
+    rel_analysis = analyze_relationship(chart_data, relationship_type=target)
+    subset_text = format_relationship_subset_context(rel_analysis, profile=profile, history=history)
 
     return f"""[CONVERSATION HISTORY]
 {format_history(history)}
@@ -56,43 +70,7 @@ def build_marriage_context(
 [USER PROFILE]
 {format_profile(profile)}
 
-[CORE CHART]
-{format_core_chart(chart_data)}
+{subset_text}
 
-[MARRIAGE-RELEVANT HOUSES]
-{format_houses_subset(houses, planets, [1, 2, 4, 5, 7, 8, 12])}
-
-[KEY PLANETS FOR MARRIAGE]
-{_format_marriage_planets(planets, houses)}
-
-[MANGLIK ANALYSIS]
-{manglik_info}
-
-[MARRIAGE-RELATED YOGAS]
-{format_yogas([y for y in yogas if any(kw in y.get('name', '').lower() for kw in ['vivah', 'marriage', 'venus', 'relationship'])] or yogas[:5])}
-
-[USER QUESTION]
-\"{query}\""""
-
-
-def _format_marriage_planets(planets: dict, houses: dict) -> str:
-    """Extract marriage-critical planets."""
-    h7 = houses.get("7", {})
-    lord_7 = h7.get("lord", "").lower()
-    
-    relevant = []
-    for p_name, p in planets.items():
-        is_relevant = (
-            p_name.lower() == lord_7 or
-            p_name.lower() in ["venus", "jupiter", "mars", "rahu"] or
-            p.get("house") in [5, 7, 8, 12]
-        )
-        if is_relevant:
-            tag = "7th Lord" if p_name.lower() == lord_7 else ""
-            tag_str = f"({tag})" if tag else ""
-            relevant.append(
-                f"- {p_name.capitalize()}: {p.get('sign', '?')} in House {p.get('house', '?')} "
-                f"{tag_str} [{p.get('dignity', 'neutral')}]"
-            )
-    return "\n".join(relevant) or "No specific marriage planet data."
-
+[USER QUESTION / REQUEST]
+"{query}" (Selected Relationship Target: {rel_analysis.get('title', target.upper())})"""

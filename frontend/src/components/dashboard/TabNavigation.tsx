@@ -21,7 +21,8 @@ export interface TabConfig {
 export const ALL_TABS: TabConfig[] = [
   { id: 'overview', label: 'Overview', icon: 'grid_view', description: 'Complete Horoscope Summary' },
   { id: 'career', label: 'Career', icon: 'work', description: 'Profession, Business & Growth' },
-  { id: 'marriage', label: 'Marriage', icon: 'favorite', description: 'Compatibility & Relationships' },
+  { id: 'marriage', label: 'Relationships', icon: 'favorite', description: 'Compatibility & Relationships' },
+
   { id: 'health', label: 'Health', icon: 'medical_services', description: 'Body Systems & Wellness' },
   { id: 'food', label: 'Food & Diet', icon: 'restaurant', description: 'Ayurvedic Prakriti & Nutrition' },
   { id: 'remedies', label: 'Remedies', icon: 'self_improvement', description: 'Mantras, Gemstones & Charity' },
