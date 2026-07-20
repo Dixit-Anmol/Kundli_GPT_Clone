@@ -42,8 +42,10 @@ def handle_tab_chat(req: TabChatRequest):
             }
 
         profile = session.get("profile")
+        mode = chart_data.get("mode", "exact")
+
         computed = session.get("computed_analyses") or chart_data.get("computed")
-        if not computed:
+        if not computed and mode == "exact":
             from services.astrology.prakriti import estimate_prakriti
             from services.astrology.elements import calculate_element_distribution
             from services.astrology.lucky import calculate_lucky_attributes
@@ -64,7 +66,6 @@ def handle_tab_chat(req: TabChatRequest):
             }
             session["computed_analyses"] = computed
 
-
         # Determine if this is the initial tab overview reading or a follow-up user chat question
         is_initial = bool(
             req.is_initial
@@ -72,7 +73,6 @@ def handle_tab_chat(req: TabChatRequest):
             or len(history) == 0
         )
 
-        mode = chart_data.get("mode", "exact")
 
         if mode == "prashna":
             from services.prompts.prashna import get_prashna_prompt
