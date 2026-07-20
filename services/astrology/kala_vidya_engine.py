@@ -599,9 +599,9 @@ def analyze_kala_vidya(chart_data: dict) -> dict:
     }
 
 
-def format_kala_vidya_subset_context(analysis: dict, profile: dict = None) -> str:
+def format_kala_vidya_subset_context(analysis: dict, profile: dict = None, chart_data: dict = None) -> str:
     """
-    Extracts ONLY the top 64 classical Kalas astrological subset in Devanagari for LLM prompting.
+    Extracts the top 64 classical Kalas AND Student Receptivity pillars in Devanagari for LLM prompting.
     """
     name = profile.get("name", "Seeker") if profile else "Seeker"
     top_k = analysis.get("top_kalas", [])
@@ -612,16 +612,113 @@ def format_kala_vidya_subset_context(analysis: dict, profile: dict = None) -> st
         for k in top_k
     ]
 
+    rec_lines = []
+    if chart_data:
+        rec_analysis = analyze_student_receptivity(chart_data)
+        for p in rec_analysis.get("receptivity_pillars", []):
+            rec_lines.append(f"- {p['devanagari']} / {p['name']} ({p['meaning']}): {p['indicator']} — {p['status']}")
 
+    rec_block = f"""
 
-    return f"""[64 CLASSICAL VEDIC KALAS ASTROLOGICAL SUBSET: {name.upper()}]
+[STUDENT COGNITIVE RECEPTIVITY PILLARS IN DEVANAGARI]
+{chr(10).join(rec_lines)}""" if rec_lines else ""
+
+    return f"""[64 CLASSICAL VEDIC KALAS & RECEPTIVITY SUBSET: {name.upper()}]
 Subject: {name}
 
 [KEY HOUSE LORDS & ALIGNMENTS]
 - 2nd House (Speech/Assets): {kh.get('2nd', 'N/A')}
 - 3rd House (Skills/Dexterity): {kh.get('3rd', 'N/A')}
+- 4th House (Vidya/Foundational Knowledge): Sign {chart_data.get('houses', {}).get('4', {}).get('sign', '?')}
 - 5th House (Intellect/Genius): {kh.get('5th', 'N/A')}
+- 9th House (Guru Upadesha): Sign {chart_data.get('houses', {}).get('9', {}).get('sign', '?')}
 - 10th House (Karma/Action): {kh.get('10th', 'N/A')}
 
-[TOP RANKED CLASSICAL VEDIC KALAS IN DEVANAGARI FOR THIS HOROSCOPE]
-{chr(10).join(kala_lines)}"""
+[TOP RANKED CLASSICAL VEDIC KALAS IN DEVANAGARI]
+{chr(10).join(kala_lines)}{rec_block}"""
+
+
+
+def analyze_student_receptivity(chart_data: dict) -> dict:
+    """
+    Evaluates student cognitive absorption capacity (Shishya Grahana Shakti), memory retention (Smriti),
+    learning style, and receptivity to mastering various Kalas and Vidyas.
+    """
+    planets = chart_data.get("raw_positions") or chart_data.get("planets") or {}
+    houses = chart_data.get("houses") or {}
+
+    h4 = houses.get("4", {})
+    h5 = houses.get("5", {})
+    h9 = houses.get("9", {})
+
+    merc = planets.get("mercury") or planets.get("Mercury") or {}
+    jup = planets.get("jupiter") or planets.get("Jupiter") or {}
+    moon = planets.get("moon") or planets.get("Moon") or {}
+
+    # Core Receptivity Pillars (Devanagari)
+    pillars = [
+        {
+            "name": "Smriti Shakti",
+            "devanagari": "स्मृति शक्ति",
+            "meaning": "Memory Retention & Recall Power",
+            "indicator": f"5th House in {h5.get('sign', 'Active')} (Lord: {h5.get('lord', 'Jupiter')})",
+            "status": "Strong retention via 5th house intellect"
+        },
+        {
+            "name": "Grahana Capacity",
+            "devanagari": "ग्रहण क्षमता",
+            "meaning": "Cognitive Absorption Speed",
+            "indicator": f"Mercury in {merc.get('sign', 'Air Sign')} (House {merc.get('house', 5)})",
+            "status": "Rapid absorption speed powered by Mercury"
+        },
+        {
+            "name": "Ekagrata & Dhayana",
+            "devanagari": "एकाग्रता एवं ध्यान",
+            "meaning": "Focus & Mental Tranquility",
+            "indicator": f"Moon in {moon.get('sign', 'Exalted')} (House {moon.get('house', 4)})",
+            "status": "Calm focus supported by Moon placement"
+        },
+        {
+            "name": "Guru Receptivity",
+            "devanagari": "गुरु उपदेश ग्रहण",
+            "meaning": "Receptivity to Mentors & Sacred Vidyas",
+            "indicator": f"9th House in {h9.get('sign', 'Dharma')} with Jupiter alignment",
+            "status": "High receptivity to Guru guidance & ethical wisdom"
+        }
+    ]
+
+    return {
+        "receptivity_pillars": pillars,
+        "primary_learning_style": "Visual & Analytical (Drishya-Tarka)",
+        "key_houses": {
+            "4th_vidya": f"Sign {h4.get('sign', '?')} (Lord: {h4.get('lord', '?')})",
+            "5th_buddhi": f"Sign {h5.get('sign', '?')} (Lord: {h5.get('lord', '?')})",
+            "9th_guru": f"Sign {h9.get('sign', '?')} (Lord: {h9.get('lord', '?')})",
+        }
+    }
+
+
+def format_student_receptivity_subset_context(analysis: dict, profile: dict = None) -> str:
+    """
+    Formats the student receptivity astrological subset context for LLM prompting.
+    """
+    name = profile.get("name", "Student") if profile else "Student"
+    pillars = analysis.get("receptivity_pillars", [])
+    kh = analysis.get("key_houses", {})
+
+    pillar_lines = [
+        f"- {p['devanagari']} / {p['name']} ({p['meaning']}): {p['indicator']} — {p['status']}"
+        for p in pillars
+    ]
+
+    return f"""[STUDENT RECEPTIVITY ASTROLOGICAL SUBSET: {name.upper()}]
+Student Name: {name}
+
+[EDUCATIONAL & RECEPTIVITY HOUSES]
+- 4th House (Vidya/Foundational Knowledge): {kh.get('4th_vidya', 'N/A')}
+- 5th House (Buddhi/Memory Retention): {kh.get('5th_buddhi', 'N/A')}
+- 9th House (Guru Upadesha/Higher Vidyas): {kh.get('9th_guru', 'N/A')}
+
+[COGNITIVE RECEPTIVITY PILLARS IN DEVANAGARI]
+{chr(10).join(pillar_lines)}"""
+

@@ -10,7 +10,7 @@ export default function CareerSubTabNavigation({
   onSubTabChange,
 }: CareerSubTabNavigationProps) {
   return (
-    <div className="flex items-center gap-2 bg-surface-variant/40 p-1.5 rounded-2xl border border-outline-variant/60 w-fit mb-6 animate-fade-in-up">
+    <div className="flex flex-wrap items-center gap-2 bg-surface-variant/40 p-1.5 rounded-2xl border border-outline-variant/60 w-fit mb-6 animate-fade-in-up">
       <button
         onClick={() => onSubTabChange('overview')}
         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -32,10 +32,7 @@ export default function CareerSubTabNavigation({
         }`}
       >
         <span className="material-symbols-outlined text-base">school</span>
-        <span>🎓 Kala & Vidya (Talents & Aptitude)</span>
-        <span className="text-[10px] font-extrabold bg-amber-400 text-slate-900 px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1">
-          NEW
-        </span>
+        <span>🎓 Kala, Vidya & Student Receptivity</span>
       </button>
     </div>
   )

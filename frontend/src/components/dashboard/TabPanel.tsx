@@ -15,6 +15,8 @@ export interface TabCacheItem {
   messages: Message[]
 }
 
+
+
 interface TabPanelProps {
   tab: TabType
   chartData: any
@@ -73,9 +75,11 @@ export default function TabPanel({
         let queryMsg = `Provide a detailed ${tab} analysis for my horoscope.`
         if (tab === 'marriage') {
           queryMsg = `Provide a detailed ${relationshipTarget} relationship analysis for my horoscope.`
-        } else if (tab === 'career' && careerSubTab === 'kala_vidya') {
-          queryMsg = `Provide a detailed Kala and Vidya natural talents and learning aptitude mentorship for my horoscope.`
+        } else if (tab === 'career' && (careerSubTab === 'kala_vidya' || (careerSubTab as string) === 'receptivity')) {
+          queryMsg = `Provide a detailed Kala, Vidya (64 classical talents), Student Receptivity (Shishya Grahana), and research pedagogy analysis for my horoscope.`
         }
+
+
 
         const res = await fetch(`${apiBaseUrl}/api/tab-chat`, {
           method: 'POST',
@@ -206,21 +210,26 @@ export default function TabPanel({
         </>
       )}
 
-      {/* Kala & Vidya Interactive Dashboard (Career Sub-Tab Only) */}
+      {/* Kala, Vidya & Student Receptivity Interactive Dashboard (Career Sub-Tab Only) */}
       {tab === 'career' && careerSubTab === 'kala_vidya' && (
         <KalaVidyaDashboard chartData={chartData} />
       )}
 
-      {/* Main Tab Initial Reading */}
+
+
+      {/* Main Tab Personal AI Reading Card */}
       <div className="celestial-card p-6 rounded-3xl bg-surface border border-outline-variant/60 shadow-xs">
         <div className="flex items-center justify-between border-b border-outline-variant/40 pb-4 mb-4">
           <h2 className="font-display text-2xl font-bold text-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-2xl">auto_awesome</span>
-            Detailed {tab === 'marriage' ? 'Relationships' : tab.charAt(0).toUpperCase() + tab.slice(1)} Analysis
-
+            {tab === 'marriage'
+              ? `${relationshipTarget.charAt(0).toUpperCase() + relationshipTarget.slice(1)} Relationship AI Analysis`
+              : tab === 'career' && careerSubTab === 'kala_vidya'
+              ? 'Personal AI Astrological Analysis (Kala, Vidya & Receptivity)'
+              : `Detailed ${tab.charAt(0).toUpperCase() + tab.slice(1)} Analysis`}
           </h2>
           <span className="text-xs text-on-surface-variant bg-surface-variant px-3 py-1 rounded-full font-medium">
-            Grounded Reading
+            Personal AI Reading
           </span>
         </div>
 
@@ -228,7 +237,7 @@ export default function TabPanel({
           <div className="py-8 flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
             <p className="text-xs text-on-surface-variant italic">
-              Calculating {tab} planetary alignments & teachings...
+              Generating personal AI astrological analysis for your chart...
             </p>
           </div>
         ) : (
@@ -247,6 +256,8 @@ export default function TabPanel({
         onSendMessage={handleSendMessage}
         loading={loadingChat}
       />
+
+
     </div>
   )
 }
