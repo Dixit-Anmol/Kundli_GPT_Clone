@@ -13,7 +13,14 @@ class GroqClient:
             os.environ.get("GROQ_API_KEY_FALLBACK2"),
             os.environ.get("GROQ_API_KEY_FALLBACK3"),
             os.environ.get("GROQ_API_KEY_FALLBACK4"),
+            os.environ.get("GROQ_API_KEY_FALLBACK5"),
+            os.environ.get("GROQ_API_KEY_FALLBACK6"),
+            os.environ.get("GROQ_API_KEY_FALLBACK7"),
+            os.environ.get("GROQ_API_KEY_FALLBACK8"),
+            os.environ.get("GROQ_API_KEY_FALLBACK9"),
+            os.environ.get("GROQ_API_KEY_FALLBACK10"),
         ]
+
 
         keys_to_try = []
         for k in raw_keys:
