@@ -80,39 +80,66 @@ const TEMPERAMENTS: TemperamentDefinition[] = [
 ]
 
 export default function PersonalityDashboard({ chartData, computed }: PersonalityDashboardProps) {
-  const [selectedTempId, setSelectedTempId] = useState<string>('choleric')
+  // Dynamic Astrological Four Temperaments Calculation Engine
+  const fireSigns = ['Aries', 'Leo', 'Sagittarius']
+  const airSigns = ['Gemini', 'Libra', 'Aquarius']
+  const earthSigns = ['Taurus', 'Virgo', 'Capricorn']
+  const waterSigns = ['Cancer', 'Scorpio', 'Pisces']
 
-  // Calculate elemental scores from computed or chartData fallback
-  const elements = computed?.elements || {}
-  const rawPlanets = chartData?.planets || {}
-  
-  let fireScore = elements.Fire
-  let airScore = elements.Air
-  let earthScore = elements.Earth
-  let waterScore = elements.Water
+  let firePts = 0
+  let airPts = 0
+  let earthPts = 0
+  let waterPts = 0
 
-  if (fireScore === undefined) {
-    // Basic sign-based fallback
-    let f = 0, a = 0, e = 0, w = 0
-    const fireSigns = ['Aries', 'Leo', 'Sagittarius']
-    const airSigns = ['Gemini', 'Libra', 'Aquarius']
-    const earthSigns = ['Taurus', 'Virgo', 'Capricorn']
-    const waterSigns = ['Cancer', 'Scorpio', 'Pisces']
+  // 1. Ascendant / Lagna sign weighting (+3 points)
+  const ascSign =
+    chartData?.metadata?.ascendant_sign ||
+    chartData?.ascendant_sign ||
+    chartData?.prashna_lagna?.sign ||
+    ''
 
-    Object.values(rawPlanets).forEach((p: any) => {
-      const s = p?.sign
-      if (fireSigns.includes(s)) f += 1
-      else if (airSigns.includes(s)) a += 1
-      else if (earthSigns.includes(s)) e += 1
-      else if (waterSigns.includes(s)) w += 1
-    })
-    const total = Math.max(1, f + a + e + w)
-    fireScore = Math.round((f / total) * 100)
-    airScore = Math.round((a / total) * 100)
-    earthScore = Math.round((e / total) * 100)
-    waterScore = Math.round((w / total) * 100)
+  if (fireSigns.includes(ascSign)) firePts += 3
+  else if (airSigns.includes(ascSign)) airPts += 3
+  else if (earthSigns.includes(ascSign)) earthPts += 3
+  else if (waterSigns.includes(ascSign)) waterPts += 3
+
+  // 2. Planets signs weighting (+2 for Sun/Moon, +1 for others)
+  const planetsObj = chartData?.planets || chartData?.raw_positions || {}
+  Object.entries(planetsObj).forEach(([pName, pData]: [string, any]) => {
+    const s = typeof pData === 'string' ? pData : pData?.sign || ''
+    if (!s) return
+
+    const nameLower = pName.toLowerCase()
+    const weight = nameLower === 'sun' || nameLower === 'moon' ? 2 : 1
+
+    if (fireSigns.includes(s)) firePts += weight
+    else if (airSigns.includes(s)) airPts += weight
+    else if (earthSigns.includes(s)) earthPts += weight
+    else if (waterSigns.includes(s)) waterPts += weight
+  })
+
+  // 3. Fallback check from computed.elements if present
+  if (computed?.elements) {
+    const e = computed.elements
+    if (e.Fire) firePts += Math.round(e.Fire / 10)
+    if (e.Air) airPts += Math.round(e.Air / 10)
+    if (e.Earth) earthPts += Math.round(e.Earth / 10)
+    if (e.Water) waterPts += Math.round(e.Water / 10)
   }
 
+  // Fallback defaults if chart data is completely missing
+  if (firePts + airPts + earthPts + waterPts === 0) {
+    firePts = 4
+    airPts = 3
+    earthPts = 2
+    waterPts = 2
+  }
+
+  const totalPts = firePts + airPts + earthPts + waterPts
+  const fireScore = Math.round((firePts / totalPts) * 100)
+  const airScore = Math.round((airPts / totalPts) * 100)
+  const earthScore = Math.round((earthPts / totalPts) * 100)
+  const waterScore = Math.max(0, 100 - (fireScore + airScore + earthScore))
 
   const scoresMap: Record<string, number> = {
     choleric: fireScore,
@@ -121,11 +148,12 @@ export default function PersonalityDashboard({ chartData, computed }: Personalit
     phlegmatic: waterScore
   }
 
-  // Find dominant temperament
+  // Find dominant & secondary temperaments
   const sortedTemps = [...TEMPERAMENTS].sort((a, b) => (scoresMap[b.id] || 0) - (scoresMap[a.id] || 0))
   const dominantTemp = sortedTemps[0]
   const secondaryTemp = sortedTemps[1]
 
+  const [selectedTempId, setSelectedTempId] = useState<string>(dominantTemp.id)
   const activeTemp = TEMPERAMENTS.find(t => t.id === selectedTempId) || dominantTemp
 
   return (
@@ -147,12 +175,12 @@ export default function PersonalityDashboard({ chartData, computed }: Personalit
                 </span>
               </div>
               <p className="text-xs text-on-surface-variant font-medium mt-0.5">
-                Classical Four Temperaments analysis derived from your birth chart's elemental distribution and planetary dignities.
+                Classical Four Temperaments analysis derived dynamically from your birth chart's elemental distribution and planetary dignities.
               </p>
             </div>
           </div>
 
-          {/* Dominant Badge */}
+          {/* Dominant & Secondary Badges */}
           <div className="flex flex-wrap items-center gap-2">
             <div className="bg-primary/10 border border-primary/30 px-3.5 py-1.5 rounded-2xl text-xs flex items-center gap-2">
               <span className="text-on-surface-variant font-medium">Primary:</span>
@@ -170,7 +198,7 @@ export default function PersonalityDashboard({ chartData, computed }: Personalit
           {TEMPERAMENTS.map((t) => {
             const isSelected = selectedTempId === t.id
             const isDominant = dominantTemp.id === t.id
-            const score = scoresMap[t.id] || 25
+            const score = scoresMap[t.id] || 0
 
             return (
               <div
