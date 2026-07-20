@@ -74,22 +74,22 @@ def handle_tab_chat(req: TabChatRequest):
         )
 
 
-        if mode == "prashna":
+        # Use Prashna/Partial initial prompt ONLY for overview tab initial reading
+        if mode == "prashna" and req.tab == "overview" and is_initial:
             from services.prompts.prashna import get_prashna_prompt
             from services.astrology.prashna_engine import format_prashna_context
             system_prompt = get_prashna_prompt("prashna")
             user_prompt = format_prashna_context(chart_data, profile)
-        elif mode == "partial":
+        elif mode == "partial" and req.tab == "overview" and is_initial:
             from services.prompts.prashna import get_prashna_prompt
             from services.astrology.partial_horoscope_engine import format_partial_horoscope_context
             system_prompt = get_prashna_prompt("partial")
             user_prompt = format_partial_horoscope_context(chart_data, profile)
         else:
-            # Get domain-specific system prompt (Initial Overview vs Focused Chat Q&A)
+            # Get domain-specific system prompt (Career, Marriage, Health, Food, Remedies, Finance, Personality, Spiritual, etc.)
             system_prompt = get_tab_system_prompt(req.tab, is_initial=is_initial, sub_tab=req.sub_tab)
 
             # Build domain-specific user context
-            # For spiritual tab, include Bhagavad Gita RAG
             passages = None
             if req.tab == "spiritual":
                 passages = rag_pipeline.search_wisdom(req.message, top_k=2)
@@ -105,6 +105,7 @@ def handle_tab_chat(req: TabChatRequest):
                 relationship_type=req.relationship_type,
                 sub_tab=req.sub_tab,
             )
+
 
 
 
