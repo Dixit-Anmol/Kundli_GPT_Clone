@@ -94,17 +94,24 @@ def build_chart(req: ChartRequest):
                 sess["key"] = req.api_key
 
             return {
-                "status": "success",
-                "message": "Prashna Kundli generated successfully.",
-                "session_id": req.session_id,
-                "summary": {
-                    "sun_sign": chart_data["planets"]["sun"]["sign"],
-                    "moon_sign": chart_data["planets"]["moon"]["sign"],
-                    "ascendant": chart_data["prashna_lagna"]["sign"],
-                    "moon_nakshatra": chart_data["panchanga"]["nakshatra"],
-                    "is_manglik": False
-                },
-                "chart_data": chart_data
+                "name": req.name,
+                "ascendant_sign": chart_data["prashna_lagna"]["sign"],
+                "moon_sign": chart_data["planets"]["moon"]["sign"],
+                "nakshatra": chart_data["panchanga"]["nakshatra"],
+                "pada": chart_data["panchanga"]["pada"],
+                "yogas": [],
+                "doshas": {},
+                "raw_positions": chart_data["raw_positions"],
+                "mode": "prashna",
+                "chart_type": chart_data["chart_type"],
+                "question": chart_data["question"],
+                "category": chart_data["category"],
+                "location": chart_data["location"],
+                "prashna_time": chart_data["prashna_time"],
+                "prashna_lagna": chart_data["prashna_lagna"],
+                "panchanga": chart_data["panchanga"],
+                "disclaimer": chart_data["disclaimer"],
+                "planets": chart_data["planets"]
             }
 
         # ---------------------------------------------------------------
@@ -138,18 +145,29 @@ def build_chart(req: ChartRequest):
                 sess["key"] = req.api_key
 
             return {
-                "status": "success",
-                "message": "Estimated Horoscope generated successfully.",
-                "session_id": req.session_id,
-                "summary": {
-                    "sun_sign": chart_data["planets"]["sun"]["sign"],
-                    "moon_sign": chart_data["moon_sign"],
-                    "ascendant": "Estimated (Lagna Excluded)",
-                    "moon_nakshatra": chart_data["nakshatra"],
-                    "is_manglik": False
-                },
-                "chart_data": chart_data
+                "name": req.name,
+                "ascendant_sign": "Estimated (Lagna Excluded)",
+                "moon_sign": chart_data["moon_sign"],
+                "nakshatra": chart_data["nakshatra"],
+                "pada": 1,
+                "yogas": [],
+                "doshas": {},
+                "raw_positions": chart_data["raw_positions"],
+                "mode": "partial",
+                "chart_type": chart_data["chart_type"],
+                "confidence_level": chart_data["confidence_level"],
+                "birth_date": chart_data["birth_date"],
+                "time_slot": chart_data["time_slot"],
+                "has_exact_time": chart_data["has_exact_time"],
+                "moon_stable": chart_data["moon_stable"],
+                "exact_calculations": chart_data["exact_calculations"],
+                "estimated_calculations": chart_data["estimated_calculations"],
+                "excluded_calculations": chart_data["excluded_calculations"],
+                "disclaimer": chart_data["disclaimer"],
+                "planets": chart_data["planets"],
+                "transits": chart_data["transits"]
             }
+
 
         # ---------------------------------------------------------------
         # Option 1: Complete Janma Kundli (Exact Birth Details)

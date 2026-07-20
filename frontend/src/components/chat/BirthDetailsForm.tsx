@@ -74,10 +74,10 @@ export default function BirthDetailsForm({ onSubmit }: BirthDetailsFormProps) {
     })
   }
 
-  const genderOptions: Array<{ value: 'male' | 'female' | 'other'; label: string; icon: string }> = [
-    { value: 'male', label: 'Male', icon: 'male' },
-    { value: 'female', label: 'Female', icon: 'female' },
-    { value: 'other', label: 'Other', icon: 'person' },
+  const genderOptions: Array<{ value: 'male' | 'female' | 'other'; label: string }> = [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+    { value: 'other', label: 'Other' },
   ]
 
   const timeSlotOptions = [
@@ -211,9 +211,9 @@ export default function BirthDetailsForm({ onSubmit }: BirthDetailsFormProps) {
         </label>
 
         {/* Common Name, Gender & Relationship Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="space-y-5">
           <div>
-            <label className="text-xs font-bold text-primary block mb-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-primary block mb-2">
               Full Name *
             </label>
             <input
@@ -221,46 +221,48 @@ export default function BirthDetailsForm({ onSubmit }: BirthDetailsFormProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Anmol Dixit"
-              className="w-full bg-surface-variant/40 border border-outline-variant/60 rounded-2xl px-4 py-3.5 text-sm sm:text-base text-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all font-medium"
+              className="w-full bg-surface-variant/40 border border-outline-variant/60 rounded-2xl px-4 py-3 text-sm sm:text-base text-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all font-medium"
             />
           </div>
 
-          <div>
-            <label className="text-xs font-bold text-primary block mb-2">Gender</label>
-            <div className="grid grid-cols-3 gap-2">
-              {genderOptions.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setGender(opt.value)}
-                  className={`py-3 px-2 text-xs sm:text-sm font-bold rounded-2xl border transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                    gender === opt.value
-                      ? 'bg-primary text-white border-primary shadow-xs'
-                      : 'bg-surface-variant/30 border-outline-variant/50 text-on-surface-variant hover:bg-surface-variant/60'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-base">{opt.icon}</span>
-                  <span>{opt.label}</span>
-                </button>
-              ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-primary block mb-2">Gender</label>
+              <div className="flex gap-2">
+                {genderOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setGender(opt.value)}
+                    className={`flex-1 py-3 px-4 text-xs sm:text-sm font-bold rounded-2xl border transition-all cursor-pointer text-center ${
+                      gender === opt.value
+                        ? 'bg-primary-fixed border-primary/30 text-primary'
+                        : 'bg-surface-variant/30 border-outline-variant/50 text-on-surface-variant hover:bg-surface-variant/60'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-primary block mb-2">Profile Target (Relationship)</label>
+              <select
+                value={relationship}
+                onChange={(e) => setRelationship(e.target.value as RelationshipType)}
+                className="w-full bg-surface-variant/40 border border-outline-variant/60 rounded-2xl px-4 py-3 text-sm sm:text-base text-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary cursor-pointer font-medium"
+              >
+                {['Self', 'Spouse', 'Child', 'Parent', 'Friend', 'Other'].map((rel) => (
+                  <option key={rel} value={rel}>
+                    {rel}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
-
-          <div>
-            <label className="text-xs font-bold text-primary block mb-2">Profile Target</label>
-            <select
-              value={relationship}
-              onChange={(e) => setRelationship(e.target.value as RelationshipType)}
-              className="w-full bg-surface-variant/40 border border-outline-variant/60 rounded-2xl px-4 py-3.5 text-sm sm:text-base text-primary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary cursor-pointer font-medium"
-            >
-              {['Self', 'Spouse', 'Child', 'Parent', 'Friend', 'Other'].map((rel) => (
-                <option key={rel} value={rel}>
-                  {rel}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
+
 
         {/* Mode 1: Exact Birth Details Inputs */}
         {mode === 'exact' && (
