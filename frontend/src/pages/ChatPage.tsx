@@ -74,6 +74,12 @@ export default function ChatPage() {
     const newProfileId = crypto.randomUUID()
 
     try {
+      const timeStr = birthData.timeOfBirth
+        ? birthData.timeOfBirth.length === 5
+          ? `${birthData.timeOfBirth}:00`
+          : birthData.timeOfBirth
+        : '12:00:00'
+
       // 1. Fetch real chart data from FastAPI backend
       const response = await fetch(`${API_BASE_URL}/api/chart`, {
         method: 'POST',
@@ -81,15 +87,20 @@ export default function ChatPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: birthData.fullName,
-          date_str: birthData.dateOfBirth,
-          time_str: `${birthData.timeOfBirth}:00`,
+          name: birthData.fullName || 'Seeker',
+          date_str: birthData.dateOfBirth || new Date().toISOString().split('T')[0],
+          time_str: timeStr,
           latitude: lat,
           longitude: lon,
           session_id: sessionId,
           user_id: newProfileId,
+          mode: birthData.mode || 'exact',
+          time_slot: birthData.timeSlot || 'unknown',
+          question: birthData.question,
+          category: birthData.category,
         }),
       })
+
 
       if (response.ok) {
         const data = await response.json()

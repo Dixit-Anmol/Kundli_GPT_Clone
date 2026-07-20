@@ -9,11 +9,13 @@ import RelationshipTargetSelector, { type RelationshipTarget } from './Relations
 import RelationshipScoreCard from './RelationshipScoreCard'
 import CareerSubTabNavigation, { type CareerSubTab } from './CareerSubTabNavigation'
 import KalaVidyaDashboard from './KalaVidyaDashboard'
+import PrashnaDashboardView from './PrashnaDashboardView'
 
 export interface TabCacheItem {
   initialReading: string
   messages: Message[]
 }
+
 
 
 
@@ -188,13 +190,20 @@ export default function TabPanel({
       {/* Summary Cards */}
       <SummaryCards tab={tab} chartData={chartData} computed={computed} />
 
-      {/* Interactive Animated Kundli Chart (Overview Tab Only) */}
+      {/* Interactive Animated Kundli Chart OR Prashna / Partial View (Overview Tab Only) */}
       {tab === 'overview' && (
         <>
-          <AnimatedKundliChart chartData={chartData} />
-          <PlanetaryTable chartData={chartData} />
+          {chartData?.mode === 'prashna' || chartData?.mode === 'partial' ? (
+            <PrashnaDashboardView chartData={chartData} />
+          ) : (
+            <>
+              <AnimatedKundliChart chartData={chartData} />
+              <PlanetaryTable chartData={chartData} />
+            </>
+          )}
         </>
       )}
+
 
       {/* Interactive Multi-Target Relationship Engine (Marriage Tab Only) */}
       {tab === 'marriage' && (

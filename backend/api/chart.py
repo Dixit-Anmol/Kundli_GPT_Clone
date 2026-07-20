@@ -20,7 +20,11 @@ from services.astrology.lucky import calculate_lucky_attributes
 from services.astrology.planet_ranking import rank_planets
 from services.astrology.remedies_calc import generate_remedy_data
 
+from services.astrology.prashna_engine import calculate_prashna_chart
+from services.astrology.partial_horoscope_engine import calculate_partial_horoscope
+
 router = APIRouter()
+
 
 
 def find_timezone_offset(lat: float, lon: float, date_str: str) -> tuple:
@@ -59,6 +63,97 @@ def get_timezone(req: TimezoneRequest):
 @router.post("/chart", response_model=ChartResponse)
 def build_chart(req: ChartRequest):
     try:
+        mode = (req.mode or "exact").lower()
+
+        # ---------------------------------------------------------------
+        # Option 3: Prashna Kundli (Horary)
+        # ---------------------------------------------------------------
+        if mode == "prashna":
+            _, offset = find_timezone_offset(req.latitude, req.longitude, datetime.now().strftime("%Y-%m-%d"))
+            chart_data = calculate_prashna_chart(
+                question=req.question or "General Guidance",
+                category=req.category or "general",
+                lat=req.latitude,
+                lon=req.longitude,
+                timezone_offset=offset
+            )
+
+            # Store in session memory
+            session_store.save_chart(req.session_id, chart_data)
+            sess = session_store.get_session(req.session_id)
+            sess["profile"] = {
+                "name": req.name,
+                "mode": "prashna",
+                "question": req.question,
+                "category": req.category,
+                "latitude": req.latitude,
+                "longitude": req.longitude,
+                "timezone_offset": offset
+            }
+            if req.api_key:
+                sess["key"] = req.api_key
+
+            return {
+                "status": "success",
+                "message": "Prashna Kundli generated successfully.",
+                "session_id": req.session_id,
+                "summary": {
+                    "sun_sign": chart_data["planets"]["sun"]["sign"],
+                    "moon_sign": chart_data["planets"]["moon"]["sign"],
+                    "ascendant": chart_data["prashna_lagna"]["sign"],
+                    "moon_nakshatra": chart_data["panchanga"]["nakshatra"],
+                    "is_manglik": False
+                },
+                "chart_data": chart_data
+            }
+
+        # ---------------------------------------------------------------
+        # Option 2: Partial Birth Details (Estimated Horoscope)
+        # ---------------------------------------------------------------
+        elif mode == "partial":
+            date_parts = (req.date_str or "2000-01-01").split("-")
+            year, month, day = int(date_parts[0]), int(date_parts[1]), int(date_parts[2])
+            _, offset = find_timezone_offset(req.latitude, req.longitude, req.date_str or "2000-01-01")
+
+            chart_data = calculate_partial_horoscope(
+                year=year, month=month, day=day,
+                time_slot=req.time_slot or "unknown",
+                exact_time=req.time_str,
+                lat=req.latitude, lon=req.longitude, timezone_offset=offset
+            )
+
+            # Store in session memory
+            session_store.save_chart(req.session_id, chart_data)
+            sess = session_store.get_session(req.session_id)
+            sess["profile"] = {
+                "name": req.name,
+                "mode": "partial",
+                "date_of_birth": req.date_str,
+                "time_slot": req.time_slot,
+                "latitude": req.latitude,
+                "longitude": req.longitude,
+                "timezone_offset": offset
+            }
+            if req.api_key:
+                sess["key"] = req.api_key
+
+            return {
+                "status": "success",
+                "message": "Estimated Horoscope generated successfully.",
+                "session_id": req.session_id,
+                "summary": {
+                    "sun_sign": chart_data["planets"]["sun"]["sign"],
+                    "moon_sign": chart_data["moon_sign"],
+                    "ascendant": "Estimated (Lagna Excluded)",
+                    "moon_nakshatra": chart_data["nakshatra"],
+                    "is_manglik": False
+                },
+                "chart_data": chart_data
+            }
+
+        # ---------------------------------------------------------------
+        # Option 1: Complete Janma Kundli (Exact Birth Details)
+        # ---------------------------------------------------------------
         # Resolve timezone offset
         _, offset = find_timezone_offset(req.latitude, req.longitude, req.date_str)
         
@@ -66,7 +161,7 @@ def build_chart(req: ChartRequest):
         dt = datetime.strptime(req.date_str, "%Y-%m-%d")
         tm = datetime.strptime(req.time_str, "%H:%M:%S")
         
-        # Calculate full horoscope data (legacy path, still used for session/response)
+        # Calculate full horoscope data
         chart_data = calculate_horoscope_data(
             year=dt.year, month=dt.month, day=dt.day,
             hour=tm.hour, minute=tm.minute, second=tm.second,
@@ -78,6 +173,7 @@ def build_chart(req: ChartRequest):
         sess = session_store.get_session(req.session_id)
         sess["profile"] = {
             "name": req.name,
+            "mode": "exact",
             "date_of_birth": req.date_str,
             "time_of_birth": req.time_str,
             "latitude": req.latitude,
@@ -85,12 +181,8 @@ def build_chart(req: ChartRequest):
             "timezone_offset": offset
         }
         if req.api_key:
-            # Save user API key for Anthropic/Groq calls if provided
             sess["key"] = req.api_key
 
-        # ---------------------------------------------------------------
-        # NEW: Generate ALL divisional charts via the new astrology engine
-        # ---------------------------------------------------------------
         birth = BirthDetails(
             name=req.name,
             date_of_birth=req.date_str,
@@ -100,15 +192,11 @@ def build_chart(req: ChartRequest):
             timezone_offset=offset,
         )
 
-        # Generate all 15 divisional charts + global calculations
         bundle = generate_all_charts(birth)
-
-        # Cache the full bundle (keyed by session_id, or user_id if available)
         cache_key = req.user_id or req.session_id
         chart_cache.store(cache_key, bundle)
-
-        # Store the bundle dict in session for chat access
         sess["chart_bundle"] = bundle.to_dict()
+
         # ---------------------------------------------------------------
             
         meta = chart_data["metadata"]

@@ -72,26 +72,40 @@ def handle_tab_chat(req: TabChatRequest):
             or len(history) == 0
         )
 
-        # Get domain-specific system prompt (Initial Overview vs Focused Chat Q&A)
-        system_prompt = get_tab_system_prompt(req.tab, is_initial=is_initial, sub_tab=req.sub_tab)
+        mode = chart_data.get("mode", "exact")
 
-        # Build domain-specific user context
-        # For spiritual tab, include Bhagavad Gita RAG
-        passages = None
-        if req.tab == "spiritual":
-            passages = rag_pipeline.search_wisdom(req.message, top_k=2)
+        if mode == "prashna":
+            from services.prompts.prashna import get_prashna_prompt
+            from services.astrology.prashna_engine import format_prashna_context
+            system_prompt = get_prashna_prompt("prashna")
+            user_prompt = format_prashna_context(chart_data, profile)
+        elif mode == "partial":
+            from services.prompts.prashna import get_prashna_prompt
+            from services.astrology.partial_horoscope_engine import format_partial_horoscope_context
+            system_prompt = get_prashna_prompt("partial")
+            user_prompt = format_partial_horoscope_context(chart_data, profile)
+        else:
+            # Get domain-specific system prompt (Initial Overview vs Focused Chat Q&A)
+            system_prompt = get_tab_system_prompt(req.tab, is_initial=is_initial, sub_tab=req.sub_tab)
 
-        user_prompt = build_tab_context(
-            tab=req.tab,
-            query=req.message,
-            chart_data=chart_data,
-            profile=profile,
-            history=history,
-            computed=computed,
-            passages=passages,
-            relationship_type=req.relationship_type,
-            sub_tab=req.sub_tab,
-        )
+            # Build domain-specific user context
+            # For spiritual tab, include Bhagavad Gita RAG
+            passages = None
+            if req.tab == "spiritual":
+                passages = rag_pipeline.search_wisdom(req.message, top_k=2)
+
+            user_prompt = build_tab_context(
+                tab=req.tab,
+                query=req.message,
+                chart_data=chart_data,
+                profile=profile,
+                history=history,
+                computed=computed,
+                passages=passages,
+                relationship_type=req.relationship_type,
+                sub_tab=req.sub_tab,
+            )
+
 
 
 

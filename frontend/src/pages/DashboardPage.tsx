@@ -74,25 +74,33 @@ export default function DashboardPage({
               <h1 className="font-display text-3xl font-bold text-primary">
                 🙏 Welcome, {birthData?.fullName || 'Seeker'}!
               </h1>
-              {birthData?.relationship && (
-                <span className="text-xs font-semibold text-primary bg-primary-fixed px-2.5 py-0.5 rounded-full border border-primary/20">
-                  {birthData.relationship}
-                </span>
-              )}
+              <span className="text-xs font-semibold text-primary bg-primary-fixed px-2.5 py-0.5 rounded-full border border-primary/20">
+                {chartData?.mode === 'prashna'
+                  ? '🔮 Prashna Horary'
+                  : chartData?.mode === 'partial'
+                  ? '🪐 Estimated Horoscope'
+                  : birthData?.relationship || 'Janma Kundli'}
+              </span>
             </div>
             <p className="text-xs text-on-surface-variant mt-1 font-medium">
-              Ascendant (Lagna): <strong className="text-primary">{formatSignWithHindi(meta.ascendant_sign)}</strong> · Moon Sign (Rashi): <strong className="text-primary">{formatSignWithHindi(meta.moon_sign)}</strong> · Nakshatra: <strong className="text-primary">{meta.nakshatra}</strong>
+              {chartData?.mode === 'prashna' ? (
+                <>Prashna Lagna: <strong className="text-primary">{formatSignWithHindi(chartData?.prashna_lagna?.sign || 'Aries')}</strong> · Moon Sign: <strong className="text-primary">{formatSignWithHindi(chartData?.planets?.moon?.sign || 'Cancer')}</strong> · Nakshatra: <strong className="text-primary">{chartData?.panchanga?.nakshatra}</strong></>
+              ) : chartData?.mode === 'partial' ? (
+                <>Moon Sign (Rashi): <strong className="text-primary">{formatSignWithHindi(chartData?.moon_sign || 'Cancer')}</strong> · Nakshatra: <strong className="text-primary">{chartData?.nakshatra}</strong> · Lagna: <strong className="text-amber-800">Excluded (No Birth Time)</strong></>
+              ) : (
+                <>Ascendant (Lagna): <strong className="text-primary">{formatSignWithHindi(meta.ascendant_sign)}</strong> · Moon Sign (Rashi): <strong className="text-primary">{formatSignWithHindi(meta.moon_sign)}</strong> · Nakshatra: <strong className="text-primary">{meta.nakshatra}</strong></>
+              )}
             </p>
-
           </div>
 
           <button
             onClick={onResetProfile}
             className="text-xs text-on-surface-variant hover:text-primary transition-colors underline underline-offset-4 decoration-outline-variant hover:decoration-primary cursor-pointer"
           >
-            Edit Chart Details
+            Edit Details
           </button>
         </div>
+
 
         {/* Tab Panel View */}
         <TabPanel

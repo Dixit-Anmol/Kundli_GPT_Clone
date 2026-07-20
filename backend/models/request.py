@@ -8,13 +8,17 @@ class TimezoneRequest(BaseModel):
 
 class ChartRequest(BaseModel):
     name: str
-    date_str: str  # YYYY-MM-DD
-    time_str: str  # HH:MM:SS
+    date_str: Optional[str] = "2000-01-01"  # YYYY-MM-DD
+    time_str: Optional[str] = "12:00:00"  # HH:MM:SS
     latitude: float
     longitude: float
     session_id: str
     user_id: Optional[str] = None   # Anonymous persistent UUID from localStorage
     api_key: Optional[str] = None
+    mode: Optional[str] = "exact"  # "exact" | "partial" | "prashna"
+    time_slot: Optional[str] = "unknown" # "morning" | "afternoon" | "evening" | "night" | "sunrise" | "sunset" | "unknown"
+    question: Optional[str] = None
+    category: Optional[str] = "general"
 
 class ChatRequest(BaseModel):
     session_id: str
@@ -29,6 +33,11 @@ class TabChatRequest(BaseModel):
     is_initial: Optional[bool] = False
     relationship_type: Optional[str] = "spouse"  # father, mother, siblings, spouse, children, friends, boss, mentors, inlaws
     sub_tab: Optional[str] = "overview"  # "overview" | "kala_vidya"
+    mode: Optional[str] = "exact"
+    time_slot: Optional[str] = "unknown"
+    question: Optional[str] = None
+    category: Optional[str] = "general"
+
 
 
 
