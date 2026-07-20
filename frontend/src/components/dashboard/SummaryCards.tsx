@@ -117,13 +117,36 @@ function getCardsForTab(tab: TabType, chartData: any, computed?: any): SummaryCa
       ]
     }
 
-    case 'remedies':
+    case 'remedies': {
+      const remedyInfo = getRemedySummary(chartData, comp)
       return [
-        { label: 'Afflicted Planets', value: `${comp.remedy_data?.weak_planets?.length || 0} Planets`, icon: 'warning', subtext: 'Requires remedy' },
-        { label: 'Primary Weak Planet', value: comp.remedy_data?.weak_planets?.[0]?.display_name || 'None', icon: 'nature_people', subtext: comp.remedy_data?.weak_planets?.[0]?.status || 'Chart Balanced' },
-        { label: 'Recommended Gem', value: comp.remedy_data?.weak_planets?.[0]?.remedies?.gemstone?.primary || 'Pearl / Ruby', icon: 'diamond', subtext: 'Consult Jyotish expert' },
-        { label: 'Fasting Day', value: comp.remedy_data?.weak_planets?.[0]?.remedies?.fasting_day || 'Monday', icon: 'event', subtext: 'Weekly discipline' },
+        {
+          label: 'Active Dasha Planet',
+          value: formatPlanetWithHindi(remedyInfo.currentDasha),
+          icon: 'schedule',
+          subtext: `${remedyInfo.currentDasha} Mahadasha Active`
+        },
+        {
+          label: 'Afflicted Planets',
+          value: `${remedyInfo.weakCount} Planets`,
+          icon: 'warning',
+          subtext: remedyInfo.weakCount > 0 ? `Primary: ${remedyInfo.primaryWeak}` : 'Chart In Harmony'
+        },
+        {
+          label: 'Recommended Gem',
+          value: remedyInfo.gemstone,
+          icon: 'diamond',
+          subtext: `For ${remedyInfo.primaryWeak}`
+        },
+        {
+          label: 'Fasting Day (Vrata)',
+          value: remedyInfo.fastingDay,
+          icon: 'event',
+          subtext: `Dedicated to ${remedyInfo.primaryWeak}`
+        },
       ]
+    }
+
 
     case 'finance':
       return [
@@ -271,6 +294,78 @@ function getSpiritualPath(element?: string): string {
       return 'Jnana & Self-Inquiry'
   }
 }
+
+function getRemedySummary(chartData: any, comp: any) {
+  const currentDashaRaw = (
+    chartData?.current_dasha ||
+    chartData?.metadata?.current_dasha ||
+    'Jupiter'
+  )
+  const currentDasha = currentDashaRaw.charAt(0).toUpperCase() + currentDashaRaw.slice(1).toLowerCase()
+
+  const planets = chartData?.planets || chartData?.raw_positions || {}
+  const weakPlanetsList: Array<{ name: string; status: string }> = []
+
+  // Check dignity, combust, dusthana
+  Object.entries(planets).forEach(([pName, pData]: [string, any]) => {
+    const dignity = (pData?.dignity || '').toLowerCase()
+    const combust = pData?.combust || false
+    const house = pData?.house
+
+    const isDebil = dignity.includes('debilitated') || dignity.includes('enemy')
+    const isDusthana = house && [6, 8, 12].includes(Number(house))
+
+    if (isDebil || combust || isDusthana) {
+      const status = isDebil ? 'Debilitated' : combust ? 'Combust' : 'Dusthana (H' + house + ')'
+      const nameCap = pName.charAt(0).toUpperCase() + pName.slice(1).toLowerCase()
+      weakPlanetsList.push({ name: nameCap, status })
+    }
+  })
+
+  // Priority to pre-computed weak planets if present
+  const preComputedWeak = comp?.remedy_data?.weak_planets
+  const weakCount = preComputedWeak ? preComputedWeak.length : weakPlanetsList.length
+  const primaryWeak = preComputedWeak?.[0]?.display_name || weakPlanetsList[0]?.name || currentDasha
+
+  // Gemstones map
+  const gemMap: Record<string, string> = {
+    Sun: 'Ruby (Manik)',
+    Moon: 'Pearl (Moti)',
+    Mars: 'Red Coral (Moonga)',
+    Mercury: 'Emerald (Panna)',
+    Jupiter: 'Yellow Sapphire (Pukhraj)',
+    Venus: 'Diamond (Heera)',
+    Saturn: 'Blue Sapphire (Neelam)',
+    Rahu: 'Hessonite (Gomed)',
+    Ketu: "Cat's Eye (Lehsunia)",
+  }
+
+  // Fasting map
+  const fastMap: Record<string, string> = {
+    Sun: 'Sunday',
+    Moon: 'Monday',
+    Mars: 'Tuesday',
+    Mercury: 'Wednesday',
+    Jupiter: 'Thursday',
+    Venus: 'Friday',
+    Saturn: 'Saturday',
+    Rahu: 'Saturday',
+    Ketu: 'Tuesday',
+  }
+
+  const targetPlanet = primaryWeak in gemMap ? primaryWeak : currentDasha
+  const gemstone = gemMap[targetPlanet] || 'Yellow Sapphire (Pukhraj)'
+  const fastingDay = fastMap[targetPlanet] || 'Thursday'
+
+  return {
+    currentDasha,
+    weakCount,
+    primaryWeak,
+    gemstone,
+    fastingDay,
+  }
+}
+
 
 function getLuckyAttributes(comp: any, chartData: any) {
   if (comp?.lucky?.lucky_day) return comp.lucky
