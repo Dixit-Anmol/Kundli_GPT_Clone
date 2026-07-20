@@ -10,6 +10,8 @@ import RelationshipScoreCard from './RelationshipScoreCard'
 import CareerSubTabNavigation, { type CareerSubTab } from './CareerSubTabNavigation'
 import KalaVidyaDashboard from './KalaVidyaDashboard'
 import PrashnaDashboardView from './PrashnaDashboardView'
+import PersonalityDashboard from './PersonalityDashboard'
+
 
 export interface TabCacheItem {
   initialReading: string
@@ -223,6 +225,12 @@ export default function TabPanel({
       {tab === 'career' && careerSubTab === 'kala_vidya' && (
         <KalaVidyaDashboard chartData={chartData} />
       )}
+
+      {/* The Four Temperaments Interactive Dashboard (Personality Tab Only) */}
+      {tab === 'personality' && (
+        <PersonalityDashboard chartData={chartData} computed={computed} />
+      )}
+
 
 
 

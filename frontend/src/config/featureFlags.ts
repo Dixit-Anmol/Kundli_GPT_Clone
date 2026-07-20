@@ -21,11 +21,12 @@ export const FEATURE_FLAGS: FeatureFlags = {
   enableMarriageTab: true,
   enableHealthTab: true,
   enableFoodTab: true,
-  enableRemediesTab: false,    // ❌ Disabled via feature flag per request
+  enableRemediesTab: true,    // ✅ Enabled Remedies tab
   enableFinanceTab: true,
-  enablePersonalityTab: false, // ❌ Disabled via feature flag per request
+  enablePersonalityTab: true, // ✅ Enabled Personality tab with The Four Temperaments
   enableSpiritualTab: false,   // ❌ Disabled via feature flag per request
 }
+
 
 /** Check if a specific tab ID is enabled by feature flags */
 export function isTabEnabled(tabId: string): boolean {

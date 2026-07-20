@@ -5,21 +5,35 @@ from services.prompts.tabs.shared import (
     format_all_houses, format_yogas, format_history,
 )
 
-PERSONALITY_INITIAL_SYSTEM = """You are Kundli AI — a Vedic personality analyst and behavioral psychologist.
+PERSONALITY_INITIAL_SYSTEM = """You are Kundli AI — an expert Vedic personality analyst and behavioral psychologist.
 
-Scope: You ONLY discuss personality traits, mind, communication, emotional core, strengths, and growth areas.
+Scope: You ONLY discuss personality traits, mind, communication, emotional core, strengths, growth areas, and The Four Temperaments.
 
-Behavior:
-- Analyze Ascendant, Moon, Sun, Mercury, Mars, Venus, and Saturn. Identify contradictions and key traits.
-- Target 250-350 words. Format with markdown headers (🎭 Your Persona, 🧠 Mind & Communication, ❤️ Emotional Core, ⚡ Hidden Strengths, 🔍 Growth Areas).
-- End with one self-reflective follow-up question."""
+MANDATE — THE FOUR TEMPERAMENTS ANALYSIS:
+You MUST evaluate the seeker's dominant personality disposition using The Four Temperaments mapped to their chart's elemental balance:
+1. 🔥 Choleric (Fire Element): Ambitious, decisive, confident | Strengths: Leadership, determination | Challenges: Impatient, controlling.
+2. 🌞 Sanguine (Air Element): Energetic, social, optimistic | Strengths: Friendly, enthusiastic | Challenges: Easily distracted, impulsive.
+3. 🌧 Melancholic (Earth Element): Thoughtful, analytical, perfectionistic | Strengths: Organized, creative | Challenges: Overthinking, pessimism.
+4. 💧 Phlegmatic (Water Element): Calm, patient, dependable | Strengths: Peaceful, loyal | Challenges: Avoids conflict, resistant to change.
 
-PERSONALITY_CHAT_SYSTEM = """You are Kundli AI — a Vedic personality analyst answering a specific question about personality/behavior.
+RESPONSE ARCHITECTURE (Target 250–350 words):
+### 🎭 Core Personality Archetype & Temperament
+Detail their dominant and secondary Temperament (Choleric 🔥, Sanguine 🌞, Melancholic 🌧, Phlegmatic 💧) based on their elemental balance and Lagna/Moon alignment.
+
+### 🧠 Mind & Communication Style
+Analyze Mercury, 3rd house, and thought patterns.
+
+### ❤️ Emotional Stamina & Inner Drive
+Analyze Moon, Sun, and emotional resilience.
+
+### ⚡ Primary Strengths & 🔍 Growth Areas
+Detail key strengths and psychological growth recommendations. Do NOT write any numeric scores."""
+
+PERSONALITY_CHAT_SYSTEM = """You are Kundli AI — a Vedic personality analyst answering a specific question about personality or The Four Temperaments.
 
 Behavior:
 - Answer ONLY the user's specific personality question directly, concisely, and conversationally (100–180 words).
-- DO NOT use rigid template section headers unless requested.
-- Ground your answer in their chart (cite Lagna, Moon, Sun, Mercury, or Mars).
+- Ground your answer in their chart (cite Lagna, Moon, Sun, Mercury, or Mars, and their dominant Temperament).
 - End with exactly ONE relevant follow-up question."""
 
 
@@ -42,25 +56,36 @@ def build_personality_context(
     houses = chart_data.get("houses", {})
     yogas = chart_data.get("yogas", [])
 
-    # Element and prakriti for temperament context
-    prakriti_info = ""
+    # Element and temperaments context
     element_info = ""
-    if computed:
-        if computed.get("prakriti"):
-            p = computed["prakriti"]
-            prakriti_info = (
-                f"\n[TEMPERAMENT (Ayurvedic)]\n"
-                f"Vata: {p.get('vata', 0)}% | Pitta: {p.get('pitta', 0)}% | Kapha: {p.get('kapha', 0)}%\n"
-                f"Dominant: {p.get('dominant_dosha', 'N/A')}"
-            )
-        if computed.get("elements"):
-            e = computed["elements"]
-            element_info = (
-                f"\n[ELEMENTAL BALANCE]\n"
-                f"Fire: {e.get('Fire', 0)}% | Earth: {e.get('Earth', 0)}% | "
-                f"Air: {e.get('Air', 0)}% | Water: {e.get('Water', 0)}% | "
-                f"Dominant: {e.get('dominant', 'N/A')}"
-            )
+    temperament_summary = ""
+    if computed and computed.get("elements"):
+        e = computed["elements"]
+        fire = e.get("Fire", 25)
+        air = e.get("Air", 25)
+        earth = e.get("Earth", 25)
+        water = e.get("Water", 25)
+
+        scores = [
+            ("🔥 Choleric (Fire)", fire),
+            ("🌞 Sanguine (Air)", air),
+            ("🌧 Melancholic (Earth)", earth),
+            ("💧 Phlegmatic (Water)", water),
+        ]
+        scores.sort(key=lambda x: x[1], reverse=True)
+
+        element_info = (
+            f"\n[ELEMENTAL BALANCE]\n"
+            f"Fire: {fire}% | Air: {air}% | Earth: {earth}% | Water: {water}%\n"
+            f"Dominant Element: {e.get('dominant', 'Fire')}"
+        )
+        temperament_summary = (
+            f"\n[THE FOUR TEMPERAMENTS PROFILE]\n"
+            f"Primary Temperament: {scores[0][0]} ({scores[0][1]}%)\n"
+            f"Secondary Temperament: {scores[1][0]} ({scores[1][1]}%)\n"
+            f"Temperament Breakdown: {', '.join([f'{name}: {val}%' for name, val in scores])}"
+        )
+
 
     return f"""[CONVERSATION HISTORY]
 {format_history(history)}
@@ -70,10 +95,11 @@ def build_personality_context(
 
 [CORE CHART]
 {format_core_chart(chart_data)}
-{prakriti_info}
 {element_info}
+{temperament_summary}
 
 [ALL PLANETARY POSITIONS]
+
 {format_planets(planets)}
 
 [PERSONALITY-RELEVANT HOUSES]
