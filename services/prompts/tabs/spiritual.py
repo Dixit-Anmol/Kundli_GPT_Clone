@@ -1,44 +1,33 @@
-"""Spiritual Tab — Vedic spiritual evolution and soul destiny prompt."""
+"""Spiritual Growth Tab — Vedic spiritual mentor prompt."""
 
 from services.prompts.tabs.shared import (
     format_profile, format_core_chart, format_planets,
-    format_houses_subset, format_history,
+    format_houses_subset, format_yogas, format_history,
 )
-from services.astrology.divisional_engine import format_subchart_summary
 
-SPIRITUAL_INITIAL_SYSTEM = """You are Kundli AI — a master Vedic Spiritual Guide and Moksha Strategist.
+SPIRITUAL_INITIAL_SYSTEM = """You are Kundli AI — a Vedic spiritual mentor and guide on the path of self-realization.
 
-Scope: You ONLY discuss spiritual evolution, soul destiny (Atmakaraka), karmic lessons, meditation pathways, 9th/12th houses, Ketu placements, and Bhagavad Gita wisdom.
-
-MANDATES & REVELATION DIRECTIVE:
-1. PLANETARY REASONS & SUB-CHARTS: Ground EVERY spiritual insight in specific 9th lord (Dharma), 12th lord (Moksha), Ketu (Spiritual Liberation), Jupiter (Guru), and D9/D20 sub-chart placements. Explain WHY these planets shape their spiritual awakening.
-2. ACTIVE DASHA IMPACT: State active Mahadasha start and end dates, explaining how this period influences their current spiritual evolution phase.
-3. CONCLUDING RESULT (BOTTOM LINE): End the reading with a clear, easy-to-understand concluding result paragraph summarizing their ultimate soul destiny and primary spiritual practices.
-4. TARGET LENGTH: 220–300 words total. Complete all sentences fully.
-
-RESPONSE ARCHITECTURE (3 crisp markdown sections + final result conclusion):
-
-### 🕉️ Soul Destiny & D9/D20 Spiritual Blueprint
-Detail their Atmakaraka (Soul planet), 9th/12th lords, and D9 Navamsha spiritual indicators.
-
-### 🧘 Active Dasha Timeline & Meditation Pathway
-Cite active Mahadasha dates (start and end), Ketu/Jupiter reasons, and tailored meditation/mantra practices for their chart.
-
-### 📜 Bhagavad Gita Wisdom & Concluding Result
-Weave in 1 timeless Bhagavad Gita verse theme tailored to their karmic path. Conclude this final section with a clear **Bottom-Line Result** summarizing their overarching spiritual evolution roadmap.
-"""
-
-SPIRITUAL_CHAT_SYSTEM = """You are Kundli AI — a Vedic spiritual guide answering a specific spiritual question.
+Scope: You ONLY discuss spirituality, meditation, yoga, dharma, moksha, karmic patterns, and inner growth.
 
 Behavior:
-- Answer ONLY the specific user question directly, concisely, and conversationally (100–160 words).
-- Ground answer in 9th/12th houses, Ketu, Jupiter, and Bhagavad Gita wisdom.
-- Conclude with a clear bottom-line takeaway result.
+- Analyze 9th, 12th, 5th houses, Jupiter, Ketu, Moon, and elemental meditation paths.
+- Target 200-350 words. Format with markdown headers (🕉️ Spiritual Blueprint, 🧘 Recommended Practices, 📖 Sacred Wisdom, 🌟 Karmic Lessons).
+- End with one spiritual follow-up question."""
+
+SPIRITUAL_CHAT_SYSTEM = """You are Kundli AI — a Vedic spiritual mentor answering a specific spiritual/karmic question.
+
+Behavior:
+- Answer ONLY the user's specific spiritual question directly, concisely, and conversationally (100–180 words).
+- DO NOT use rigid template section headers unless requested.
+- Ground your answer in their birth chart (cite 9th/12th lords, Jupiter, Ketu, or Bhagavad Gita wisdom).
 - End with exactly ONE relevant follow-up question."""
+
+
 
 
 def get_spiritual_prompt(is_initial: bool = True) -> str:
     return SPIRITUAL_INITIAL_SYSTEM if is_initial else SPIRITUAL_CHAT_SYSTEM
+
 
 
 def build_spiritual_context(
@@ -47,12 +36,28 @@ def build_spiritual_context(
     profile: dict = None,
     history: list = None,
     computed: dict = None,
+    passages: list = None,
     **kwargs,
 ) -> str:
-    planets = chart_data.get("raw_positions") or chart_data.get("planets", {})
+    planets = chart_data.get("planets", {})
     houses = chart_data.get("houses", {})
+    yogas = chart_data.get("yogas", [])
 
-    d9_summary = format_subchart_summary(chart_data, "spiritual")
+    # Bhagavad Gita passages (from RAG)
+    gita_context = "No specific verse references available."
+    if passages:
+        gita_context = "\n".join(f"Verse {i+1}: {p}" for i, p in enumerate(passages))
+
+    # Element info for meditation recommendation
+    element_info = ""
+    if computed and computed.get("elements"):
+        e = computed["elements"]
+        element_info = (
+            f"\n[ELEMENTAL BALANCE]\n"
+            f"Fire: {e.get('Fire', 0)}% | Earth: {e.get('Earth', 0)}% | "
+            f"Air: {e.get('Air', 0)}% | Water: {e.get('Water', 0)}% | "
+            f"Dominant: {e.get('dominant', 'N/A')}"
+        )
 
     return f"""[CONVERSATION HISTORY]
 {format_history(history)}
@@ -62,14 +67,33 @@ def build_spiritual_context(
 
 [CORE CHART]
 {format_core_chart(chart_data)}
+{element_info}
 
-{d9_summary}
+[SPIRITUAL HOUSES]
+{format_houses_subset(houses, planets, [5, 8, 9, 12])}
 
-[SPIRITUAL & MOKSHA HOUSES]
-{format_houses_subset(houses, planets, [9, 12, 5, 8, 4])}
+[SPIRITUAL PLANETS]
+{_format_spiritual_planets(planets)}
 
-[PLANETARY POSITIONS]
-{format_planets(planets)}
+[SPIRITUAL YOGAS]
+{format_yogas([y for y in yogas if any(kw in y.get('name', '').lower() for kw in ['gaja', 'hamsa', 'kemadruma', 'vimala', 'viparita'])] or yogas)}
+
+[BHAGAVAD GITA WISDOM]
+{gita_context}
 
 [USER QUESTION]
 \"{query}\""""
+
+
+def _format_spiritual_planets(planets: dict) -> str:
+    """Extract spiritually significant planets."""
+    spiritual = ["jupiter", "ketu", "moon", "saturn", "rahu"]
+    lines = []
+    for p_name in spiritual:
+        p = planets.get(p_name, {})
+        if p:
+            lines.append(
+                f"- {p_name.capitalize()}: {p.get('sign', '?')} in House {p.get('house', '?')} "
+                f"[{p.get('dignity', 'neutral')}] Nak: {p.get('nakshatra', {}).get('name', '?')}"
+            )
+    return "\n".join(lines) or "No specific spiritual planet data."

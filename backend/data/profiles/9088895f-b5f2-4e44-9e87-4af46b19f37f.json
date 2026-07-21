@@ -1,0 +1,1037 @@
+{
+  "user_id": "9088895f-b5f2-4e44-9e87-4af46b19f37f",
+  "birth_details": {
+    "name": "Shivi",
+    "date_of_birth": "1990-12-09",
+    "time_of_birth": "11:55:00",
+    "latitude": 28.6328027,
+    "longitude": 77.2197713,
+    "timezone_offset": 5.5
+  },
+  "natal_chart": {
+    "natal": {
+      "metadata": {
+        "julian_day": 2448234.767361111,
+        "ascendant_longitude": 309.0730103014153,
+        "ascendant_sign": "Aquarius",
+        "moon_sign": "Leo",
+        "nakshatra": "Purva Phalguni",
+        "pada": 4,
+        "ayanamsa": 24.613703634020965
+      },
+      "planets": {
+        "sun": {
+          "name_sanskrit": "Surya",
+          "longitude": 232.29410466291523,
+          "sign": "Scorpio",
+          "degree": 22.29410466291523,
+          "dignity": "Neutral",
+          "house": 10,
+          "nakshatra": {
+            "name": "Jyeshtha",
+            "lord": "mercury",
+            "deity": "Indra",
+            "pada": 2,
+            "longitude": 232.29410466291523
+          }
+        },
+        "moon": {
+          "name_sanskrit": "Chandra",
+          "longitude": 144.45230937074643,
+          "sign": "Leo",
+          "degree": 24.452309370746434,
+          "dignity": "Neutral",
+          "house": 7,
+          "nakshatra": {
+            "name": "Purva Phalguni",
+            "lord": "venus",
+            "deity": "Bhaga",
+            "pada": 4,
+            "longitude": 144.45230937074643
+          }
+        },
+        "mercury": {
+          "name_sanskrit": "Budh",
+          "longitude": 252.99447100516556,
+          "sign": "Sagittarius",
+          "degree": 12.994471005165565,
+          "dignity": "Neutral",
+          "house": 11,
+          "nakshatra": {
+            "name": "Mula",
+            "lord": "ketu",
+            "deity": "Nirriti",
+            "pada": 4,
+            "longitude": 252.99447100516556
+          }
+        },
+        "venus": {
+          "name_sanskrit": "Shukra",
+          "longitude": 241.5683939798306,
+          "sign": "Sagittarius",
+          "degree": 1.5683939798306028,
+          "dignity": "Neutral",
+          "house": 11,
+          "nakshatra": {
+            "name": "Mula",
+            "lord": "ketu",
+            "deity": "Nirriti",
+            "pada": 1,
+            "longitude": 241.5683939798306
+          }
+        },
+        "mars": {
+          "name_sanskrit": "Mangal",
+          "longitude": 36.77215956590789,
+          "sign": "Taurus",
+          "degree": 6.7721595659078915,
+          "dignity": "Neutral",
+          "house": 4,
+          "nakshatra": {
+            "name": "Krittika",
+            "lord": "sun",
+            "deity": "Agni",
+            "pada": 4,
+            "longitude": 36.77215956590789
+          }
+        },
+        "jupiter": {
+          "name_sanskrit": "Guru",
+          "longitude": 108.84363523886431,
+          "sign": "Cancer",
+          "degree": 18.84363523886431,
+          "dignity": "Exalted Sign",
+          "house": 6,
+          "nakshatra": {
+            "name": "Ashlesha",
+            "lord": "mercury",
+            "deity": "Sarpas",
+            "pada": 1,
+            "longitude": 108.84363523886431
+          }
+        },
+        "saturn": {
+          "name_sanskrit": "Shani",
+          "longitude": 268.53177304493653,
+          "sign": "Sagittarius",
+          "degree": 28.53177304493653,
+          "dignity": "Neutral",
+          "house": 11,
+          "nakshatra": {
+            "name": "Uttara Ashadha",
+            "lord": "sun",
+            "deity": "Vishvadevas",
+            "pada": 1,
+            "longitude": 268.53177304493653
+          }
+        },
+        "rahu": {
+          "name_sanskrit": "Rahu",
+          "longitude": 274.3425603027847,
+          "sign": "Capricorn",
+          "degree": 4.342560302784705,
+          "dignity": "Neutral",
+          "house": 12,
+          "nakshatra": {
+            "name": "Uttara Ashadha",
+            "lord": "sun",
+            "deity": "Vishvadevas",
+            "pada": 3,
+            "longitude": 274.3425603027847
+          }
+        },
+        "ketu": {
+          "name_sanskrit": "Ketu",
+          "longitude": 94.3425603027847,
+          "sign": "Cancer",
+          "degree": 4.342560302784705,
+          "dignity": "Neutral",
+          "house": 6,
+          "nakshatra": {
+            "name": "Pushya",
+            "lord": "saturn",
+            "deity": "Brihaspati",
+            "pada": 1,
+            "longitude": 94.3425603027847
+          }
+        }
+      },
+      "houses": {
+        "1": {
+          "sign": "Aquarius",
+          "lord": "saturn",
+          "signification": "Self, personality, physical body, appearance, health, beginning of life."
+        },
+        "2": {
+          "sign": "Pisces",
+          "lord": "jupiter",
+          "signification": "Wealth, family, speech, primary education, food, assets, face."
+        },
+        "3": {
+          "sign": "Aries",
+          "lord": "mars",
+          "signification": "Courage, short travels, siblings, communication, writing, efforts, hands."
+        },
+        "4": {
+          "sign": "Taurus",
+          "lord": "venus",
+          "signification": "Mother, home, happiness, vehicle, lands, emotions, heart, inner peace."
+        },
+        "5": {
+          "sign": "Gemini",
+          "lord": "mercury",
+          "signification": "Intellect, children, creativity, past life merits (Purvapunya), romance, speculation."
+        },
+        "6": {
+          "sign": "Cancer",
+          "lord": "moon",
+          "signification": "Debts, enemies, diseases, service, daily routine, competition, obstacles."
+        },
+        "7": {
+          "sign": "Leo",
+          "lord": "sun",
+          "signification": "Spouse, partnership, business partners, relationship, travel, public life."
+        },
+        "8": {
+          "sign": "Virgo",
+          "lord": "mercury",
+          "signification": "Longevity, secrets, inheritance, sudden transformations, occult, mysteries."
+        },
+        "9": {
+          "sign": "Libra",
+          "lord": "venus",
+          "signification": "Dharma, fortune (Bhagya), father, higher education, long journeys, philosophy, religion."
+        },
+        "10": {
+          "sign": "Scorpio",
+          "lord": "mars",
+          "signification": "Career, status, reputation, public life, authority, karma, actions in society."
+        },
+        "11": {
+          "sign": "Sagittarius",
+          "lord": "jupiter",
+          "signification": "Gains, desires fulfillment, friends, elder siblings, cash flow, achievements."
+        },
+        "12": {
+          "sign": "Capricorn",
+          "lord": "saturn",
+          "signification": "Losses, liberation (Moksha), foreign travels, isolation, dreams, bedroom pleasures."
+        }
+      },
+      "yogas": [],
+      "doshas": {
+        "manglik": {
+          "is_present": true,
+          "house": 4,
+          "description": "Mars in 4th house affects domestic peace and can cause domestic disputes."
+        },
+        "kaal_sarp": {
+          "is_present": false,
+          "description": "No Kaal Sarp Dosha found."
+        }
+      },
+      "computed": {
+        "prakriti": {
+          "vata": 21.4,
+          "pitta": 48.5,
+          "kapha": 30.1,
+          "dominant_dosha": "Pitta",
+          "dominant_element": "Fire",
+          "element_distribution": {
+            "Fire": 42.7,
+            "Earth": 13.7,
+            "Air": 17.9,
+            "Water": 25.7
+          }
+        },
+        "elements": {
+          "Fire": 40.0,
+          "Earth": 14.4,
+          "Air": 18.8,
+          "Water": 26.9,
+          "Ether": 0.0,
+          "dominant": "Fire"
+        },
+        "lucky": {
+          "lucky_colors": [
+            "Black",
+            "Dark Blue",
+            "Navy",
+            "Gold"
+          ],
+          "lucky_numbers": [
+            8,
+            17,
+            26
+          ],
+          "lucky_day": "Saturday",
+          "lucky_direction": "West"
+        },
+        "planet_rankings": [
+          {
+            "planet": "jupiter",
+            "display_name": "Guru",
+            "score": 6.5,
+            "status": "Very Strong",
+            "sign": "Cancer",
+            "house": 6,
+            "reasons": [
+              "Exalted Sign dignity in Cancer",
+              "Upachaya placement (House 6)"
+            ],
+            "rank": 1
+          },
+          {
+            "planet": "sun",
+            "display_name": "Surya",
+            "score": 5.0,
+            "status": "Strong",
+            "sign": "Scorpio",
+            "house": 10,
+            "reasons": [
+              "Kendra placement (House 10)"
+            ],
+            "rank": 2
+          },
+          {
+            "planet": "moon",
+            "display_name": "Chandra",
+            "score": 5.0,
+            "status": "Strong",
+            "sign": "Leo",
+            "house": 7,
+            "reasons": [
+              "Kendra placement (House 7)"
+            ],
+            "rank": 3
+          },
+          {
+            "planet": "mars",
+            "display_name": "Mangal",
+            "score": 5.0,
+            "status": "Strong",
+            "sign": "Taurus",
+            "house": 4,
+            "reasons": [
+              "Kendra placement (House 4)"
+            ],
+            "rank": 4
+          },
+          {
+            "planet": "mercury",
+            "display_name": "Budh",
+            "score": 3.5,
+            "status": "Moderate",
+            "sign": "Sagittarius",
+            "house": 11,
+            "reasons": [
+              "Upachaya placement (House 11)"
+            ],
+            "rank": 5
+          },
+          {
+            "planet": "venus",
+            "display_name": "Shukra",
+            "score": 3.5,
+            "status": "Moderate",
+            "sign": "Sagittarius",
+            "house": 11,
+            "reasons": [
+              "Upachaya placement (House 11)"
+            ],
+            "rank": 6
+          },
+          {
+            "planet": "saturn",
+            "display_name": "Shani",
+            "score": 3.5,
+            "status": "Moderate",
+            "sign": "Sagittarius",
+            "house": 11,
+            "reasons": [
+              "Upachaya placement (House 11)"
+            ],
+            "rank": 7
+          },
+          {
+            "planet": "ketu",
+            "display_name": "Ketu",
+            "score": 3.5,
+            "status": "Moderate",
+            "sign": "Cancer",
+            "house": 6,
+            "reasons": [
+              "Upachaya placement (House 6)"
+            ],
+            "rank": 8
+          },
+          {
+            "planet": "rahu",
+            "display_name": "Rahu",
+            "score": 1.0,
+            "status": "Weak",
+            "sign": "Capricorn",
+            "house": 12,
+            "reasons": [
+              "Dusthana placement (House 12)"
+            ],
+            "rank": 9
+          }
+        ],
+        "remedy_data": {
+          "weak_planets": [
+            {
+              "planet": "rahu",
+              "display_name": "Rahu",
+              "status": "Weak",
+              "score": 1.0,
+              "reasons": [
+                "Dusthana placement (House 12)"
+              ],
+              "remedies": {
+                "mantra": {
+                  "beej": "Om Bhraam Bhreem Bhraum Sah Rahave Namaha",
+                  "vedic": "Om Sookdantaya Vidmahe Ugraroopaya Dhimahi Tanno Rahuh Prachodayat",
+                  "count": 18000
+                },
+                "gemstone": {
+                  "primary": "Hessonite (Gomed)",
+                  "alternative": "Zircon",
+                  "metal": "Silver",
+                  "finger": "Middle finger",
+                  "day": "Saturday"
+                },
+                "charity": {
+                  "items": [
+                    "Coconut",
+                    "Blue/black cloth",
+                    "Electrical items"
+                  ],
+                  "day": "Saturday",
+                  "recipient": "Sweepers, outcasts"
+                },
+                "fasting_day": "Saturday",
+                "colors": "Smoke Grey",
+                "deity": {
+                  "deity": "Goddess Durga",
+                  "temple": "Durga temple",
+                  "practice": "Durga mantra, Rahu Kaal awareness"
+                }
+              }
+            }
+          ],
+          "afflicted_houses": [
+            {
+              "house": 6,
+              "occupant": "Jupiter",
+              "sign": "Cancer"
+            },
+            {
+              "house": 12,
+              "occupant": "Rahu",
+              "sign": "Capricorn"
+            },
+            {
+              "house": 6,
+              "occupant": "Ketu",
+              "sign": "Cancer"
+            }
+          ],
+          "general_remedies": [
+            {
+              "dosha": "Manglik Dosha",
+              "remedy": "Perform Kumbh Vivah before marriage. Recite Hanuman Chalisa daily. Offer red flowers at Hanuman temple on Tuesdays."
+            }
+          ]
+        }
+      }
+    }
+  },
+  "chart_response": {
+    "name": "Shivi",
+    "ascendant_sign": "Aquarius",
+    "moon_sign": "Leo",
+    "nakshatra": "Purva Phalguni",
+    "pada": 4,
+    "current_dasha": "Rahu",
+    "metadata": {
+      "julian_day": 2448234.767361111,
+      "ascendant_longitude": 309.0730103014153,
+      "ascendant_sign": "Aquarius",
+      "moon_sign": "Leo",
+      "nakshatra": "Purva Phalguni",
+      "pada": 4,
+      "ayanamsa": 24.613703634020965
+    },
+    "houses": {
+      "1": {
+        "sign": "Aquarius",
+        "lord": "saturn",
+        "signification": "Self, personality, physical body, appearance, health, beginning of life."
+      },
+      "2": {
+        "sign": "Pisces",
+        "lord": "jupiter",
+        "signification": "Wealth, family, speech, primary education, food, assets, face."
+      },
+      "3": {
+        "sign": "Aries",
+        "lord": "mars",
+        "signification": "Courage, short travels, siblings, communication, writing, efforts, hands."
+      },
+      "4": {
+        "sign": "Taurus",
+        "lord": "venus",
+        "signification": "Mother, home, happiness, vehicle, lands, emotions, heart, inner peace."
+      },
+      "5": {
+        "sign": "Gemini",
+        "lord": "mercury",
+        "signification": "Intellect, children, creativity, past life merits (Purvapunya), romance, speculation."
+      },
+      "6": {
+        "sign": "Cancer",
+        "lord": "moon",
+        "signification": "Debts, enemies, diseases, service, daily routine, competition, obstacles."
+      },
+      "7": {
+        "sign": "Leo",
+        "lord": "sun",
+        "signification": "Spouse, partnership, business partners, relationship, travel, public life."
+      },
+      "8": {
+        "sign": "Virgo",
+        "lord": "mercury",
+        "signification": "Longevity, secrets, inheritance, sudden transformations, occult, mysteries."
+      },
+      "9": {
+        "sign": "Libra",
+        "lord": "venus",
+        "signification": "Dharma, fortune (Bhagya), father, higher education, long journeys, philosophy, religion."
+      },
+      "10": {
+        "sign": "Scorpio",
+        "lord": "mars",
+        "signification": "Career, status, reputation, public life, authority, karma, actions in society."
+      },
+      "11": {
+        "sign": "Sagittarius",
+        "lord": "jupiter",
+        "signification": "Gains, desires fulfillment, friends, elder siblings, cash flow, achievements."
+      },
+      "12": {
+        "sign": "Capricorn",
+        "lord": "saturn",
+        "signification": "Losses, liberation (Moksha), foreign travels, isolation, dreams, bedroom pleasures."
+      }
+    },
+    "planets": {
+      "sun": {
+        "name_sanskrit": "Surya",
+        "longitude": 232.29410466291523,
+        "sign": "Scorpio",
+        "degree": 22.29410466291523,
+        "dignity": "Neutral",
+        "house": 10,
+        "nakshatra": {
+          "name": "Jyeshtha",
+          "lord": "mercury",
+          "deity": "Indra",
+          "pada": 2,
+          "longitude": 232.29410466291523
+        }
+      },
+      "moon": {
+        "name_sanskrit": "Chandra",
+        "longitude": 144.45230937074643,
+        "sign": "Leo",
+        "degree": 24.452309370746434,
+        "dignity": "Neutral",
+        "house": 7,
+        "nakshatra": {
+          "name": "Purva Phalguni",
+          "lord": "venus",
+          "deity": "Bhaga",
+          "pada": 4,
+          "longitude": 144.45230937074643
+        }
+      },
+      "mercury": {
+        "name_sanskrit": "Budh",
+        "longitude": 252.99447100516556,
+        "sign": "Sagittarius",
+        "degree": 12.994471005165565,
+        "dignity": "Neutral",
+        "house": 11,
+        "nakshatra": {
+          "name": "Mula",
+          "lord": "ketu",
+          "deity": "Nirriti",
+          "pada": 4,
+          "longitude": 252.99447100516556
+        }
+      },
+      "venus": {
+        "name_sanskrit": "Shukra",
+        "longitude": 241.5683939798306,
+        "sign": "Sagittarius",
+        "degree": 1.5683939798306028,
+        "dignity": "Neutral",
+        "house": 11,
+        "nakshatra": {
+          "name": "Mula",
+          "lord": "ketu",
+          "deity": "Nirriti",
+          "pada": 1,
+          "longitude": 241.5683939798306
+        }
+      },
+      "mars": {
+        "name_sanskrit": "Mangal",
+        "longitude": 36.77215956590789,
+        "sign": "Taurus",
+        "degree": 6.7721595659078915,
+        "dignity": "Neutral",
+        "house": 4,
+        "nakshatra": {
+          "name": "Krittika",
+          "lord": "sun",
+          "deity": "Agni",
+          "pada": 4,
+          "longitude": 36.77215956590789
+        }
+      },
+      "jupiter": {
+        "name_sanskrit": "Guru",
+        "longitude": 108.84363523886431,
+        "sign": "Cancer",
+        "degree": 18.84363523886431,
+        "dignity": "Exalted Sign",
+        "house": 6,
+        "nakshatra": {
+          "name": "Ashlesha",
+          "lord": "mercury",
+          "deity": "Sarpas",
+          "pada": 1,
+          "longitude": 108.84363523886431
+        }
+      },
+      "saturn": {
+        "name_sanskrit": "Shani",
+        "longitude": 268.53177304493653,
+        "sign": "Sagittarius",
+        "degree": 28.53177304493653,
+        "dignity": "Neutral",
+        "house": 11,
+        "nakshatra": {
+          "name": "Uttara Ashadha",
+          "lord": "sun",
+          "deity": "Vishvadevas",
+          "pada": 1,
+          "longitude": 268.53177304493653
+        }
+      },
+      "rahu": {
+        "name_sanskrit": "Rahu",
+        "longitude": 274.3425603027847,
+        "sign": "Capricorn",
+        "degree": 4.342560302784705,
+        "dignity": "Neutral",
+        "house": 12,
+        "nakshatra": {
+          "name": "Uttara Ashadha",
+          "lord": "sun",
+          "deity": "Vishvadevas",
+          "pada": 3,
+          "longitude": 274.3425603027847
+        }
+      },
+      "ketu": {
+        "name_sanskrit": "Ketu",
+        "longitude": 94.3425603027847,
+        "sign": "Cancer",
+        "degree": 4.342560302784705,
+        "dignity": "Neutral",
+        "house": 6,
+        "nakshatra": {
+          "name": "Pushya",
+          "lord": "saturn",
+          "deity": "Brihaspati",
+          "pada": 1,
+          "longitude": 94.3425603027847
+        }
+      }
+    },
+    "yogas": [],
+    "doshas": {
+      "manglik": {
+        "is_present": true,
+        "house": 4,
+        "description": "Mars in 4th house affects domestic peace and can cause domestic disputes."
+      },
+      "kaal_sarp": {
+        "is_present": false,
+        "description": "No Kaal Sarp Dosha found."
+      },
+      "sade_sati": {
+        "is_present": false,
+        "phase": "Not Active",
+        "description": "Sade Sati is not active for this Moon sign right now."
+      }
+    },
+    "raw_positions": {
+      "sun": {
+        "name_sanskrit": "Surya",
+        "longitude": 232.29410466291523,
+        "sign": "Scorpio",
+        "degree": 22.29410466291523,
+        "dignity": "Neutral",
+        "house": 10,
+        "nakshatra": {
+          "name": "Jyeshtha",
+          "lord": "mercury",
+          "deity": "Indra",
+          "pada": 2,
+          "longitude": 232.29410466291523
+        }
+      },
+      "moon": {
+        "name_sanskrit": "Chandra",
+        "longitude": 144.45230937074643,
+        "sign": "Leo",
+        "degree": 24.452309370746434,
+        "dignity": "Neutral",
+        "house": 7,
+        "nakshatra": {
+          "name": "Purva Phalguni",
+          "lord": "venus",
+          "deity": "Bhaga",
+          "pada": 4,
+          "longitude": 144.45230937074643
+        }
+      },
+      "mercury": {
+        "name_sanskrit": "Budh",
+        "longitude": 252.99447100516556,
+        "sign": "Sagittarius",
+        "degree": 12.994471005165565,
+        "dignity": "Neutral",
+        "house": 11,
+        "nakshatra": {
+          "name": "Mula",
+          "lord": "ketu",
+          "deity": "Nirriti",
+          "pada": 4,
+          "longitude": 252.99447100516556
+        }
+      },
+      "venus": {
+        "name_sanskrit": "Shukra",
+        "longitude": 241.5683939798306,
+        "sign": "Sagittarius",
+        "degree": 1.5683939798306028,
+        "dignity": "Neutral",
+        "house": 11,
+        "nakshatra": {
+          "name": "Mula",
+          "lord": "ketu",
+          "deity": "Nirriti",
+          "pada": 1,
+          "longitude": 241.5683939798306
+        }
+      },
+      "mars": {
+        "name_sanskrit": "Mangal",
+        "longitude": 36.77215956590789,
+        "sign": "Taurus",
+        "degree": 6.7721595659078915,
+        "dignity": "Neutral",
+        "house": 4,
+        "nakshatra": {
+          "name": "Krittika",
+          "lord": "sun",
+          "deity": "Agni",
+          "pada": 4,
+          "longitude": 36.77215956590789
+        }
+      },
+      "jupiter": {
+        "name_sanskrit": "Guru",
+        "longitude": 108.84363523886431,
+        "sign": "Cancer",
+        "degree": 18.84363523886431,
+        "dignity": "Exalted Sign",
+        "house": 6,
+        "nakshatra": {
+          "name": "Ashlesha",
+          "lord": "mercury",
+          "deity": "Sarpas",
+          "pada": 1,
+          "longitude": 108.84363523886431
+        }
+      },
+      "saturn": {
+        "name_sanskrit": "Shani",
+        "longitude": 268.53177304493653,
+        "sign": "Sagittarius",
+        "degree": 28.53177304493653,
+        "dignity": "Neutral",
+        "house": 11,
+        "nakshatra": {
+          "name": "Uttara Ashadha",
+          "lord": "sun",
+          "deity": "Vishvadevas",
+          "pada": 1,
+          "longitude": 268.53177304493653
+        }
+      },
+      "rahu": {
+        "name_sanskrit": "Rahu",
+        "longitude": 274.3425603027847,
+        "sign": "Capricorn",
+        "degree": 4.342560302784705,
+        "dignity": "Neutral",
+        "house": 12,
+        "nakshatra": {
+          "name": "Uttara Ashadha",
+          "lord": "sun",
+          "deity": "Vishvadevas",
+          "pada": 3,
+          "longitude": 274.3425603027847
+        }
+      },
+      "ketu": {
+        "name_sanskrit": "Ketu",
+        "longitude": 94.3425603027847,
+        "sign": "Cancer",
+        "degree": 4.342560302784705,
+        "dignity": "Neutral",
+        "house": 6,
+        "nakshatra": {
+          "name": "Pushya",
+          "lord": "saturn",
+          "deity": "Brihaspati",
+          "pada": 1,
+          "longitude": 94.3425603027847
+        }
+      }
+    },
+    "computed": {
+      "prakriti": {
+        "vata": 21.4,
+        "pitta": 48.5,
+        "kapha": 30.1,
+        "dominant_dosha": "Pitta",
+        "dominant_element": "Fire",
+        "element_distribution": {
+          "Fire": 42.7,
+          "Earth": 13.7,
+          "Air": 17.9,
+          "Water": 25.7
+        }
+      },
+      "elements": {
+        "Fire": 40.0,
+        "Earth": 14.4,
+        "Air": 18.8,
+        "Water": 26.9,
+        "Ether": 0.0,
+        "dominant": "Fire"
+      },
+      "lucky": {
+        "lucky_colors": [
+          "Black",
+          "Dark Blue",
+          "Navy",
+          "Gold"
+        ],
+        "lucky_numbers": [
+          8,
+          17,
+          26
+        ],
+        "lucky_day": "Saturday",
+        "lucky_direction": "West"
+      },
+      "planet_rankings": [
+        {
+          "planet": "jupiter",
+          "display_name": "Guru",
+          "score": 6.5,
+          "status": "Very Strong",
+          "sign": "Cancer",
+          "house": 6,
+          "reasons": [
+            "Exalted Sign dignity in Cancer",
+            "Upachaya placement (House 6)"
+          ],
+          "rank": 1
+        },
+        {
+          "planet": "sun",
+          "display_name": "Surya",
+          "score": 5.0,
+          "status": "Strong",
+          "sign": "Scorpio",
+          "house": 10,
+          "reasons": [
+            "Kendra placement (House 10)"
+          ],
+          "rank": 2
+        },
+        {
+          "planet": "moon",
+          "display_name": "Chandra",
+          "score": 5.0,
+          "status": "Strong",
+          "sign": "Leo",
+          "house": 7,
+          "reasons": [
+            "Kendra placement (House 7)"
+          ],
+          "rank": 3
+        },
+        {
+          "planet": "mars",
+          "display_name": "Mangal",
+          "score": 5.0,
+          "status": "Strong",
+          "sign": "Taurus",
+          "house": 4,
+          "reasons": [
+            "Kendra placement (House 4)"
+          ],
+          "rank": 4
+        },
+        {
+          "planet": "mercury",
+          "display_name": "Budh",
+          "score": 3.5,
+          "status": "Moderate",
+          "sign": "Sagittarius",
+          "house": 11,
+          "reasons": [
+            "Upachaya placement (House 11)"
+          ],
+          "rank": 5
+        },
+        {
+          "planet": "venus",
+          "display_name": "Shukra",
+          "score": 3.5,
+          "status": "Moderate",
+          "sign": "Sagittarius",
+          "house": 11,
+          "reasons": [
+            "Upachaya placement (House 11)"
+          ],
+          "rank": 6
+        },
+        {
+          "planet": "saturn",
+          "display_name": "Shani",
+          "score": 3.5,
+          "status": "Moderate",
+          "sign": "Sagittarius",
+          "house": 11,
+          "reasons": [
+            "Upachaya placement (House 11)"
+          ],
+          "rank": 7
+        },
+        {
+          "planet": "ketu",
+          "display_name": "Ketu",
+          "score": 3.5,
+          "status": "Moderate",
+          "sign": "Cancer",
+          "house": 6,
+          "reasons": [
+            "Upachaya placement (House 6)"
+          ],
+          "rank": 8
+        },
+        {
+          "planet": "rahu",
+          "display_name": "Rahu",
+          "score": 1.0,
+          "status": "Weak",
+          "sign": "Capricorn",
+          "house": 12,
+          "reasons": [
+            "Dusthana placement (House 12)"
+          ],
+          "rank": 9
+        }
+      ],
+      "remedy_data": {
+        "weak_planets": [
+          {
+            "planet": "rahu",
+            "display_name": "Rahu",
+            "status": "Weak",
+            "score": 1.0,
+            "reasons": [
+              "Dusthana placement (House 12)"
+            ],
+            "remedies": {
+              "mantra": {
+                "beej": "Om Bhraam Bhreem Bhraum Sah Rahave Namaha",
+                "vedic": "Om Sookdantaya Vidmahe Ugraroopaya Dhimahi Tanno Rahuh Prachodayat",
+                "count": 18000
+              },
+              "gemstone": {
+                "primary": "Hessonite (Gomed)",
+                "alternative": "Zircon",
+                "metal": "Silver",
+                "finger": "Middle finger",
+                "day": "Saturday"
+              },
+              "charity": {
+                "items": [
+                  "Coconut",
+                  "Blue/black cloth",
+                  "Electrical items"
+                ],
+                "day": "Saturday",
+                "recipient": "Sweepers, outcasts"
+              },
+              "fasting_day": "Saturday",
+              "colors": "Smoke Grey",
+              "deity": {
+                "deity": "Goddess Durga",
+                "temple": "Durga temple",
+                "practice": "Durga mantra, Rahu Kaal awareness"
+              }
+            }
+          }
+        ],
+        "afflicted_houses": [
+          {
+            "house": 6,
+            "occupant": "Jupiter",
+            "sign": "Cancer"
+          },
+          {
+            "house": 12,
+            "occupant": "Rahu",
+            "sign": "Capricorn"
+          },
+          {
+            "house": 6,
+            "occupant": "Ketu",
+            "sign": "Cancer"
+          }
+        ],
+        "general_remedies": [
+          {
+            "dosha": "Manglik Dosha",
+            "remedy": "Perform Kumbh Vivah before marriage. Recite Hanuman Chalisa daily. Offer red flowers at Hanuman temple on Tuesdays."
+          }
+        ]
+      }
+    }
+  },
+  "created_at": "2026-07-21T06:22:19.154202+00:00",
+  "updated_at": "2026-07-21T06:22:19.154202+00:00"
+}

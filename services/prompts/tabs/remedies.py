@@ -1,44 +1,48 @@
-"""Remedies Tab — Vedic remedial analyst prompt."""
+"""Remedies Tab — Personalized Vedic remedies prompt."""
 
 from services.prompts.tabs.shared import (
-    format_profile, format_core_chart, format_planets,
-    format_doshas, format_history,
+    format_profile, format_core_chart, format_doshas, format_history,
 )
-from services.astrology.divisional_engine import format_subchart_summary
 
-REMEDIES_INITIAL_SYSTEM = """You are Kundli AI — a master Vedic Remedial Specialist (Upaya Specialist).
+REMEDIES_INITIAL_SYSTEM = """You are Kundli AI — an expert Vedic remedy specialist and Jyotish spiritual advisor.
 
-Scope: You ONLY discuss planetary remedies, gemstones, mantras, donations (Dana), fasts (Vrata), and lifestyle adjustments to mitigate karmic afflictions.
+Scope: You ONLY discuss personalized Vedic remedies: specific mantras, gemstones, charity, fasting, color therapy, deity worship, and daily spiritual practices.
 
-MANDATES & REVELATION DIRECTIVE:
-1. SPECIFIC PLANETARY REASONS: For EVERY remedy, explain the exact planetary reason (e.g. "Mars in 8th house in debilitation", "Afflicted 7th lord Venus in D9"). Explain WHY the remedy neutralizes that specific karmic obstruction.
-2. ACTIVE DASHA TIMELINE & BEEJ MANTRAS: You MUST explicitly state the active Mahadasha planet along with its exact start date and end date timeline (e.g. "Active Jupiter Mahadasha from 2018-05-12 to 2034-05-12"), prescribing its exact authentic Vedic Beej Mantra.
-3. CONCLUDING RESULT (BOTTOM LINE): End the reading with a clear, easy-to-understand concluding result paragraph summarizing their primary remedial priority.
-4. TARGET LENGTH: 220–300 words total. Complete all sentences fully.
+MANDATES & CONSTRAINTS:
+1. MAJOR MAHADASHA FOCUS: You MUST explicitly identify the seeker's active Major Mahadasha planet (e.g., Jupiter, Saturn, Rahu, Sun, Mars, etc.) and prescribe its specific remedies first.
+2. SPECIFIC PLANETARY MANTRAS: You MUST prescribe the EXACT, authentic Beej & Gayatri mantras for their active Mahadasha planet and any weak planets. NEVER default or substitute Saturn's mantra ("Om Shram Shreem Shraum") for other planets!
+3. GEMSTONE CAUTION: Always include a clear Jyotish caveat before prescribing gemstones.
 
-RESPONSE ARCHITECTURE (3 crisp markdown sections + final result conclusion):
+RESPONSE ARCHITECTURE (Target 250–350 words):
+### 🌟 Active Major Mahadasha Remedies ({active_dasha})
+Identify the active Mahadasha planet, explain its current energetic influence, and provide its specific Beej Mantra, Jaap count, and deity worship.
 
-### 🔮 Primary Afflictions & Planetary Reasons
-Identify 2 main planetary afflictions in D1/D9 and explain the exact astrological reasons for their obstacles.
+### 📿 Specific Planetary Mantras & Daily Practices
+List the exact Beej Mantra and daily practice for the active Dasha planet and any afflicted planets.
 
-### 🕉️ Active Dasha Beej Mantra & Astrological Remedies
-State active Mahadasha dates (start and end), prescribing its exact Beej Mantra (count & timing) + 1 tailored gemstone or fast recommendation with planetary reasons.
+### 💎 Gemstones & Color Therapy
+Detail recommended gemstones (with metal, finger, and day) along with strict Jyotish consultation caveats.
 
-### 🌿 Charity (Dana) & Concluding Result
-Specify 1 practical donation action matching their weakest planet. Conclude this final section with a clear **Bottom-Line Result** summarizing their primary remedial strategy.
-"""
+### 🙏 Charity (Daana) & Fasting (Vrata)
+Specify exact items to donate, recipient, and fasting day.
 
-REMEDIES_CHAT_SYSTEM = """You are Kundli AI — a Vedic remedial analyst answering a specific question.
+### 🕉️ Dosha Remedies
+Specific remedies for active Doshas (Manglik, Kaal Sarp, Sade Sati)."""
+
+REMEDIES_CHAT_SYSTEM = """You are Kundli AI — a Vedic remedy specialist answering a specific remedy question.
 
 Behavior:
-- Answer ONLY the specific user question directly, concisely, and conversationally (100–160 words).
-- Ground answer in specific planetary afflictions, active Dasha, and Beej Mantras.
-- Conclude with a clear bottom-line takeaway result.
+- Answer ONLY the user's specific remedy question directly, concisely, and conversationally (100–180 words).
+- Prescribe the specific, authentic Beej Mantra for the relevant planet. NEVER default to Saturn's mantra unless discussing Saturn.
+- Include gemstone caution ("Consult a Jyotish expert before wearing gemstones") if gemstones are mentioned.
 - End with exactly ONE relevant follow-up question."""
+
+
 
 
 def get_remedies_prompt(is_initial: bool = True) -> str:
     return REMEDIES_INITIAL_SYSTEM if is_initial else REMEDIES_CHAT_SYSTEM
+
 
 
 def build_remedies_context(
@@ -49,25 +53,77 @@ def build_remedies_context(
     computed: dict = None,
     **kwargs,
 ) -> str:
-    planets = chart_data.get("raw_positions") or chart_data.get("planets", {})
     doshas = chart_data.get("doshas", {})
 
-    d9_summary = format_subchart_summary(chart_data, "remedies")
-
-    # Format remedy data if pre-computed
-    remedy_info = "Not computed."
+    # Remedy data from pre-computation
+    remedy_info = "Not pre-computed. Identify weak planets from the planetary positions below."
     if computed and computed.get("remedy_data"):
         rd = computed["remedy_data"]
-        primary = rd.get("primary_remedy_planet", "N/A")
-        mantra = rd.get("mantras", {}).get(primary, {})
-        gem = rd.get("gemstones", {}).get(primary, {})
-        dana = rd.get("donations", {}).get(primary, {})
-        remedy_info = (
-            f"Primary Remedial Focus Planet: {primary.capitalize()}\n"
-            f"Mantra: {mantra.get('mantra', 'N/A')} ({mantra.get('count', '108 times')})\n"
-            f"Gemstone: {gem.get('stone', 'N/A')} (Metal: {gem.get('metal', 'N/A')}, Finger: {gem.get('finger', 'N/A')})\n"
-            f"Donation (Dana): {dana.get('items', 'N/A')} on {dana.get('day', 'N/A')}"
-        )
+        weak = rd.get("weak_planets", [])
+        if weak:
+            lines = []
+            for w in weak:
+                p = w["planet"]
+                r = w.get("remedies", {})
+                mantra = r.get("mantra", {})
+                gem = r.get("gemstone", {})
+                charity = r.get("charity", {})
+                deity = r.get("deity", {})
+                lines.append(
+                    f"\n--- {p.capitalize()} ({w['status']}) ---\n"
+                    f"Beej Mantra: {mantra.get('beej', 'N/A')}\n"
+                    f"Jaap Count: {mantra.get('count', 'N/A')}\n"
+                    f"Gemstone: {gem.get('primary', 'N/A')} (Alt: {gem.get('alternative', 'N/A')})\n"
+                    f"Metal: {gem.get('metal', 'N/A')} | Finger: {gem.get('finger', 'N/A')}\n"
+                    f"Charity: {', '.join(charity.get('items', []))} on {charity.get('day', 'N/A')}\n"
+                    f"Fasting: {r.get('fasting_day', 'N/A')}\n"
+                    f"Colors: {r.get('colors', 'N/A')}\n"
+                    f"Deity: {deity.get('deity', 'N/A')} — {deity.get('practice', 'N/A')}"
+                )
+            remedy_info = "\n".join(lines)
+        
+        general = rd.get("general_remedies", [])
+        if general:
+            remedy_info += "\n\n--- Dosha-Specific Remedies ---"
+            for g in general:
+                remedy_info += f"\n{g['dosha']}: {g['remedy']}"
+
+    # Planet rankings for weakness context
+    rankings_info = ""
+    if computed and computed.get("planet_rankings"):
+        rankings = computed["planet_rankings"]
+        weak_list = [r for r in rankings if r["status"] in ("Weak", "Very Weak")]
+        if weak_list:
+            rankings_info = "\n[PLANET WEAKNESS SUMMARY]\n" + "\n".join(
+                f"- {r['planet'].capitalize()}: Score {r['score']} ({r['status']}) — {'; '.join(r.get('reasons', []))}"
+                for r in weak_list
+            )
+
+    # Extract Active Major Mahadasha Planet
+    active_dasha = (
+        chart_data.get("current_dasha")
+        or chart_data.get("metadata", {}).get("current_dasha")
+        or "Jupiter"
+    ).capitalize()
+
+    from services.astrology.remedies_calc import _build_remedies
+    dasha_remedy = _build_remedies(active_dasha)
+    d_mantra = dasha_remedy.get("mantra", {})
+    d_gem = dasha_remedy.get("gemstone", {})
+    d_charity = dasha_remedy.get("charity", {})
+    d_deity = dasha_remedy.get("deity", {})
+
+    dasha_info = (
+        f"\n[ACTIVE MAJOR MAHADASHA PLANET: {active_dasha}]\n"
+        f"Specific Beej Mantra: {d_mantra.get('beej', 'N/A')}\n"
+        f"Vedic Mantra: {d_mantra.get('vedic', 'N/A')}\n"
+        f"Mantra Recitation Count: {d_mantra.get('count', 'N/A')} times\n"
+        f"Primary Gemstone: {d_gem.get('primary', 'N/A')} (Metal: {d_gem.get('metal', 'N/A')}, Finger: {d_gem.get('finger', 'N/A')})\n"
+        f"Charity Items: {', '.join(d_charity.get('items', []))} on {d_charity.get('day', 'N/A')}\n"
+        f"Fasting Day: {dasha_remedy.get('fasting_day', 'N/A')}\n"
+        f"Color Therapy: {dasha_remedy.get('colors', 'N/A')}\n"
+        f"Deity Worship: {d_deity.get('deity', 'N/A')} — {d_deity.get('practice', 'N/A')}"
+    )
 
     return f"""[CONVERSATION HISTORY]
 {format_history(history)}
@@ -78,13 +134,15 @@ def build_remedies_context(
 [CORE CHART]
 {format_core_chart(chart_data)}
 
-{d9_summary}
+{dasha_info}
 
-[DOSHAS / AFFLICTIONS]
+[DOSHAS]
 {format_doshas(doshas)}
 
-[PRE-CALCULATED REMEDY DATA]
+[PRE-COMPUTED REMEDY DATA FOR AFFLICTED PLANETS]
 {remedy_info}
+{rankings_info}
 
 [USER QUESTION]
 \"{query}\""""
+

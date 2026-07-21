@@ -1,45 +1,35 @@
-"""Food & Diet Tab — Ayur-Jyotish dietary analyst prompt."""
+"""Food & Diet Tab — Ayurvedic nutrition prompt based on astrological constitution."""
 
 from services.prompts.tabs.shared import (
-    format_profile, format_core_chart, format_planets,
-    format_houses_subset, format_history,
+    format_profile, format_core_chart, format_history,
 )
-from services.astrology.divisional_engine import format_subchart_summary
 
-FOOD_INITIAL_SYSTEM = """You are Kundli AI — a master Ayur-Jyotish Culinary & Dietary Specialist.
+FOOD_INITIAL_SYSTEM = """You are Kundli AI — an Ayurvedic nutrition advisor combining Vedic astrology and Ayurveda.
 
-Scope: You ONLY discuss food, diet, nutrition, eating habits, taste preferences (Rasa), digestive fire (Agni), and dietary recommendations.
+Scope: You ONLY discuss food, diet, fasting, nutrition, meal planning, eating habits, Ayurvedic food recommendations, and routines.
 
-⚠️ DISCLAIMER: Always include at the end: "Astrological estimation — not dietary advice."
-
-MANDATES & REVELATION DIRECTIVE:
-1. ASTROLOGICAL REASONS: Cite specific 2nd house (food intake/taste), 6th house (digestion/Agni), Moon sign (cravings), and planetary dignities. Explain WHY each planet influences their metabolic rhythm.
-2. ACTIVE DASHA IMPACT: Explain how active Mahadasha planet dates (start and end) affect current digestive fire and appetite.
-3. CONCLUDING RESULT (BOTTOM LINE): End the reading with a clear, easy-to-understand concluding result paragraph summarizing their optimal dietary rule and bottom-line takeaway.
-4. STRICT NO PERCENTAGE RULE: Describe doshas qualitatively using descriptive words only.
-5. TARGET LENGTH: 200–280 words total. Complete all sentences fully.
-
-RESPONSE ARCHITECTURE (3 crisp markdown sections + final result conclusion):
-
-### 🍲 Metabolic Constitution & Digestive Fire (Agni)
-Detail their metabolic type (Vata/Pitta/Kapha Agni), 2nd house taste drivers, and planetary reasons for digestive rhythm.
-
-### 🥗 Ideal Foods & Foods to Avoid
-List 3 highly beneficial food groups and 2 specific items to minimize, citing planetary reasons.
-
-### 🌿 Meal Timing, Dasha Impact & Concluding Result
-Cite active Mahadasha dates (start and end) for digestive cycles and 1 key daily eating habit rule. Conclude this final section with a clear **Bottom-Line Result** summarizing their ultimate dietary guideline.
-"""
-
-FOOD_CHAT_SYSTEM = """You are Kundli AI — an Ayur-Jyotish food analyst answering a specific dietary query.
-
-⚠️ DISCLAIMER: Always include: "Astrological estimation — not dietary advice."
+⚠️ DISCLAIMER: Always include: "This Prakriti estimation is derived from astrological indicators. For clinical Ayurvedic assessment, consult a qualified Vaidya."
 
 Behavior:
-- Answer ONLY the specific user question directly, concisely, and conversationally (100–160 words).
-- Ground answer in 2nd/6th houses, Moon, and active Dasha.
-- Conclude with a clear bottom-line takeaway result.
+- CRITICAL CONSISTENCY REQUIREMENT: You MUST strictly use the exact Ascendant, Moon Sign, and Dominant Dosha provided in the [CORE CHART] and [AYURVEDIC PRAKRITI ESTIMATION] sections.
+- STRICT NO PERCENTAGE RULE: DO NOT mention any numerical percentages (e.g. do NOT write "46.9%", "50.1%", "27%", "47.1%") anywhere in your text. Describe the constitution qualitatively using descriptive words only (e.g. "predominantly Pitta with a secondary Vata influence").
+- Recommend foods to favor, foods to limit, meal timing, and herbs based on their exact calculated Dominant Dosha.
+- Target 250-350 words. Format with markdown headers (🍽️ Your Constitution, ✅ Recommended Foods, ❌ Foods to Limit, ⏰ Meal Timing, 🌿 Herbs & Spices).
+- End with one dietary follow-up question."""
+
+FOOD_CHAT_SYSTEM = """You are Kundli AI — an Ayurvedic nutrition advisor answering a specific dietary question.
+
+⚠️ DISCLAIMER: Always include: "Astrological estimation — not clinical advice."
+
+Behavior:
+- Answer ONLY the user's specific food/diet question directly, concisely, and conversationally (100–180 words).
+- DO NOT use rigid template section headers unless requested.
+- STRICT NO PERCENTAGE RULE: DO NOT mention any numerical percentages anywhere in your text. Describe doshas qualitatively.
+- Connect advice directly to their exact calculated Prakriti or relevant planet.
 - End with exactly ONE relevant follow-up question."""
+
+
+
 
 
 def get_food_prompt(is_initial: bool = True) -> str:
@@ -54,20 +44,43 @@ def build_food_context(
     computed: dict = None,
     **kwargs,
 ) -> str:
-    planets = chart_data.get("raw_positions") or chart_data.get("planets", {})
-    houses = chart_data.get("houses", {})
+    planets = chart_data.get("raw_positions") or chart_data.get("planets") or {}
 
-    d6_summary = format_subchart_summary(chart_data, "food")
 
-    # Include Prakriti data if pre-computed
-    prakriti_info = "Not computed."
-    if computed and computed.get("prakriti"):
-        p = computed["prakriti"]
-        prakriti_info = (
-            f"Vata: {p.get('vata', 0)}% | Pitta: {p.get('pitta', 0)}% | Kapha: {p.get('kapha', 0)}%\n"
-            f"Dominant Dosha: {p.get('dominant_dosha', 'N/A')}\n"
-            f"Dominant Element: {p.get('dominant_element', 'N/A')}"
-        )
+    if not computed or not computed.get("prakriti"):
+        from services.astrology.prakriti import estimate_prakriti
+        from services.astrology.elements import calculate_element_distribution
+        prakriti = estimate_prakriti(chart_data)
+        elements = calculate_element_distribution(chart_data)
+        computed = computed or {}
+        computed["prakriti"] = prakriti
+        computed["elements"] = elements
+
+    # Prakriti data
+    p = computed.get("prakriti", {})
+    prakriti_info = (
+        f"- Pitta: {p.get('pitta', 0)}%\n"
+        f"- Vata: {p.get('vata', 0)}%\n"
+        f"- Kapha: {p.get('kapha', 0)}%\n"
+        f"- Dominant Dosha: {p.get('dominant_dosha', 'N/A')}\n"
+        f"- Dominant Element: {p.get('dominant_element', 'N/A')}"
+    )
+
+    e = computed.get("elements", {})
+    element_info = (
+        f"Fire: {e.get('Fire', 0)}% | Earth: {e.get('Earth', 0)}% | "
+        f"Air: {e.get('Air', 0)}% | Water: {e.get('Water', 0)}%"
+    )
+
+
+    # Key food-related planets
+    food_planets = []
+    for p_name in ["moon", "mars", "jupiter", "saturn", "venus"]:
+        p = planets.get(p_name, {})
+        if p:
+            food_planets.append(
+                f"- {p_name.capitalize()}: {p.get('sign', '?')} in House {p.get('house', '?')}"
+            )
 
     return f"""[CONVERSATION HISTORY]
 {format_history(history)}
@@ -78,13 +91,15 @@ def build_food_context(
 [CORE CHART]
 {format_core_chart(chart_data)}
 
-{d6_summary}
-
-[FOOD & DIGESTION HOUSES]
-{format_houses_subset(houses, planets, [2, 6, 4, 12])}
-
-[AYURVEDIC PRAKRITI]
+[AYURVEDIC PRAKRITI ESTIMATION - COPY THESE EXACT NUMBERS VERBATIM]
 {prakriti_info}
+
+[ELEMENT DISTRIBUTION]
+{element_info}
+
+
+[FOOD-RELEVANT PLANETS]
+{chr(10).join(food_planets)}
 
 [USER QUESTION]
 \"{query}\""""

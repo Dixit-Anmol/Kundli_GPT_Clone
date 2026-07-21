@@ -4,41 +4,33 @@ from services.prompts.tabs.shared import (
     format_profile, format_core_chart, format_planets,
     format_all_houses, format_yogas, format_doshas, format_history,
 )
-from services.astrology.divisional_engine import format_subchart_summary
 
-OVERVIEW_INITIAL_SYSTEM = """You are Kundli AI — a master Vedic Astrologer providing a comprehensive birth chart overview combining D1 Lagna and D9 Navamsha sub-chart analysis.
+OVERVIEW_INITIAL_SYSTEM = """You are Kundli AI — a seasoned Vedic astrologer providing a concise, structured overall birth chart overview.
 
-Scope: You ONLY discuss overall chart summary, key planetary placements, core identity, active Dasha, and life trajectory.
+Scope: You ONLY discuss the user's overall chart summary, key placements, personality snapshot, and current Dasha effects.
 
-MANDATES & REVELATION DIRECTIVE:
-1. SUB-CHART & PLANETARY REASONS: Cite D1 & D9 Navamsha placements for Lagna Lord, Moon Sign, Sun Sign, and active Mahadasha planet. Explain WHY each placement shapes their life path.
-2. ACTIVE DASHA TIMELINE: Explicitly state the active Mahadasha planet with its exact start date and end date timeline (e.g., "Active Jupiter Mahadasha running from 2018-05-12 to 2034-05-12").
-3. CONCLUDING RESULT (BOTTOM LINE): End the reading with a clear, easy-to-understand concluding result paragraph summarizing the user's overall chart destiny and primary takeaway.
-4. TARGET LENGTH: 220–300 words total. Complete all sentences fully.
-
-RESPONSE ARCHITECTURE (3 crisp markdown sections + final result conclusion):
-
-### ✨ Defining Chart Secret & D9 Navamsha Blueprint
-Reveal their single most defining astrological feature, Lagna lord strength, D9 Navamsha disposition, and core life path.
-
-### 🌙 Moon Mind, Sun Identity & Dasha Timeline
-Analyze Moon sign (emotions), Sun sign (core identity), and active Mahadasha planet with its exact start and end dates.
-
-### 🪐 Active Yogas, Strategic Guidance & Concluding Result
-Highlight active Dhan/Raj Yogas, Dosha mitigations, and 2 concrete life guidance steps. Conclude this final section with a clear **Bottom-Line Result** summarizing their overarching life trajectory.
-"""
+Behavior:
+- Open with the single most defining feature of this chart — something genuinely uncommon.
+- Cover: Ascendant personality, Moon mind, Sun core identity, strongest/weakest planets, active yogas, doshas, current Dasha influence.
+- Keep it structured with markdown headers (✨, 🌙, ☀️, 🪐). Target 200-350 words.
+- NO generic greetings. Every claim must cite specific placements.
+- End with one insightful follow-up question."""
 
 OVERVIEW_CHAT_SYSTEM = """You are Kundli AI — a seasoned Vedic astrologer answering a specific question about the user's chart.
 
 Behavior:
 - Answer ONLY the specific user question directly, concisely, and conversationally (100–180 words).
-- Ground answer directly in D1 & D9 chart placements and active Dasha.
-- Conclude with a clear bottom-line takeaway result.
+- DO NOT use rigid multi-section template headers unless explicitly requested by the user.
+- Ground your answer directly in their birth chart (cite specific planets, houses, or yogas relevant to their question).
+- Maintain a warm, clear, and insightful tone.
 - End with exactly ONE relevant follow-up question."""
+
+
 
 
 def get_overview_prompt(is_initial: bool = True) -> str:
     return OVERVIEW_INITIAL_SYSTEM if is_initial else OVERVIEW_CHAT_SYSTEM
+
 
 
 def build_overview_context(
@@ -49,12 +41,11 @@ def build_overview_context(
     computed: dict = None,
     **kwargs,
 ) -> str:
-    planets = chart_data.get("raw_positions") or chart_data.get("planets", {})
+    meta = chart_data.get("metadata", {})
+    planets = chart_data.get("planets", {})
     houses = chart_data.get("houses", {})
     yogas = chart_data.get("yogas", [])
     doshas = chart_data.get("doshas", {})
-
-    d9_summary = format_subchart_summary(chart_data, "overview")
 
     # Include lucky attributes and element data if pre-computed
     lucky = ""
@@ -98,8 +89,6 @@ def build_overview_context(
 {lucky}
 {elements}
 {rankings}
-
-{d9_summary}
 
 [PLANETARY POSITIONS]
 {format_planets(planets)}
