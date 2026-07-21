@@ -44,7 +44,7 @@ export default function Navbar({
         </div>
         <div>
           <h1 className="font-display text-[28px] leading-tight font-semibold text-primary">
-            Kundli AI
+            AstroSutra AI
           </h1>
           <p className="text-[12px] leading-4 font-semibold text-on-surface-variant">
             Modular AI Astrology Platform

@@ -290,7 +290,7 @@ export default function ChatPage() {
             <AssistantMessage icon="star">
               {profiles.length > 0
                 ? '🙏 Namaste! Add a new profile for a family member or friend to analyze their Vedic birth chart.'
-                : '🙏 Namaste! Welcome to Kundli AI. I will calculate your personalized Vedic birth chart and store up to 5 profiles for you and your loved ones.'}
+                : '🙏 Namaste! Welcome to AstroSutra AI. I will calculate your personalized Vedic birth chart and store up to 5 profiles for you and your loved ones.'}
             </AssistantMessage>
           )}
 

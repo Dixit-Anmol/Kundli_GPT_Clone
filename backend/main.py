@@ -19,7 +19,7 @@ from api.tab_chat import router as tab_chat_router
 from api.profile import router as profile_router
 
 app = FastAPI(
-    title="Kundli AI API",
+    title="AstroSutra AI API",
     description="Ancient Wisdom meets Modern Intelligence — Horoscope Computation and RAG-Gita Guided Chat Engine.",
     version="1.0.0"
 )

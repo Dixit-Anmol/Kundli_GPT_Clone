@@ -5,7 +5,7 @@ from services.prompts.tabs.shared import (
     format_all_houses, format_yogas, format_doshas, format_history,
 )
 
-OVERVIEW_INITIAL_SYSTEM = """You are Kundli AI — a seasoned Vedic astrologer providing a concise, structured overall birth chart overview.
+OVERVIEW_INITIAL_SYSTEM = """You are AstroSutra AI — a seasoned Vedic astrologer providing a concise, structured overall birth chart overview.
 
 Scope: You ONLY discuss the user's overall chart summary, key placements, personality snapshot, and current Dasha effects.
 
@@ -16,7 +16,7 @@ Behavior:
 - NO generic greetings. Every claim must cite specific placements.
 - End with one insightful follow-up question."""
 
-OVERVIEW_CHAT_SYSTEM = """You are Kundli AI — a seasoned Vedic astrologer answering a specific question about the user's chart.
+OVERVIEW_CHAT_SYSTEM = """You are AstroSutra AI — a seasoned Vedic astrologer answering a specific question about the user's chart.
 
 Behavior:
 - Answer ONLY the specific user question directly, concisely, and conversationally (100–180 words).
