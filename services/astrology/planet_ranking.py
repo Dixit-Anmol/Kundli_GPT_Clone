@@ -39,7 +39,8 @@ def rank_planets(chart_data: dict) -> list:
         ...
     ]
     """
-    planets = chart_data.get("planets", {})
+    planets = chart_data.get("raw_positions") or chart_data.get("planets") or {}
+
     yogas = chart_data.get("yogas", [])
     
     # Count yoga participation per planet

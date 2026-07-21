@@ -44,7 +44,8 @@ def build_food_context(
     computed: dict = None,
     **kwargs,
 ) -> str:
-    planets = chart_data.get("planets", {})
+    planets = chart_data.get("raw_positions") or chart_data.get("planets") or {}
+
 
     if not computed or not computed.get("prakriti"):
         from services.astrology.prakriti import estimate_prakriti

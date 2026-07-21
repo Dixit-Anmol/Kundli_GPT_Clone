@@ -129,4 +129,8 @@ def handle_tab_chat(req: TabChatRequest):
         }
 
     except Exception as e:
+        import traceback
+        print(f"❌ Error in tab_chat (tab={req.tab}): {e}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
