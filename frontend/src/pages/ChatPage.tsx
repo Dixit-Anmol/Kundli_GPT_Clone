@@ -38,7 +38,7 @@ export default function ChatPage() {
   const [chartData, setChartData] = useState<any>(null)
 
   // -----------------------------------------------------------------------
-  // On Mount — Load saved profiles from localStorage
+  // On Mount — Load saved profiles from localStorage & hydrate from backend if needed
   // -----------------------------------------------------------------------
   useEffect(() => {
     const saved = getSavedProfiles()
@@ -50,13 +50,40 @@ export default function ChatPage() {
       const active = saved.find((p) => p.id === savedActiveId) || saved[0]
       setActiveId(active.id)
       setActiveProfileId(active.id)
-      setBirthData(active.birthData)
-      setChartData(active.chartData)
-      setStep('ready')
+      setBirthData(active.birthData || null)
+
+      if (active.chartData && active.chartData.ascendant_sign) {
+        setChartData(active.chartData)
+        setStep('ready')
+      } else if (active.id) {
+        // Attempt to load from backend profile store
+        fetch(`${API_BASE_URL}/api/profile/${active.id}`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (data && data.exists && data.chart_summary) {
+              setChartData(data.chart_summary)
+              setStep('ready')
+            } else if (active.birthData) {
+              // Re-trigger chart calculation from saved birth details
+              handleBirthSubmit(active.birthData)
+            } else {
+              setStep('ready')
+            }
+          })
+          .catch(() => {
+            if (active.chartData) {
+              setChartData(active.chartData)
+            }
+            setStep('ready')
+          })
+      } else {
+        setStep('ready')
+      }
     } else {
       setStep('welcome')
     }
   }, [])
+
 
   // -----------------------------------------------------------------------
   // Single-Page Birth Details & Location Submission → Chart Computation

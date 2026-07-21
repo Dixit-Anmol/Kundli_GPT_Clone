@@ -34,18 +34,23 @@ export function saveProfile(profile: UserProfile): UserProfile[] {
     updated = [...current]
     updated[existingIndex] = profile
   } else {
-    // Add new profile (check max limit)
+    // Add new profile (if max limit reached, displace oldest)
     if (current.length >= MAX_PROFILES) {
-      console.warn(`Maximum profile limit (${MAX_PROFILES}) reached. Cannot add more profiles.`)
-      return current
+      updated = [profile, ...current.slice(0, MAX_PROFILES - 1)]
+    } else {
+      updated = [profile, ...current]
     }
-    updated = [profile, ...current]
   }
 
-  localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(updated))
-  setActiveProfileId(profile.id)
+  try {
+    localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(updated))
+    setActiveProfileId(profile.id)
+  } catch (err) {
+    console.error('Failed to save profile to localStorage:', err)
+  }
   return updated
 }
+
 
 export function deleteProfile(id: string): UserProfile[] {
   const current = getSavedProfiles()
