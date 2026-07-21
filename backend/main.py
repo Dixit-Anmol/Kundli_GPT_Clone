@@ -27,25 +27,32 @@ app = FastAPI(
 frontend_url_env = os.environ.get("FRONTEND_URL")
 
 origins = [
+    "https://astrosutraai.onrender.com",
     "https://astrosutraai.onrender.com/",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
 if frontend_url_env:
-    clean_env = frontend_url_env.rstrip("/")
+    raw_env = frontend_url_env.strip()
+    clean_env = raw_env.rstrip("/")
     if clean_env not in origins:
         origins.append(clean_env)
+    if (clean_env + "/") not in origins:
+        origins.append(clean_env + "/")
 
-# Enable CORS for React + Vite frontend server
+# Enable CORS for React + Vite frontend server & Astrosutra domain
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*astrosutra.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 # Mount API Routers
