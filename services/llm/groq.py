@@ -40,15 +40,15 @@ class GroqClient:
                     "Content-Type": "application/json"
                 }
                 data = {
-                    "model": "openai/gpt-oss-120b",
+                    "model": "llama-3.3-70b-versatile",
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}
                     ],
                     "temperature": 0.7,
-                    "max_tokens": 1500
-
+                    "max_tokens": 1200
                 }
+
 
                 response = requests.post(url, headers=headers, json=data, timeout=30)
                 if response.ok:
