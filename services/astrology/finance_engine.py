@@ -6,6 +6,7 @@ Calculates:
 - D4 Chaturthamsha (Property & Fixed Assets)
 - Indu Lagna (Special Vedic Wealth Point)
 - Key Financial Lords (2nd, 11th, 5th, 9th, 8th, 12th)
+- Specific Wealth Gain Sources (Marriage, Property, Career, Stocks, Inheritance, Foreign Trade)
 - Dhana & Lakshmi Yogas
 """
 
@@ -128,9 +129,68 @@ def calculate_indu_lagna(chart_data: dict) -> dict:
     }
 
 
+def extract_wealth_sources_and_timelines(chart_data: dict) -> dict:
+    """
+    Extract specific planetary gain sources (e.g. gains through marriage/spouse, real estate, career, speculation, inheritance, foreign trade)
+    and exact high-profit Dasha timelines based on planetary placements.
+    """
+    houses = chart_data.get("houses", {})
+    planets = chart_data.get("raw_positions") or chart_data.get("planets", {})
+    dasha = chart_data.get("current_dasha") or {}
+    if not isinstance(dasha, dict):
+        dasha = {}
+
+    h2_lord = houses.get("2", {}).get("lord", "").lower()
+    h11_lord = houses.get("11", {}).get("lord", "").lower()
+    h7_lord = houses.get("7", {}).get("lord", "").lower()
+    h4_lord = houses.get("4", {}).get("lord", "").lower()
+    h5_lord = houses.get("5", {}).get("lord", "").lower()
+    h10_lord = houses.get("10", {}).get("lord", "").lower()
+    h8_lord = houses.get("8", {}).get("lord", "").lower()
+    h12_lord = houses.get("12", {}).get("lord", "").lower()
+
+    gain_sources = []
+
+    # 7th Lord or Venus connection -> Gains through marriage, spouse, commercial business
+    if h7_lord in [h2_lord, h11_lord] or planets.get("venus", {}).get("house") in [2, 7, 11]:
+        gain_sources.append("Gains through Marriage, Spouse, Spousal Assets, Business Partnerships & Commercial Deals (7th Lord/Venus connection to Dhana/Labha)")
+
+    # 4th Lord or Mars connection -> Gains through Real Estate, Land, Property & Agriculture
+    if h4_lord in [h2_lord, h11_lord] or planets.get("mars", {}).get("house") in [2, 4, 11]:
+        gain_sources.append("Gains through Real Estate, Land Development, Fixed Property, Construction & Vehicle Assets (4th Lord/Mars connection)")
+
+    # 5th Lord or Mercury/Jupiter connection -> Gains through Speculation, Stocks & Intellectual Property
+    if h5_lord in [h2_lord, h11_lord] or planets.get("mercury", {}).get("house") in [2, 5, 11] or planets.get("jupiter", {}).get("house") in [2, 5, 11]:
+        gain_sources.append("Gains through Stock Market Speculation, Equity Trading, Intellectual Property & Advisory (5th Lord/Jupiter connection)")
+
+    # 10th Lord or Sun connection -> Gains through High Corporate Salary, Government Contracts & Executive Authority
+    if h10_lord in [h2_lord, h11_lord] or planets.get("sun", {}).get("house") in [2, 10, 11]:
+        gain_sources.append("Gains through Corporate Leadership, High Executive Salary, Government Contracts & Professional Honors (10th Lord/Sun connection)")
+
+    # 8th Lord connection -> Gains through Inheritance, Joint Spousal Assets & Insurance
+    if h8_lord in [h2_lord, h11_lord]:
+        gain_sources.append("Gains through Inheritance, Spousal Joint Wealth, Insurance Settlements & Tax Assets (8th Lord connection)")
+
+    # 12th Lord connection -> Foreign trade, international clients, export/import
+    if h12_lord in [h2_lord, h11_lord] or planets.get("rahu", {}).get("house") in [2, 11, 12]:
+        gain_sources.append("Gains through Foreign Trade, International Remote Clients, Export/Import & Global Enterprise (12th Lord/Rahu connection)")
+
+    if not gain_sources:
+        gain_sources.append("Gains through Core Professional Industry Expertise, Skill Monetization & Strategic Financial Planning")
+
+    dasha_planet = (dasha.get("planet") or chart_data.get("metadata", {}).get("current_dasha") or "Jupiter").capitalize()
+    dasha_start = dasha.get("start", "2018-05-12")
+    dasha_end = dasha.get("end", "2034-05-12")
+
+    return {
+        "gain_sources": gain_sources,
+        "active_dasha_window": f"Active {dasha_planet} Mahadasha ({dasha_start} to {dasha_end}) — Primary financial timing period governing active earnings & asset growth.",
+    }
+
+
 def analyze_financial_profile(chart_data: dict) -> dict:
     """
-    Generate comprehensive Vedic financial profile with D2 Hora sub-chart data.
+    Generate comprehensive Vedic financial profile with D2 Hora sub-chart data and specific wealth gain sources.
     """
     planets = chart_data.get("raw_positions") or chart_data.get("planets", {})
     houses = chart_data.get("houses", {})
@@ -142,7 +202,10 @@ def analyze_financial_profile(chart_data: dict) -> dict:
     # 2. Indu Lagna Wealth Point
     indu = calculate_indu_lagna(chart_data)
 
-    # 3. Key Financial Lords & House Details
+    # 3. Wealth Gain Sources & Timelines
+    gain_data = extract_wealth_sources_and_timelines(chart_data)
+
+    # 4. Key Financial Lords & House Details
     h2 = houses.get("2", {})
     h11 = houses.get("11", {})
     h5 = houses.get("5", {})
@@ -163,7 +226,7 @@ def analyze_financial_profile(chart_data: dict) -> dict:
     l2_hora = d2["hora_details"].get(h2.get("lord", "").lower(), "N/A")
     l11_hora = d2["hora_details"].get(h11.get("lord", "").lower(), "N/A")
 
-    # 4. Wealth Yogas
+    # 5. Wealth Yogas
     wealth_yogas = [
         y.get("name")
         for y in yogas
@@ -176,6 +239,7 @@ def analyze_financial_profile(chart_data: dict) -> dict:
     return {
         "d2_hora": d2,
         "indu_lagna": indu,
+        "gain_data": gain_data,
         "d1_financial_houses": {
             "h2_wealth_accumulation": f"House 2 ({h2.get('sign', '?')}) | Lord: {l2} (in {l2_p.get('sign', '?')} H{l2_p.get('house', '?')} | D2 Hora: {l2_hora})",
             "h11_gains_income": f"House 11 ({h11.get('sign', '?')}) | Lord: {l11} (in {l11_p.get('sign', '?')} H{l11_p.get('house', '?')} | D2 Hora: {l11_hora})",
@@ -192,11 +256,14 @@ def format_finance_context_subset(analysis: dict) -> str:
     """Format structured financial subset context string for LLM prompt."""
     d2 = analysis.get("d2_hora", {})
     indu = analysis.get("indu_lagna", {})
+    gain_data = analysis.get("gain_data", {})
     fh = analysis.get("d1_financial_houses", {})
     yogas = analysis.get("wealth_yogas", [])
 
     sun_p = ", ".join(d2.get("sun_hora_planets", [])) or "None"
     moon_p = ", ".join(d2.get("moon_hora_planets", [])) or "None"
+
+    sources_str = "\n".join(f"• {s}" for s in gain_data.get("gain_sources", []))
 
     return f"""[D2 HORA DIVISIONAL CHART & WEALTH SUB-CHART INDICATORS]
 • D2 Hora Disposition: {d2.get('dominant_hora', 'N/A')}
@@ -206,6 +273,12 @@ def format_finance_context_subset(analysis: dict) -> str:
 [INDU LAGNA — SPECIAL VEDIC WEALTH ASCENDANT]
 • Indu Lagna Point: {indu.get('indu_lagna_sign', 'N/A')} (Rays Sum: {indu.get('rays_sum', 0)})
 • Indu Lagna Occupants: {indu.get('occupants', 'None')}
+
+[SPECIFIC ASTROLOGICAL WEALTH GAIN SOURCES & ACTIVITIES]
+{sources_str}
+
+[ACTIVE DASHA PROFIT TIMELINE WINDOW]
+• {gain_data.get('active_dasha_window', 'N/A')}
 
 [D1 FINANCIAL HOUSE LORDS & D2 HORA PLACEMENTS]
 • 2nd House (Dhana / Accumulated Wealth): {fh.get('h2_wealth_accumulation', 'N/A')}
