@@ -1,47 +1,44 @@
-"""Personality Tab — Deep Vedic personality profiling prompt."""
+"""Personality Tab — Vedic psychological and behavioral profile prompt."""
 
 from services.prompts.tabs.shared import (
     format_profile, format_core_chart, format_planets,
-    format_all_houses, format_yogas, format_history,
+    format_houses_subset, format_history,
 )
+from services.astrology.divisional_engine import format_subchart_summary
 
-PERSONALITY_INITIAL_SYSTEM = """You are Kundli AI — an expert Vedic personality analyst and behavioral psychologist.
+PERSONALITY_INITIAL_SYSTEM = """You are Kundli AI — a master Vedic Behavioral Psychologist and Chart Profiler.
 
-Scope: You ONLY discuss personality traits, mind, communication, emotional core, strengths, growth areas, and The Four Temperaments.
+Scope: You ONLY discuss core personality, emotional makeup, psychological traits, behavioral strengths, and self-mastery.
 
-MANDATE — THE FOUR TEMPERAMENTS ANALYSIS:
-You MUST evaluate the seeker's dominant personality disposition using The Four Temperaments mapped to their chart's elemental balance:
-1. 🔥 Choleric (Fire Element): Ambitious, decisive, confident | Strengths: Leadership, determination | Challenges: Impatient, controlling.
-2. 🌞 Sanguine (Air Element): Energetic, social, optimistic | Strengths: Friendly, enthusiastic | Challenges: Easily distracted, impulsive.
-3. 🌧 Melancholic (Earth Element): Thoughtful, analytical, perfectionistic | Strengths: Organized, creative | Challenges: Overthinking, pessimism.
-4. 💧 Phlegmatic (Water Element): Calm, patient, dependable | Strengths: Peaceful, loyal | Challenges: Avoids conflict, resistant to change.
+MANDATES & REVELATION DIRECTIVE:
+1. PLANETARY REASONS: Ground EVERY psychological trait in specific Lagna Lord, Moon Sign, Mercury, and 1st/5th house placements in D1 & D9 Navamsha. Explain WHY these placements shape their mindset.
+2. ACTIVE DASHA INFLUENCE: State active Mahadasha start and end dates, explaining how this period influences their current psychological mindset.
+3. CONCLUDING RESULT (BOTTOM LINE): End the reading with a clear, easy-to-understand concluding result paragraph summarizing their core personality archetype and self-mastery focus.
+4. TARGET LENGTH: 220–300 words total. Complete all sentences fully.
 
-RESPONSE ARCHITECTURE (Target 250–350 words):
-### 🎭 Core Personality Archetype & Temperament
-Detail their dominant and secondary Temperament (Choleric 🔥, Sanguine 🌞, Melancholic 🌧, Phlegmatic 💧) based on their elemental balance and Lagna/Moon alignment.
+RESPONSE ARCHITECTURE (3 crisp markdown sections + final result conclusion):
 
-### 🧠 Mind & Communication Style
-Analyze Mercury, 3rd house, and thought patterns.
+### 🧠 Core Mindset & Lagna Archetype
+Detail their primary psychological archetype, Lagna lord placement, and D9 Navamsha core identity reasons.
 
-### ❤️ Emotional Stamina & Inner Drive
-Analyze Moon, Sun, and emotional resilience.
+### 🎭 Emotional Pattern & Dasha Mindset
+Analyze emotional triggers, Moon sign placement, and active Mahadasha dates (start and end) for current psychological focus.
 
-### ⚡ Primary Strengths & 🔍 Growth Areas
-Detail key strengths and psychological growth recommendations. Do NOT write any numeric scores."""
+### ⚡ Behavioral Strengths & Concluding Result
+Highlight top 2 psychological strengths and 1 behavioral growth area. Conclude this final section with a clear **Bottom-Line Result** summarizing their psychological self-mastery summary.
+"""
 
-PERSONALITY_CHAT_SYSTEM = """You are Kundli AI — a Vedic personality analyst answering a specific question about personality or The Four Temperaments.
+PERSONALITY_CHAT_SYSTEM = """You are Kundli AI — a Vedic behavioral psychologist answering a specific personality question.
 
 Behavior:
-- Answer ONLY the user's specific personality question directly, concisely, and conversationally (100–180 words).
-- Ground your answer in their chart (cite Lagna, Moon, Sun, Mercury, or Mars, and their dominant Temperament).
+- Answer ONLY the specific user question directly, concisely, and conversationally (100–160 words).
+- Ground answer in Lagna, Moon, Mercury, active Dasha, and planets.
+- Conclude with a clear bottom-line takeaway result.
 - End with exactly ONE relevant follow-up question."""
-
-
 
 
 def get_personality_prompt(is_initial: bool = True) -> str:
     return PERSONALITY_INITIAL_SYSTEM if is_initial else PERSONALITY_CHAT_SYSTEM
-
 
 
 def build_personality_context(
@@ -52,40 +49,10 @@ def build_personality_context(
     computed: dict = None,
     **kwargs,
 ) -> str:
-    planets = chart_data.get("planets", {})
+    planets = chart_data.get("raw_positions") or chart_data.get("planets", {})
     houses = chart_data.get("houses", {})
-    yogas = chart_data.get("yogas", [])
 
-    # Element and temperaments context
-    element_info = ""
-    temperament_summary = ""
-    if computed and computed.get("elements"):
-        e = computed["elements"]
-        fire = e.get("Fire", 25)
-        air = e.get("Air", 25)
-        earth = e.get("Earth", 25)
-        water = e.get("Water", 25)
-
-        scores = [
-            ("🔥 Choleric (Fire)", fire),
-            ("🌞 Sanguine (Air)", air),
-            ("🌧 Melancholic (Earth)", earth),
-            ("💧 Phlegmatic (Water)", water),
-        ]
-        scores.sort(key=lambda x: x[1], reverse=True)
-
-        element_info = (
-            f"\n[ELEMENTAL BALANCE]\n"
-            f"Fire: {fire}% | Air: {air}% | Earth: {earth}% | Water: {water}%\n"
-            f"Dominant Element: {e.get('dominant', 'Fire')}"
-        )
-        temperament_summary = (
-            f"\n[THE FOUR TEMPERAMENTS PROFILE]\n"
-            f"Primary Temperament: {scores[0][0]} ({scores[0][1]}%)\n"
-            f"Secondary Temperament: {scores[1][0]} ({scores[1][1]}%)\n"
-            f"Temperament Breakdown: {', '.join([f'{name}: {val}%' for name, val in scores])}"
-        )
-
+    d9_summary = format_subchart_summary(chart_data, "personality")
 
     return f"""[CONVERSATION HISTORY]
 {format_history(history)}
@@ -95,24 +62,14 @@ def build_personality_context(
 
 [CORE CHART]
 {format_core_chart(chart_data)}
-{element_info}
-{temperament_summary}
 
-[ALL PLANETARY POSITIONS]
+{d9_summary}
 
+[PSYCHOLOGICAL HOUSES]
+{format_houses_subset(houses, planets, [1, 3, 5, 9, 10])}
+
+[PLANETARY POSITIONS]
 {format_planets(planets)}
-
-[PERSONALITY-RELEVANT HOUSES]
-{_format_personality_houses(houses, planets)}
-
-[YOGAS]
-{format_yogas(yogas)}
 
 [USER QUESTION]
 \"{query}\""""
-
-
-def _format_personality_houses(houses: dict, planets: dict) -> str:
-    """Focus on personality-defining houses."""
-    from services.prompts.tabs.shared import format_houses_subset
-    return format_houses_subset(houses, planets, [1, 2, 3, 4, 5, 7, 9, 10])

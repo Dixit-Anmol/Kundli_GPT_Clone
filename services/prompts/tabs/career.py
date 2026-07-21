@@ -6,24 +6,38 @@ from services.prompts.tabs.shared import (
 )
 from services.astrology.kala_vidya_engine import (
     analyze_kala_vidya, format_kala_vidya_subset_context,
-    analyze_student_receptivity, format_student_receptivity_subset_context,
 )
+from services.astrology.divisional_engine import format_subchart_summary
 
-CAREER_INITIAL_SYSTEM = """You are Kundli AI — a Vedic career counselor and professional strategist.
+CAREER_INITIAL_SYSTEM = """You are Kundli AI — a master Vedic Career Counselor and Professional Strategist specializing in D10 Dashamsha sub-chart analysis.
 
-Scope: Discuss career, profession, business, education, and professional growth.
-Behavior:
-- Analyze 10th, 6th, 2nd, 11th houses and D10 Dashamsha.
-- Suggest 2-3 specific career fields matching the chart.
-- Target 180-250 words total. Format with headers: 💼 Career Path, 📈 Timing & Yogas, 🎯 Recommendations.
-- End with one follow-up question."""
+Scope: Discuss career, profession, status, business, leadership, and wealth creation.
+
+MANDATES & REVELATION DIRECTIVE:
+1. D10 DASHAMSHA & SUB-CHART SPECIFICITY: You MUST explicitly cite D10 Dashamsha placements for key career planets (Sun, Saturn, 10th Lord). Explain the exact astrological reason (house, sign, dignity) and active Dasha timing for their real-life professional impact.
+2. PLANETARY REASONS & DASHA IMPACT: For every prediction, explain WHY the planet is causing it, citing its active Mahadasha dates (start and end) and house placement.
+3. CONCLUDING RESULT (BOTTOM LINE): End the reading with a clear, direct, easy-to-understand concluding result paragraph summarizing the final takeaway for the user (without creating a separate generic header).
+4. TARGET LENGTH: 220–300 words total. Complete all sentences fully.
+
+RESPONSE ARCHITECTURE (3 crisp markdown sections + final result conclusion):
+
+### 💼 Career Path & D10 Dashamsha Calling
+Analyze their 10th lord, Sun, Saturn, and D10 Dashamsha sign placement, detailing the exact astrological reasons for their top 2-3 matching career fields.
+
+### 🚀 Hidden Superpower & Dasha Impact
+Detail one uncommon professional advantage driven by active Dasha planet placements and yogas, citing exact start and end dates.
+
+### 🎯 Strategic Career Recommendations & Milestones
+Provide 2 concrete, actionable professional steps to maximize earnings and status. Conclude this final section with a clear **Bottom-Line Result** summarizing their ultimate career trajectory.
+"""
 
 CAREER_CHAT_SYSTEM = """You are Kundli AI — a Vedic career counselor answering a specific career question.
 
 Behavior:
-- Answer directly and concisely (100–150 words).
-- Ground response in birth chart (cite specific 10th/6th/2nd lords, planets, or yogas).
-- End with one follow-up question."""
+- Answer directly and concisely (100–160 words).
+- Ground response in D10 Dashamsha and birth chart (cite specific 10th/6th/2nd lords, active Dasha, and planets).
+- Conclude with a clear bottom-line takeaway result.
+- End with one relevant follow-up question."""
 
 KALA_VIDYA_INITIAL_SYSTEM = """You are Kundli AI — an expert Vedic Educational Strategist specializing in the 64 Classical Kalas (चतुःषष्टि कला) and Shishya Grahana (Student Cognitive Receptivity & Pedagogy).
 
@@ -50,7 +64,6 @@ Provide 3 highly specific modern career paths matching these Kalas and 1 tailore
 Provide 1 actionable tip for Guru/mentor alignment and study focus."""
 
 
-
 def get_career_prompt(is_initial: bool = True, sub_tab: str = "overview") -> str:
     if sub_tab == "kala_vidya" or sub_tab == "receptivity":
         return KALA_VIDYA_INITIAL_SYSTEM if is_initial else CAREER_CHAT_SYSTEM
@@ -74,7 +87,7 @@ def build_career_context(
     if st == "kala_vidya" or st == "receptivity":
         kv_analysis = analyze_kala_vidya(chart_data)
         subset_text = format_kala_vidya_subset_context(kv_analysis, profile=profile, chart_data=chart_data)
-        
+
         return f"""{hist_part}[USER PROFILE]
 {format_profile(profile)}
 
@@ -83,12 +96,12 @@ def build_career_context(
 [USER QUERY]
 "{query}" """
 
-
-
     # Default Career Overview
-    planets = chart_data.get("planets", {})
+    planets = chart_data.get("raw_positions") or chart_data.get("planets", {})
     houses = chart_data.get("houses", {})
     yogas = chart_data.get("yogas", [])
+
+    d10_summary = format_subchart_summary(chart_data, "career")
 
     career_yogas = [y for y in yogas if any(
         kw in (y.get("name", "") + y.get("type", "")).lower()
@@ -101,35 +114,13 @@ def build_career_context(
 [CORE CHART]
 {format_core_chart(chart_data)}
 
+{d10_summary}
+
 [CAREER HOUSES]
 {format_houses_subset(houses, planets, [2, 6, 10, 11])}
-
-[KEY PLANETS]
-{_format_career_planets(planets, houses)}
 
 [YOGAS]
 {format_yogas(career_yogas[:3]) if career_yogas else format_yogas(yogas[:3])}
 
 [QUERY]
 "{query}" """
-
-
-def _format_career_planets(planets: dict, houses: dict) -> str:
-    """Extract career-critical planet placements efficiently."""
-    career_planets = []
-    h10 = houses.get("10", {})
-    lord_10 = h10.get("lord", "").lower()
-    
-    for p_name, p in planets.items():
-        is_relevant = (
-            p_name.lower() == lord_10 or
-            p.get("house") in [2, 6, 10, 11] or
-            p_name.lower() in ["sun", "saturn", "jupiter", "mercury"]
-        )
-        if is_relevant:
-            career_planets.append(
-                f"- {p_name.capitalize()}: {p.get('sign', '?')} in H{p.get('house', '?')} "
-                f"({'[10th Lord]' if p_name.lower() == lord_10 else ''}) "
-                f"[{p.get('dignity', 'neutral')}]"
-            )
-    return "\n".join(career_planets[:5]) or "No specific planet data."
