@@ -23,9 +23,8 @@ Detail the emotional resonance and uncover one surprising hidden emotional patte
 ### 3. 💬 Communication & Secret Motives (Shocking Reveal)
 Analyze intellectual alignment and reveal one shocking truth about how truth-telling or misunderstandings play out.
 
-### 4. ⏳ Karmic Bonds & Dasha Timeline
-Explain the past-life karmic bond, explicitly state the active Mahadasha planet with its exact start date and end date timeline (e.g., "Active Jupiter Mahadasha from 2018-05-12 to 2034-05-12"), and predict relationship milestone turning points driven by this timeline window.
-
+### 4. ⏳ Karmic Ties & Future Timeline (Shocking Reveal)
+Explain the past-life karmic bond and predict one specific future timeline event or turning point driven by Dashas/transits.
 
 ### 5. ⚡ Primary Strength vs Clash Trigger (Shocking Reveal)
 Highlight the bond's single biggest astrological superpower alongside one unexpected clash trigger to watch out for.
