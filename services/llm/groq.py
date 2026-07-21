@@ -40,15 +40,14 @@ class GroqClient:
                     "Content-Type": "application/json"
                 }
                 data = {
-                    "model": "llama-3.3-70b-versatile",
+                    "model": "llama-3.1-70b-versatile",
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}
                     ],
                     "temperature": 0.7,
-                    "max_tokens": 1200
+                    "max_tokens": 650
                 }
-
 
                 response = requests.post(url, headers=headers, json=data, timeout=30)
                 if response.ok:

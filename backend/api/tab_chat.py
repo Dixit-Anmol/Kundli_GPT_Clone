@@ -26,20 +26,49 @@ def handle_tab_chat(req: TabChatRequest):
         chart_data = session.get("chart_data")
         history = session.get("history", [])
 
-        # Fallback: load from profile store if session has no chart data
-        if not chart_data and req.user_id:
-            stored = profile_store.load_profile(req.user_id)
+        # Fallback: load from persistent disk profile store if backend restarted
+        if not chart_data:
+            user_key = req.user_id or req.session_id
+            stored = profile_store.load_profile(user_key) if user_key else None
+            if not stored and req.session_id:
+                stored = profile_store.load_profile(req.session_id)
+
             if stored and stored.get("natal_chart"):
                 natal = stored["natal_chart"]
                 chart_data = natal.get("natal", natal)
                 session_store.save_chart(req.session_id, chart_data)
+                session = session_store.get_session(req.session_id)
                 session["profile"] = stored.get("birth_details", {})
+                
+                # Restore or compute computed analyses
+                computed = natal.get("computed") or stored.get("chart_response", {}).get("computed")
+                if not computed:
+                    from services.astrology.prakriti import estimate_prakriti
+                    from services.astrology.elements import calculate_element_distribution
+                    from services.astrology.lucky import calculate_lucky_attributes
+                    from services.astrology.planet_ranking import rank_planets
+                    from services.astrology.remedies_calc import generate_remedy_data
+
+                    prakriti = estimate_prakriti(chart_data)
+                    elements = calculate_element_distribution(chart_data)
+                    lucky = calculate_lucky_attributes(chart_data)
+                    rankings = rank_planets(chart_data)
+                    remedies = generate_remedy_data(chart_data, rankings)
+                    computed = {
+                        "prakriti": prakriti,
+                        "elements": elements,
+                        "lucky": lucky,
+                        "planet_rankings": rankings,
+                        "remedy_data": remedies,
+                    }
+                session["computed_analyses"] = computed
 
         if not chart_data:
             return {
                 "response": "🙏 Please provide your birth details first so I can generate your chart.",
                 "session_count": 0,
             }
+
 
         profile = session.get("profile")
         mode = chart_data.get("mode", "exact")

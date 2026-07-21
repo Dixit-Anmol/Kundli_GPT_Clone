@@ -27,16 +27,21 @@ def handle_chat(req: ChatRequest):
         chart_data = session.get("chart_data")
         history = session.get("history", [])
         
-        # Fallback: If session has no chart data but user_id is provided,
-        # attempt to load from the persistent profile store
-        if not chart_data and req.user_id:
-            stored = profile_store.load_profile(req.user_id)
+        # Fallback: If session has no chart data (e.g. server restart),
+        # load from persistent disk profile store
+        if not chart_data:
+            user_key = req.user_id or req.session_id
+            stored = profile_store.load_profile(user_key) if user_key else None
+            if not stored and req.session_id:
+                stored = profile_store.load_profile(req.session_id)
+
             if stored and stored.get("natal_chart"):
                 natal = stored["natal_chart"]
-                # Support both new (natal key) and legacy flat formats
                 chart_data = natal.get("natal", natal)
                 session_store.save_chart(req.session_id, chart_data)
+                session = session_store.get_session(req.session_id)
                 session["profile"] = stored.get("birth_details", {})
+
         
         # 1. Block if birth chart is not generated yet
         if not chart_data:

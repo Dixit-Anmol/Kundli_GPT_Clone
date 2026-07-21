@@ -289,12 +289,21 @@ def build_chart(req: ChartRequest):
                 }
             }
 
-            profile_store.save_profile(
-                user_id=req.user_id,
-                birth_details=birth_details,
-                natal_chart=natal_chart,
-                chart_response=chart_response,
-            )
+            if req.user_id:
+                profile_store.save_profile(
+                    user_id=req.user_id,
+                    birth_details=birth_details,
+                    natal_chart=natal_chart,
+                    chart_response=chart_response,
+                )
+            if req.session_id:
+                profile_store.save_profile(
+                    user_id=req.session_id,
+                    birth_details=birth_details,
+                    natal_chart=natal_chart,
+                    chart_response=chart_response,
+                )
+
         
         return chart_response
     except Exception as e:
