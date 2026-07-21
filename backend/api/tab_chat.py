@@ -23,15 +23,24 @@ rag_pipeline = BG16Pipeline()
 def handle_tab_chat(req: TabChatRequest):
     try:
         session = session_store.get_session(req.session_id)
+
+        # Enforce strict profile isolation: if session user_id does not match req.user_id, reset session chart_data
+        if req.user_id and session.get("user_id") != req.user_id:
+            session["chart_data"] = None
+            session["user_id"] = req.user_id
+            session["history"] = []
+            session["computed_analyses"] = None
+
         chart_data = session.get("chart_data")
         history = session.get("history", [])
 
-        # Fallback: load from persistent disk profile store if backend restarted
+        # Fallback: load from persistent disk profile store if backend restarted or profile switched
         if not chart_data:
             user_key = req.user_id or req.session_id
             stored = profile_store.load_profile(user_key) if user_key else None
             if not stored and req.session_id:
                 stored = profile_store.load_profile(req.session_id)
+
 
             if stored and stored.get("natal_chart"):
                 natal = stored["natal_chart"]

@@ -47,12 +47,14 @@ export default function TabPanel({
   const [relationshipTarget, setRelationshipTarget] = useState<RelationshipTarget>('spouse')
   const [careerSubTab, setCareerSubTab] = useState<CareerSubTab>('overview')
 
-  // Compute unique key for granular caching
+  // Compute unique key for granular per-profile caching (prevents profile data leaks)
   const getCacheKey = () => {
-    if (tab === 'marriage') return `marriage_${relationshipTarget}`
-    if (tab === 'career') return `career_${careerSubTab}`
-    return tab
+    const profilePrefix = userId ? `${userId}_` : ''
+    if (tab === 'marriage') return `${profilePrefix}marriage_${relationshipTarget}`
+    if (tab === 'career') return `${profilePrefix}career_${careerSubTab}`
+    return `${profilePrefix}${tab}`
   }
+
 
   const cacheKey = getCacheKey()
   const cachedItem = tabCacheMap[cacheKey]
@@ -110,10 +112,7 @@ export default function TabPanel({
               onUpdateCacheByKey(currentKey, { initialReading: data.response, messages: [] })
             }
           }
-        } else {
-          throw new Error(`Server returned status ${res.status}`)
         }
-
       } catch (err) {
         console.error(`Failed to fetch reading for tab ${tab}:`, err)
         if (!cancelled) {
@@ -253,8 +252,8 @@ export default function TabPanel({
             {tab === 'marriage'
               ? `${relationshipTarget.charAt(0).toUpperCase() + relationshipTarget.slice(1)} Relationship AI Analysis`
               : tab === 'career' && careerSubTab === 'kala_vidya'
-              ? 'Personal AI Astrological Analysis (Kala, Vidya & Receptivity)'
-              : `Detailed ${tab.charAt(0).toUpperCase() + tab.slice(1)} Analysis`}
+                ? 'Personal AI Astrological Analysis (Kala, Vidya & Receptivity)'
+                : `Detailed ${tab.charAt(0).toUpperCase() + tab.slice(1)} Analysis`}
           </h2>
           <span className="text-xs text-on-surface-variant bg-surface-variant px-3 py-1 rounded-full font-medium">
             Personal AI Reading

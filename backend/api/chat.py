@@ -24,8 +24,16 @@ rag_pipeline = BG16Pipeline()
 def handle_chat(req: ChatRequest):
     try:
         session = session_store.get_session(req.session_id)
+
+        # Enforce strict profile isolation: if session user_id does not match req.user_id, reset session chart_data
+        if req.user_id and session.get("user_id") != req.user_id:
+            session["chart_data"] = None
+            session["user_id"] = req.user_id
+            session["history"] = []
+
         chart_data = session.get("chart_data")
         history = session.get("history", [])
+
         
         # Fallback: If session has no chart data (e.g. server restart),
         # load from persistent disk profile store
