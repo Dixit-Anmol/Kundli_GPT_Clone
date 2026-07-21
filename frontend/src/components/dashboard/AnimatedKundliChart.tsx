@@ -71,8 +71,9 @@ export default function AnimatedKundliChart({ chartData }: AnimatedKundliChartPr
             </h3>
           </div>
           <p className="text-xs text-on-surface-variant font-medium mt-0.5">
-            Ascendant: <strong className="text-primary">{formatSignWithHindi(meta.ascendant_sign)}</strong> · Interactive Animated Planetary Placements
+            Ascendant: <strong className="text-primary">{formatSignWithHindi(meta.ascendant_sign)}</strong> · <span className="font-bold text-primary">H1–H12</span> House Numbers · <span className="font-bold text-amber-700">1–12</span> Zodiac Sign Numbers
           </p>
+
         </div>
 
         <button
@@ -117,7 +118,7 @@ export default function AnimatedKundliChart({ chartData }: AnimatedKundliChartPr
                   style={{ animationDelay: line.delay }}
                 />
               ))}
-              {/* Houses (Sign Numbers & Planet Badges) */}
+              {/* Houses (House Numbers H1-H12, Sign Numbers & Planet Badges) */}
               {Object.entries(NORTH_INDIAN_HOUSES).map(([hStr, houseInfo]) => {
                 const hNum = Number(hStr)
                 const signNum = getHouseSignNumber(hNum, meta.ascendant_sign)
@@ -131,7 +132,20 @@ export default function AnimatedKundliChart({ chartData }: AnimatedKundliChartPr
                     onMouseLeave={() => setHoveredHouse(null)}
                     className="cursor-pointer transition-all"
                   >
-                    {/* Zodiac Sign Number Badge (Subtle, Muted Amber Style) */}
+                    {/* Explicit House Number Badge (H1 to H12) */}
+                    <text
+                      x={houseInfo.houseX}
+                      y={houseInfo.houseY}
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      className={`text-[10px] font-mono font-extrabold fill-primary transition-all ${
+                        isHovered ? 'scale-110 fill-amber-700' : 'opacity-85'
+                      }`}
+                    >
+                      H{hNum}
+                    </text>
+
+                    {/* Zodiac Sign Number Badge (Rashi 1-12) */}
                     <text
                       x={houseInfo.signX}
                       y={houseInfo.signY}
@@ -157,6 +171,7 @@ export default function AnimatedKundliChart({ chartData }: AnimatedKundliChartPr
                         Asc
                       </text>
                     )}
+
 
                     {/* Planet Badges inside House Centroid */}
                     {planetsInHouse.length > 0 && (

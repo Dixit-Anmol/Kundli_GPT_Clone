@@ -5,6 +5,8 @@
 export interface HousePos {
   signX: number
   signY: number
+  houseX: number
+  houseY: number
   planetX: number
   planetY: number
   name: string
@@ -43,19 +45,20 @@ export const PLANET_INFO_MAP: Record<
 
 /** 12 North Indian House Coordinates on a 400x400 SVG Canvas */
 export const NORTH_INDIAN_HOUSES: Record<number, HousePos> = {
-  1: { signX: 200, signY: 35, planetX: 200, planetY: 130, name: '1st House (Lagna)', hindiName: 'Tanu Bhava' },
-  2: { signX: 75, signY: 25, planetX: 100, planetY: 55, name: '2nd House (Wealth)', hindiName: 'Dhana Bhava' },
-  3: { signX: 25, signY: 75, planetX: 55, planetY: 100, name: '3rd House (Siblings)', hindiName: 'Sahaja Bhava' },
-  4: { signX: 30, signY: 200, planetX: 110, planetY: 200, name: '4th House (Mother & Comfort)', hindiName: 'Sukha Bhava' },
-  5: { signX: 25, signY: 325, planetX: 55, planetY: 300, name: '5th House (Intelligence & Children)', hindiName: 'Putra Bhava' },
-  6: { signX: 75, signY: 375, planetX: 100, planetY: 345, name: '6th House (Enemies & Health)', hindiName: 'Ari Bhava' },
-  7: { signX: 200, signY: 365, planetX: 200, planetY: 275, name: '7th House (Marriage)', hindiName: 'Kalatra Bhava' },
-  8: { signX: 325, signY: 375, planetX: 300, planetY: 345, name: '8th House (Longevity)', hindiName: 'Randhra Bhava' },
-  9: { signX: 375, signY: 325, planetX: 345, planetY: 300, name: '9th House (Dharma & Fortune)', hindiName: 'Bhagya Bhava' },
-  10: { signX: 370, signY: 200, planetX: 290, planetY: 200, name: '10th House (Career & Status)', hindiName: 'Karma Bhava' },
-  11: { signX: 375, signY: 75, planetX: 345, planetY: 100, name: '11th House (Gains)', hindiName: 'Labha Bhava' },
-  12: { signX: 325, signY: 25, planetX: 300, planetY: 55, name: '12th House (Moksha & Loss)', hindiName: 'Vyaya Bhava' },
+  1: { signX: 200, signY: 45, houseX: 200, houseY: 18, planetX: 200, planetY: 130, name: '1st House (Lagna)', hindiName: 'Tanu Bhava' },
+  2: { signX: 75, signY: 35, houseX: 110, houseY: 18, planetX: 100, planetY: 65, name: '2nd House (Wealth)', hindiName: 'Dhana Bhava' },
+  3: { signX: 35, signY: 75, houseX: 18, houseY: 110, planetX: 65, planetY: 100, name: '3rd House (Siblings)', hindiName: 'Sahaja Bhava' },
+  4: { signX: 45, signY: 200, houseX: 18, houseY: 200, planetX: 120, planetY: 200, name: '4th House (Mother & Comfort)', hindiName: 'Sukha Bhava' },
+  5: { signX: 35, signY: 325, houseX: 18, houseY: 290, planetX: 65, planetY: 300, name: '5th House (Intelligence & Children)', hindiName: 'Putra Bhava' },
+  6: { signX: 75, signY: 365, houseX: 110, houseY: 382, planetX: 100, planetY: 335, name: '6th House (Enemies & Health)', hindiName: 'Ari Bhava' },
+  7: { signX: 200, signY: 355, houseX: 200, houseY: 382, planetX: 200, planetY: 270, name: '7th House (Marriage)', hindiName: 'Kalatra Bhava' },
+  8: { signX: 325, signY: 365, houseX: 290, houseY: 382, planetX: 300, planetY: 335, name: '8th House (Longevity)', hindiName: 'Randhra Bhava' },
+  9: { signX: 365, signY: 325, houseX: 382, houseY: 290, planetX: 335, planetY: 300, name: '9th House (Dharma & Fortune)', hindiName: 'Bhagya Bhava' },
+  10: { signX: 355, signY: 200, houseX: 382, houseY: 200, planetX: 280, planetY: 200, name: '10th House (Career & Status)', hindiName: 'Karma Bhava' },
+  11: { signX: 365, signY: 75, houseX: 382, houseY: 110, planetX: 335, planetY: 100, name: '11th House (Gains)', hindiName: 'Labha Bhava' },
+  12: { signX: 325, signY: 35, houseX: 290, houseY: 18, planetX: 300, planetY: 65, name: '12th House (Moksha & Loss)', hindiName: 'Vyaya Bhava' },
 }
+
 
 
 /** Calculate sign number (1 to 12) for a given house index (1 to 12) based on ascendant sign */
