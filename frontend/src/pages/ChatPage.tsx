@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import Navbar from '../components/layout/Navbar'
 import BirthDetailsForm, { type BirthData } from '../components/chat/BirthDetailsForm'
-import BirthplaceMap from '../components/chat/BirthplaceMap'
 import ComputingCard from '../components/chat/ComputingCard'
+
 import AssistantMessage from '../components/chat/AssistantMessage'
 import DashboardPage from './DashboardPage'
 
@@ -19,9 +19,11 @@ import {
 type ChatStep = 'loading' | 'welcome' | 'birthplace' | 'computing' | 'ready'
 
 const API_BASE_URL =
-  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  import.meta.env.VITE_API_BASE_URL ||
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:8000'
-    : 'https://kundli-gpt-clone-back.onrender.com'
+    : 'https://kundli-gpt-clone-back.onrender.com')
+
 
 export default function ChatPage() {
   const [sessionId] = useState(() => Math.random().toString(36).substring(7))
@@ -57,27 +59,22 @@ export default function ChatPage() {
   }, [])
 
   // -----------------------------------------------------------------------
-  // Birth details form submission
+  // Single-Page Birth Details & Location Submission → Chart Computation
   // -----------------------------------------------------------------------
-  const handleBirthSubmit = (data: BirthData) => {
+  const handleBirthSubmit = async (data: BirthData) => {
     setBirthData(data)
-    setStep('birthplace')
-  }
-
-  // -----------------------------------------------------------------------
-  // Birthplace confirmation → chart computation + multi-profile persistence
-  // -----------------------------------------------------------------------
-  const handleBirthplaceConfirm = async (_placeName: string, lat: number, lon: number) => {
-    if (!birthData) return
     setStep('computing')
 
     const newProfileId = crypto.randomUUID()
+    const lat = data.latitude ?? 28.6139
+    const lon = data.longitude ?? 77.2090
+    const placeName = data.placeName || 'Delhi, India'
 
     try {
-      const timeStr = birthData.timeOfBirth
-        ? birthData.timeOfBirth.length === 5
-          ? `${birthData.timeOfBirth}:00`
-          : birthData.timeOfBirth
+      const timeStr = data.timeOfBirth
+        ? data.timeOfBirth.length === 5
+          ? `${data.timeOfBirth}:00`
+          : data.timeOfBirth
         : '12:00:00'
 
       // 1. Fetch real chart data from FastAPI backend
@@ -87,67 +84,65 @@ export default function ChatPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: birthData.fullName || 'Seeker',
-          date_str: birthData.dateOfBirth || new Date().toISOString().split('T')[0],
+          name: data.fullName || 'Seeker',
+          date_str: data.dateOfBirth || new Date().toISOString().split('T')[0],
           time_str: timeStr,
           latitude: lat,
           longitude: lon,
           session_id: sessionId,
           user_id: newProfileId,
-          mode: birthData.mode || 'exact',
-          time_slot: birthData.timeSlot || 'unknown',
-          question: birthData.question,
-          category: birthData.category,
+          mode: data.mode || 'exact',
+          time_slot: data.timeSlot || 'unknown',
+          question: data.question,
+          category: data.category,
         }),
       })
 
-
       if (response.ok) {
-        const data = await response.json()
+        const chartRes = await response.json()
 
         const newProfile: UserProfile = {
           id: newProfileId,
-          name: birthData.fullName,
-          relationship: birthData.relationship || 'Self',
+          name: data.fullName,
+          relationship: data.relationship || 'Self',
           birthData: {
-            ...birthData,
-            placeName: _placeName,
+            ...data,
+            placeName,
             latitude: lat,
             longitude: lon,
           },
-          chartData: data,
-          computed: data.computed,
+          chartData: chartRes,
+          computed: chartRes.computed,
           createdAt: new Date().toISOString(),
         }
 
         const updatedProfiles = saveProfile(newProfile)
         setProfiles(updatedProfiles)
         setActiveId(newProfileId)
-        setChartData(data)
+        setChartData(chartRes)
         setStep('ready')
       }
     } catch (err) {
       console.error('Failed to calculate horoscope chart:', err)
       // Fallback offline profile creation
       const mockChart = {
-        name: birthData.fullName,
+        name: data.fullName,
         ascendant_sign: 'Scorpio',
         moon_sign: 'Aries',
         nakshatra: 'Ashwini',
         pada: 2,
         yogas: [{ name: 'Budhaditya Yoga', meaning: 'Sun-Mercury conjunction in 10th house' }],
-        doshas: { manglik: { is_present: true, description: 'Mars in 4th house' } },
         planets: {},
-        houses: {},
+        mode: data.mode || 'exact',
       }
 
       const fallbackProfile: UserProfile = {
         id: newProfileId,
-        name: birthData.fullName,
-        relationship: birthData.relationship || 'Self',
+        name: data.fullName,
+        relationship: data.relationship || 'Self',
         birthData: {
-          ...birthData,
-          placeName: _placeName,
+          ...data,
+          placeName,
           latitude: lat,
           longitude: lon,
         },
@@ -272,19 +267,8 @@ export default function ChatPage() {
             </AssistantMessage>
           )}
 
-          {/* Birth Details Form */}
+          {/* Birth Details & Location Form (Single Page) */}
           {step === 'welcome' && <BirthDetailsForm onSubmit={handleBirthSubmit} />}
-
-          {/* Birthplace Selection */}
-          {(step === 'birthplace' || step === 'computing') && (
-            <>
-              <AssistantMessage icon="location_on">
-                Great{birthData ? `, ${birthData.fullName}` : ''}! Now I need the birthplace location.
-                Please search the city or drop a pin on the map.
-              </AssistantMessage>
-              {step === 'birthplace' && <BirthplaceMap onConfirm={handleBirthplaceConfirm} />}
-            </>
-          )}
 
           {/* Computing State */}
           {step === 'computing' && (
@@ -296,6 +280,7 @@ export default function ChatPage() {
               ]}
             />
           )}
+
         </div>
       </main>
     </div>
