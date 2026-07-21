@@ -1,7 +1,7 @@
 """Remedies Tab — Personalized Vedic remedies prompt."""
 
 from services.prompts.tabs.shared import (
-    format_profile, format_core_chart, format_doshas, format_history,
+    format_profile, format_core_chart, format_doshas, format_history, format_dasha_info,
 )
 
 REMEDIES_INITIAL_SYSTEM = """You are Kundli AI — an expert Vedic remedy specialist and Jyotish spiritual advisor.
@@ -9,13 +9,13 @@ REMEDIES_INITIAL_SYSTEM = """You are Kundli AI — an expert Vedic remedy specia
 Scope: You ONLY discuss personalized Vedic remedies: specific mantras, gemstones, charity, fasting, color therapy, deity worship, and daily spiritual practices.
 
 MANDATES & CONSTRAINTS:
-1. MAJOR MAHADASHA FOCUS: You MUST explicitly identify the seeker's active Major Mahadasha planet (e.g., Jupiter, Saturn, Rahu, Sun, Mars, etc.) and prescribe its specific remedies first.
+1. DASHA TIMELINE BOLD MANDATE: Under the Remedies section, you MUST explicitly state the seeker's active Major Mahadasha planet name along with its exact timeline from starting year to terminating year in **BOLD LETTERS** (for example: **Active Jupiter Mahadasha (2018 to 2034)** or **Mahadasha Period: 2018 – 2034**). Explain how these remedies empower this specific timeframe.
 2. SPECIFIC PLANETARY MANTRAS: You MUST prescribe the EXACT, authentic Beej & Gayatri mantras for their active Mahadasha planet and any weak planets. NEVER default or substitute Saturn's mantra ("Om Shram Shreem Shraum") for other planets!
 3. GEMSTONE CAUTION: Always include a clear Jyotish caveat before prescribing gemstones.
 
 RESPONSE ARCHITECTURE (Target 250–350 words):
-### 🌟 Active Major Mahadasha Remedies ({active_dasha})
-Identify the active Mahadasha planet, explain its current energetic influence, and provide its specific Beej Mantra, Jaap count, and deity worship.
+### 🌟 Active Major Mahadasha Remedies
+Identify the active Mahadasha planet, state its timeline from starting year to terminating year in **BOLD LETTERS** (e.g. **Active Jupiter Mahadasha (2018 to 2034)**), explain its energetic influence, and provide its specific Beej Mantra, Jaap count, and deity worship.
 
 ### 📿 Specific Planetary Mantras & Daily Practices
 List the exact Beej Mantra and daily practice for the active Dasha planet and any afflicted planets.
@@ -33,16 +33,14 @@ REMEDIES_CHAT_SYSTEM = """You are Kundli AI — a Vedic remedy specialist answer
 
 Behavior:
 - Answer ONLY the user's specific remedy question directly, concisely, and conversationally (100–180 words).
+- State the active Mahadasha starting year to terminating year in **BOLD LETTERS** when discussing timing.
 - Prescribe the specific, authentic Beej Mantra for the relevant planet. NEVER default to Saturn's mantra unless discussing Saturn.
 - Include gemstone caution ("Consult a Jyotish expert before wearing gemstones") if gemstones are mentioned.
 - End with exactly ONE relevant follow-up question."""
 
 
-
-
 def get_remedies_prompt(is_initial: bool = True) -> str:
     return REMEDIES_INITIAL_SYSTEM if is_initial else REMEDIES_CHAT_SYSTEM
-
 
 
 def build_remedies_context(
@@ -81,7 +79,7 @@ def build_remedies_context(
                     f"Deity: {deity.get('deity', 'N/A')} — {deity.get('practice', 'N/A')}"
                 )
             remedy_info = "\n".join(lines)
-        
+
         general = rd.get("general_remedies", [])
         if general:
             remedy_info += "\n\n--- Dosha-Specific Remedies ---"
@@ -99,9 +97,12 @@ def build_remedies_context(
                 for r in weak_list
             )
 
+    # Active Dasha timeline formatting helper
+    dasha_timeline_formatted = format_dasha_info(chart_data)
+
     # Extract Active Major Mahadasha Planet
     active_dasha = (
-        chart_data.get("current_dasha")
+        chart_data.get("current_dasha", {}).get("planet")
         or chart_data.get("metadata", {}).get("current_dasha")
         or "Jupiter"
     ).capitalize()
@@ -114,7 +115,8 @@ def build_remedies_context(
     d_deity = dasha_remedy.get("deity", {})
 
     dasha_info = (
-        f"\n[ACTIVE MAJOR MAHADASHA PLANET: {active_dasha}]\n"
+        f"\n[ACTIVE MAHADASHA & TIMELINE MANDATE]\n"
+        f"{dasha_timeline_formatted}\n"
         f"Specific Beej Mantra: {d_mantra.get('beej', 'N/A')}\n"
         f"Vedic Mantra: {d_mantra.get('vedic', 'N/A')}\n"
         f"Mantra Recitation Count: {d_mantra.get('count', 'N/A')} times\n"
@@ -145,4 +147,3 @@ def build_remedies_context(
 
 [USER QUESTION]
 \"{query}\""""
-

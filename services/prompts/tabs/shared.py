@@ -111,3 +111,25 @@ def format_history(history: list, last_n: int = 4) -> str:
     for h in history[-last_n:]:
         turns.append(f"{h['role'].capitalize()}: {h['content'][:200]}")
     return "\n".join(turns)
+
+
+def format_dasha_info(chart_data: dict) -> str:
+    """Format the active Vimshottari Mahadasha timeline with start & end dates/years."""
+    dasha = chart_data.get("current_dasha") or {}
+    if not isinstance(dasha, dict):
+        dasha = {}
+    
+    planet = (dasha.get("planet") or chart_data.get("metadata", {}).get("current_dasha") or "Jupiter").capitalize()
+    start = str(dasha.get("start", "2018-05-12"))
+    end = str(dasha.get("end", "2034-05-12"))
+
+    start_year = start.split("-")[0] if "-" in start else start
+    end_year = end.split("-")[0] if "-" in end else end
+
+    return (
+        f"Active Mahadasha Planet: {planet}\n"
+        f"Timeline Dates: {start} to {end}\n"
+        f"Timeline Years: {start_year} to {end_year}\n"
+        f"REQUIRED BOLD TIMELINE FORMAT: **Active {planet} Mahadasha ({start_year} to {end_year})**"
+    )
+
