@@ -110,7 +110,10 @@ export default function TabPanel({
               onUpdateCacheByKey(currentKey, { initialReading: data.response, messages: [] })
             }
           }
+        } else {
+          throw new Error(`Server returned status ${res.status}`)
         }
+
       } catch (err) {
         console.error(`Failed to fetch reading for tab ${tab}:`, err)
         if (!cancelled) {
