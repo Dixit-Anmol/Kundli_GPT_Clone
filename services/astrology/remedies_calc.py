@@ -85,8 +85,7 @@ def generate_remedy_data(chart_data: dict, planet_rankings: list = None) -> dict
             "general_remedies": [...]
         }
     """
-    planets = chart_data.get("raw_positions") or chart_data.get("planets") or {}
-
+    planets = chart_data.get("planets", {})
     doshas = chart_data.get("doshas", {})
     
     # Identify weak planets from rankings (if provided) or from dignity

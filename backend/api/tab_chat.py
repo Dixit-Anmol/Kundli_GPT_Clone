@@ -102,10 +102,9 @@ def handle_tab_chat(req: TabChatRequest):
                 history=history,
                 computed=computed,
                 passages=passages,
-                relationship_type=req.relationship_type or "spouse",
-                sub_tab=req.sub_tab or "overview",
+                relationship_type=req.relationship_type,
+                sub_tab=req.sub_tab,
             )
-
 
 
 
@@ -129,8 +128,4 @@ def handle_tab_chat(req: TabChatRequest):
         }
 
     except Exception as e:
-        import traceback
-        print(f"❌ Error in tab_chat (tab={req.tab}): {e}")
-        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
-

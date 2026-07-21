@@ -26,8 +26,41 @@ def format_profile(profile: dict) -> str:
     return f"Name: {name}\nDate of Birth: {dob}\nTime of Birth: {tob}"
 
 
+def format_dasha_info(chart_data: dict) -> str:
+    """Format active Vimshottari Mahadasha planet, start/end dates, and timeline."""
+    curr = chart_data.get("current_dasha")
+    timeline = chart_data.get("dasha_timeline", [])
+
+    if not curr and timeline:
+        import datetime
+        from services.astrology.dasha import get_current_dasha
+        try:
+            curr = get_current_dasha(timeline, datetime.date.today())
+        except Exception:
+            curr = timeline[0] if timeline else None
+
+    if curr:
+        planet = curr.get("planet", "Unknown").capitalize()
+        start = curr.get("start", "N/A")
+        end = curr.get("end", "N/A")
+        duration = curr.get("duration_years", "N/A")
+
+        dasha_str = f"ACTIVE MAHADASHA: {planet} Mahadasha (Start: {start} | End: {end} | Duration: {duration} years)"
+
+        # Add next dasha preview if available
+        next_dasha = ""
+        for i, p in enumerate(timeline):
+            if p.get("start") == curr.get("start") and p.get("planet") == curr.get("planet") and i + 1 < len(timeline):
+                nxt = timeline[i + 1]
+                next_dasha = f"\nNEXT MAHADASHA PREVIEW: {nxt.get('planet', '').capitalize()} Mahadasha (Start: {nxt.get('start')} | End: {nxt.get('end')})"
+                break
+        return dasha_str + next_dasha
+
+    return "ACTIVE MAHADASHA: Calculation pending."
+
+
 def format_core_chart(chart_data: dict) -> str:
-    """Format the core ascendant/moon/nakshatra context block."""
+    """Format the core ascendant/moon/nakshatra and active Dasha timeline context block."""
     meta = chart_data.get("metadata") if isinstance(chart_data.get("metadata"), dict) and chart_data.get("metadata") else chart_data
     asc = meta.get("ascendant_sign") or chart_data.get("ascendant_sign") or "Aries"
     moon = meta.get("moon_sign") or chart_data.get("moon_sign") or "Cancer"
@@ -35,11 +68,15 @@ def format_core_chart(chart_data: dict) -> str:
     pada = meta.get("pada") or chart_data.get("pada") or 1
     asc_deg = meta.get("ascendant_longitude", 0.0)
 
+    dasha_block = format_dasha_info(chart_data)
+
     return (
         f"Ascendant (Lagna): {asc} at {asc_deg:.2f}°\n"
         f"Moon Sign (Rashi): {moon}\n"
-        f"Nakshatra: {nak} (Pada {pada})"
+        f"Nakshatra: {nak} (Pada {pada})\n"
+        f"{dasha_block}"
     )
+
 
 
 
