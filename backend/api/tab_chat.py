@@ -102,9 +102,10 @@ def handle_tab_chat(req: TabChatRequest):
                 history=history,
                 computed=computed,
                 passages=passages,
-                relationship_type=req.relationship_type,
-                sub_tab=req.sub_tab,
+                relationship_type=req.relationship_type or "spouse",
+                sub_tab=req.sub_tab or "overview",
             )
+
 
 
 
