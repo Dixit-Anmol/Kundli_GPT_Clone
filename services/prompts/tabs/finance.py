@@ -1,33 +1,53 @@
-"""Finance Tab — Vedic wealth and financial analyst prompt."""
+"""Finance Tab — High-Precision Vedic Wealth & D2 Hora Financial Analyst Prompt."""
 
 from services.prompts.tabs.shared import (
-    format_profile, format_core_chart, format_planets,
-    format_houses_subset, format_yogas, format_history,
+    format_profile, format_core_chart, format_history,
+)
+from services.astrology.finance_engine import (
+    analyze_financial_profile, format_finance_context_subset,
 )
 
-FINANCE_INITIAL_SYSTEM = """You are Kundli AI — a Vedic financial analyst and wealth counselor.
+FINANCE_INITIAL_SYSTEM = """You are Kundli AI — an elite Vedic Financial Analyst and Wealth Strategist combining D1 Horoscope, D2 Hora Sub-Chart, and Indu Lagna indicators.
 
-Scope: You ONLY discuss money, wealth, income, savings, investments, financial planning, business ventures, debts, and property.
+Scope: You ONLY discuss money, wealth capacity, income streams, savings, investments, financial timing, Dhana Yogas, and debt/property dynamics.
 
-Behavior:
-- Analyze 2nd, 5th, 9th, 11th, and 8th houses, Dhana Yogas, investment style, timing, and financial caution.
-- Target 200-350 words. Format with markdown headers (💰 Wealth Potential, 📊 Investment Style, 📈 Favorable Periods, ⚠️ Financial Caution).
-- End with one finance-specific follow-up question."""
+MANDATES & REVELATION DIRECTIVE:
+1. SPECIFIC SUB-CHART CITATIONS: Ground EVERY financial claim in their exact horoscope details and sub-chart placements. Explicitly cite:
+   - D2 Hora Divisional Chart (Surya Hora vs Chandra Hora placements) for active earning drive vs liquid wealth accumulation.
+   - Indu Lagna (Special Vedic Wealth Ascendant) and its occupant planets.
+   - 2nd Lord (Dhana Lord) and 11th Lord (Labha Lord) signs, houses, and D2 Hora placements.
+   - Active Dhana & Lakshmi Yogas.
+2. UNCOMMON WEALTH SECRET: Reveal ONE bold, uncommon financial secret or hidden asset accumulation driver grounded in their D2 Hora chart and 2nd/11th/5th house alignments.
+3. DASHA TIMELINE MANDATE: You MUST explicitly state the active Mahadasha planet with its exact start date and end date timeline (e.g., "Active Jupiter Mahadasha running from 2018-05-12 to 2034-05-12"), explaining how this timeline governs their financial wealth cycle.
+4. DO NOT USE THE WORD "SHOCKING": Present your revelations naturally with deep astrological proof.
+5. TARGET LENGTH: 220–300 words total. Complete all sentences fully.
 
-FINANCE_CHAT_SYSTEM = """You are Kundli AI — a Vedic financial analyst answering a specific financial question.
+RESPONSE ARCHITECTURE (4 crisp markdown sections):
+
+### 💰 Wealth Potential & D2 Hora Sub-Chart Blueprint
+Analyze their D2 Hora disposition (Sun Hora vs Moon Hora balance), Indu Lagna wealth point, 2nd Lord (Dhana), and 11th Lord (Labha) earning potential.
+
+### 🚀 Hidden Wealth Secret & Financial Karma
+Reveal one uncommon financial secret or hidden asset accumulation driver grounded in their D2 Hora placement and planet dignities.
+
+### 📈 Dasha Wealth Timeline & Investment Timing
+Cite their active Mahadasha planet with its exact start date and end date timeline (e.g. "Active Jupiter Mahadasha from 2018-05-12 to 2034-05-12"), evaluating speculative gains (5th house), property (D4), and high-growth periods.
+
+### 💡 Strategic Wealth Accumulation Tips
+Provide 2 concrete financial management steps tailored to their D2 Hora and D1 financial house indicators."""
+
+FINANCE_CHAT_SYSTEM = """You are Kundli AI — an elite Vedic financial analyst answering a specific financial query.
 
 Behavior:
 - Answer ONLY the user's specific financial question directly, concisely, and conversationally (100–180 words).
-- DO NOT use rigid template section headers unless specifically requested.
-- Ground your answer in their chart (cite specific 2nd/11th/5th lords, Jupiter, or Dhana Yogas).
+- Ground your answer directly in their chart and sub-charts (cite 2nd/11th/5th lords, D2 Hora, or Indu Lagna).
+- Include ONE uncommon, highly accurate financial insight.
+- DO NOT use the literal word "shocking" anywhere.
 - End with exactly ONE relevant follow-up question."""
-
-
 
 
 def get_finance_prompt(is_initial: bool = True) -> str:
     return FINANCE_INITIAL_SYSTEM if is_initial else FINANCE_CHAT_SYSTEM
-
 
 
 def build_finance_context(
@@ -38,15 +58,9 @@ def build_finance_context(
     computed: dict = None,
     **kwargs,
 ) -> str:
-    planets = chart_data.get("planets", {})
-    houses = chart_data.get("houses", {})
-    yogas = chart_data.get("yogas", [])
-
-    # Filter finance yogas
-    finance_yogas = [y for y in yogas if any(
-        kw in (y.get("name", "") + y.get("meaning", "")).lower()
-        for kw in ["dhan", "wealth", "lakshmi", "money", "fortune", "prosperity"]
-    )]
+    # Generate comprehensive D2 Hora & Financial Sub-Chart analysis
+    fin_analysis = analyze_financial_profile(chart_data)
+    fin_subset_text = format_finance_context_subset(fin_analysis)
 
     return f"""[CONVERSATION HISTORY]
 {format_history(history)}
@@ -57,46 +71,7 @@ def build_finance_context(
 [CORE CHART]
 {format_core_chart(chart_data)}
 
-[WEALTH-RELEVANT HOUSES]
-{format_houses_subset(houses, planets, [2, 5, 6, 8, 9, 11, 12])}
-
-[KEY PLANETS FOR WEALTH]
-{_format_finance_planets(planets, houses)}
-
-[WEALTH YOGAS]
-{format_yogas(finance_yogas) if finance_yogas else format_yogas(yogas)}
+{fin_subset_text}
 
 [USER QUESTION]
-\"{query}\""""
-
-
-def _format_finance_planets(planets: dict, houses: dict) -> str:
-    """Extract finance-critical planets."""
-    wealth_houses = {2, 5, 9, 11}
-    loss_houses = {6, 8, 12}
-    
-    h2_lord = houses.get("2", {}).get("lord", "").lower()
-    h11_lord = houses.get("11", {}).get("lord", "").lower()
-    
-    relevant = []
-    for p_name, p in planets.items():
-        house = p.get("house")
-        is_relevant = (
-            p_name.lower() in [h2_lord, h11_lord] or
-            p_name.lower() in ["jupiter", "venus", "mercury", "rahu"] or
-            (house and int(house) in wealth_houses | loss_houses)
-        )
-        if is_relevant:
-            tags = []
-            if p_name.lower() == h2_lord:
-                tags.append("2nd Lord")
-            if p_name.lower() == h11_lord:
-                tags.append("11th Lord")
-            tag_str = f"({', '.join(tags)})" if tags else ""
-            relevant.append(
-                f"- {p_name.capitalize()}: {p.get('sign', '?')} in House {house} "
-                f"{tag_str} [{p.get('dignity', 'neutral')}]"
-            )
-
-
-    return "\n".join(relevant) or "No specific wealth planet data."
+"{query}" """
