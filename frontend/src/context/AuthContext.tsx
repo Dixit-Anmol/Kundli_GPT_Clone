@@ -53,19 +53,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currUser) => {
-      setFirebaseUser(currUser)
-      if (currUser) {
-        const mapped = await mapUser(currUser)
-        setAuthUser(mapped)
-      } else {
-        setAuthUser(null)
-        setToken(null)
-      }
-      setLoading(false)
-    })
+    let unsubscribed = false
+    let unsubscribe = () => {}
 
-    return () => unsubscribe()
+    // Safety timeout: Never keep the app on a loading screen for more than 2 seconds
+    const timeoutId = setTimeout(() => {
+      if (!unsubscribed) {
+        setLoading(false)
+      }
+    }, 2000)
+
+    try {
+      if (auth && typeof auth === 'object') {
+        unsubscribe = onAuthStateChanged(
+          auth,
+          async (currUser) => {
+            clearTimeout(timeoutId)
+            setFirebaseUser(currUser)
+            if (currUser) {
+              try {
+                const mapped = await mapUser(currUser)
+                setAuthUser(mapped)
+              } catch (e) {
+                console.warn('User mapping warning:', e)
+              }
+            } else {
+              setAuthUser(null)
+              setToken(null)
+            }
+            setLoading(false)
+          },
+          (err) => {
+            console.error('Auth state error:', err)
+            clearTimeout(timeoutId)
+            setLoading(false)
+          }
+        )
+      } else {
+        clearTimeout(timeoutId)
+        setLoading(false)
+      }
+    } catch (e) {
+      console.error('onAuthStateChanged init error:', e)
+      clearTimeout(timeoutId)
+      setLoading(false)
+    }
+
+    return () => {
+      unsubscribed = true
+      clearTimeout(timeoutId)
+      unsubscribe()
+    }
   }, [])
 
   const loginWithGoogle = async (): Promise<AuthUser> => {
