@@ -216,10 +216,19 @@ def build_chart(req: ChartRequest):
         cache_key = req.user_id or req.session_id
         chart_cache.store(cache_key, bundle)
         sess["chart_bundle"] = bundle.to_dict()
+        sess["birth_details"] = {
+            "name": req.name,
+            "date_of_birth": req.date_str,
+            "time_of_birth": req.time_str,
+            "latitude": req.latitude,
+            "longitude": req.longitude,
+            "timezone_offset": offset
+        }
 
         # ---------------------------------------------------------------
             
         meta = chart_data["metadata"]
+        meta["date_of_birth"] = req.date_str
         
         # Compute domain-specific dashboard analyses
         prakriti = estimate_prakriti(chart_data)

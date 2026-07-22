@@ -33,10 +33,16 @@ const TAB_SUGGESTIONS: Record<string, string[]> = {
     '🪐 Explain my Ascendant & Moon sign dynamic',
   ],
   career: [
-    '🚀 When will I get my big career promotion or breakthrough?',
-    '💼 Should I pursue a Business or a Job according to my 10th house?',
-    '🏛️ Do I have strong Raj Yogas for Government or High-Executive roles?',
-    '🌍 Will I settle abroad or gain wealth from foreign clients?',
+    '🚀 When will I get my big career promotion or major job breakthrough?',
+    '💼 Should I choose a Corporate Career or start my own Business venture?',
+    '🎓 Which of the 64 Classical Kalas is my natural soul talent & study strength?',
+    '🌍 Will I get an international job posting or work opportunities abroad?',
+  ],
+  dasha_timeline: [
+    '📅 When does my next major Mahadasha start and what transformation will it bring?',
+    '🔮 How will my current Antardasha planet affect my career and wealth window?',
+    '⚡ What are the key karmic lessons and opportunities during my active Dasha?',
+    '🚀 Which exact year will bring my biggest life breakthrough according to my Dasha timeline?',
   ],
   kala_vidya: [
     '🎓 Which of the 64 Classical Kalas is my natural soul talent?',

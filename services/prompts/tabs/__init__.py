@@ -11,19 +11,22 @@ from services.prompts.tabs.remedies import get_remedies_prompt, build_remedies_c
 from services.prompts.tabs.finance import get_finance_prompt, build_finance_context
 from services.prompts.tabs.personality import get_personality_prompt, build_personality_context
 from services.prompts.tabs.spiritual import get_spiritual_prompt, build_spiritual_context
+from services.prompts.tabs.dasha import get_dasha_prompt, build_dasha_context
 
 TAB_REGISTRY = {
-    "overview":      {"system": get_overview_prompt,    "context": build_overview_context},
-    "career":        {"system": get_career_prompt,      "context": build_career_context},
-    "marriage":      {"system": get_marriage_prompt,     "context": build_marriage_context},
-    "relationships": {"system": get_marriage_prompt,     "context": build_marriage_context},
-    "relationship":  {"system": get_marriage_prompt,     "context": build_marriage_context},
-    "health":        {"system": get_health_prompt,       "context": build_health_context},
-    "food":          {"system": get_food_prompt,         "context": build_food_context},
-    "remedies":      {"system": get_remedies_prompt,     "context": build_remedies_context},
-    "finance":       {"system": get_finance_prompt,      "context": build_finance_context},
-    "personality":   {"system": get_personality_prompt,  "context": build_personality_context},
-    "spiritual":     {"system": get_spiritual_prompt,    "context": build_spiritual_context},
+    "overview":       {"system": get_overview_prompt,    "context": build_overview_context},
+    "career":         {"system": get_career_prompt,      "context": build_career_context},
+    "dasha_timeline": {"system": get_dasha_prompt,       "context": build_dasha_context},
+    "dasha":          {"system": get_dasha_prompt,       "context": build_dasha_context},
+    "marriage":       {"system": get_marriage_prompt,     "context": build_marriage_context},
+    "relationships":  {"system": get_marriage_prompt,     "context": build_marriage_context},
+    "relationship":   {"system": get_marriage_prompt,     "context": build_marriage_context},
+    "health":         {"system": get_health_prompt,       "context": build_health_context},
+    "food":           {"system": get_food_prompt,         "context": build_food_context},
+    "remedies":       {"system": get_remedies_prompt,     "context": build_remedies_context},
+    "finance":        {"system": get_finance_prompt,      "context": build_finance_context},
+    "personality":    {"system": get_personality_prompt,  "context": build_personality_context},
+    "spiritual":      {"system": get_spiritual_prompt,    "context": build_spiritual_context},
 }
 
 

@@ -6,6 +6,7 @@
 export interface FeatureFlags {
   enableOverviewTab: boolean
   enableCareerTab: boolean
+  enableDashaTimelineTab: boolean
   enableMarriageTab: boolean
   enableMatchingTab: boolean
   enableHealthTab: boolean
@@ -19,6 +20,7 @@ export interface FeatureFlags {
 export const FEATURE_FLAGS: FeatureFlags = {
   enableOverviewTab: true,
   enableCareerTab: true,
+  enableDashaTimelineTab: true, // ✅ Enabled Vimshottari Dasha Timeline tab
   enableMarriageTab: true,
   enableMatchingTab: true,    // ✅ Enabled Kundli Matching (Gun Milan) tab
   enableHealthTab: true,
@@ -37,6 +39,8 @@ export function isTabEnabled(tabId: string): boolean {
       return FEATURE_FLAGS.enableOverviewTab
     case 'career':
       return FEATURE_FLAGS.enableCareerTab
+    case 'dasha_timeline':
+      return FEATURE_FLAGS.enableDashaTimelineTab
     case 'marriage':
       return FEATURE_FLAGS.enableMarriageTab
     case 'matching':

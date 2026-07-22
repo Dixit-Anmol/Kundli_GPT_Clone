@@ -2,7 +2,7 @@
 
 from services.prompts.tabs.shared import (
     format_profile, format_core_chart, format_planets,
-    format_all_houses, format_yogas, format_doshas, format_history,
+    format_all_houses, format_houses_subset, format_yogas, format_doshas, format_history,
 )
 
 OVERVIEW_INITIAL_SYSTEM = """You are AstroSutra AI — a seasoned Vedic astrologer providing a concise, structured overall birth chart overview.

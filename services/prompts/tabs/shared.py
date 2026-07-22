@@ -110,22 +110,61 @@ def format_history(history: list, last_n: int = 2) -> str:
 
 
 def format_dasha_info(chart_data: dict) -> str:
-    """Format the active Vimshottari Mahadasha timeline with start & end dates/years."""
-    dasha = chart_data.get("current_dasha") or {}
-    if not isinstance(dasha, dict):
-        dasha = {}
-    
-    planet = (dasha.get("planet") or chart_data.get("metadata", {}).get("current_dasha") or "Jupiter").capitalize()
-    start = str(dasha.get("start", "2018-05-12"))
-    end = str(dasha.get("end", "2034-05-12"))
+    """Format active Vimshottari Mahadasha & Antardasha timeline computed dynamically from Moon's longitude and birth date."""
+    try:
+        from services.astrology.dasha import calculate_full_dasha_package
+        import datetime
 
-    start_year = start.split("-")[0] if "-" in start else start
-    end_year = end.split("-")[0] if "-" in end else end
+        planets = chart_data.get("planets", {})
+        moon_data = planets.get("moon", {})
+        moon_long = moon_data.get("longitude", 120.0)
 
-    return (
-        f"Active Mahadasha Planet: {planet}\n"
-        f"Timeline Dates: {start} to {end}\n"
-        f"Timeline Years: {start_year} to {end_year}\n"
-        f"REQUIRED BOLD TIMELINE FORMAT: **Active {planet} Mahadasha ({start_year} to {end_year})**"
-    )
+        meta = chart_data.get("metadata", {}) if isinstance(chart_data.get("metadata"), dict) else {}
+        raw_dob = (
+            meta.get("date_of_birth") or
+            meta.get("birth_date") or
+            meta.get("date_str") or
+            chart_data.get("date_of_birth") or
+            chart_data.get("birth_date") or
+            chart_data.get("date_str") or
+            "1998-05-15"
+        )
+
+        birth_dt = None
+        if raw_dob:
+            try:
+                from backend.utils.date_parser import parse_date_str
+                birth_dt = parse_date_str(str(raw_dob))
+            except Exception:
+                try:
+                    birth_dt = datetime.date.fromisoformat(str(raw_dob)[:10])
+                except Exception:
+                    pass
+
+        if not birth_dt:
+            birth_dt = datetime.date(1998, 5, 15)
+
+        pkg = calculate_full_dasha_package(moon_long, birth_dt)
+        curr_maha = pkg["current_mahadasha"]
+        curr_antar = pkg["current_antardasha"]
+
+        planet = curr_maha["planet_name"]
+        start_date = curr_maha["start_date"]
+        end_date = curr_maha["end_date"]
+        start_year = start_date[:4]
+        end_year = end_date[:4]
+
+        antar_name = curr_antar["planet_name"] if curr_antar else "Moon"
+        antar_start = curr_antar["start_date"] if curr_antar else start_date
+        antar_end = curr_antar["end_date"] if curr_antar else end_date
+
+        return (
+            f"Active Mahadasha Planet: {planet}\n"
+            f"Active Antardasha Planet: {antar_name}\n"
+            f"Mahadasha Dates: {start_date} to {end_date} ({start_year} to {end_year})\n"
+            f"Antardasha Dates: {antar_start} to {antar_end}\n"
+            f"REQUIRED BOLD TIMELINE FORMAT: **Active {planet} Mahadasha ({start_year} to {end_year}) under {antar_name} Antardasha**"
+        )
+    except Exception:
+        return "Active Mahadasha: Sun Mahadasha"
 

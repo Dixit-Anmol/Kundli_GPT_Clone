@@ -5,6 +5,7 @@ import { getCurrentTier } from '../../utils/subscriptionManager'
 export type TabType =
   | 'overview'
   | 'career'
+  | 'dasha_timeline'
   | 'marriage'
   | 'matching'
   | 'health'
@@ -24,6 +25,7 @@ export interface TabConfig {
 export const ALL_TABS: TabConfig[] = [
   { id: 'overview', label: 'Overview', icon: 'grid_view', description: 'Complete Horoscope Summary' },
   { id: 'career', label: 'Career', icon: 'work', description: 'Profession, Business & Growth' },
+  { id: 'dasha_timeline', label: 'Dasha Timeline', icon: 'calendar_month', description: '120-Year Vimshottari Timeline & Antardashas' },
   { id: 'marriage', label: 'Relationships', icon: 'favorite', description: 'Compatibility & Relationships' },
   { id: 'matching', label: 'Kundli Matching', icon: 'diversity_2', description: '36 Gunas, Manglik & Compatibility' },
   { id: 'health', label: 'Health', icon: 'medical_services', description: 'Body Systems & Wellness' },

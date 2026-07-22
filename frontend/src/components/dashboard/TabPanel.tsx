@@ -15,6 +15,7 @@ import PersonalityDashboard from './PersonalityDashboard'
 import RemediesDashboard from './RemediesDashboard'
 import LockedTabOverlay from './LockedTabOverlay'
 import KundliMatchingView from '../matching/KundliMatchingView'
+import DashaTimelineView from '../dasha/DashaTimelineView'
 import type { UserProfile } from '../../types/profile'
 import {
   isTabAllowedForTier,
@@ -347,6 +348,14 @@ export default function TabPanel({
 
   return (
     <div className="space-y-6 animate-fade-in-up">
+      {/* Dasha Timeline Dedicated Tab View */}
+      {tab === 'dasha_timeline' && (
+        <DashaTimelineView
+          sessionId={sessionId}
+          userId={userId}
+        />
+      )}
+
       {/* Kundli Matching (Gun Milan) Dedicated Tab View */}
       {tab === 'matching' && (
         <KundliMatchingView
