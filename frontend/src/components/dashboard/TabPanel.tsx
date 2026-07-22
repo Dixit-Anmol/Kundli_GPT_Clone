@@ -1,27 +1,33 @@
 import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import type { TabType } from './TabNavigation'
+import { ALL_TABS } from './TabNavigation'
 import SummaryCards from './SummaryCards'
 import TabChat, { type Message } from './TabChat'
 import AnimatedKundliChart from './AnimatedKundliChart'
 import PlanetaryTable from './PlanetaryTable'
-import RelationshipTargetSelector, { type RelationshipTarget } from './RelationshipTargetSelector'
+import RelationshipTargetSelector, { type RelationshipTarget, RELATIONSHIP_TARGETS } from './RelationshipTargetSelector'
 import RelationshipScoreCard from './RelationshipScoreCard'
 import CareerSubTabNavigation, { type CareerSubTab } from './CareerSubTabNavigation'
 import KalaVidyaDashboard from './KalaVidyaDashboard'
 import PrashnaDashboardView from './PrashnaDashboardView'
 import PersonalityDashboard from './PersonalityDashboard'
 import RemediesDashboard from './RemediesDashboard'
-
-
+import LockedTabOverlay from './LockedTabOverlay'
+import KundliMatchingView from '../matching/KundliMatchingView'
+import type { UserProfile } from '../../types/profile'
+import {
+  isTabAllowedForTier,
+  getRequiredTierForTab,
+  isRelationshipTargetAllowed,
+  isCareerSubTabAllowed,
+} from '../../config/subscriptionConfig'
+import { getCurrentTier } from '../../utils/subscriptionManager'
 
 export interface TabCacheItem {
   initialReading: string
   messages: Message[]
 }
-
-
-
 
 interface TabPanelProps {
   tab: TabType
@@ -32,6 +38,8 @@ interface TabPanelProps {
   apiBaseUrl: string
   tabCacheMap?: Record<string, TabCacheItem>
   onUpdateCacheByKey?: (key: string, data: TabCacheItem) => void
+  onOpenPricing?: () => void
+  profiles?: UserProfile[]
 }
 
 export default function TabPanel({
@@ -43,9 +51,30 @@ export default function TabPanel({
   apiBaseUrl,
   tabCacheMap = {},
   onUpdateCacheByKey,
+  onOpenPricing,
+  profiles = [],
 }: TabPanelProps) {
   const [relationshipTarget, setRelationshipTarget] = useState<RelationshipTarget>('spouse')
   const [careerSubTab, setCareerSubTab] = useState<CareerSubTab>('overview')
+
+  const currentTier = getCurrentTier()
+  const isTabAllowed = isTabAllowedForTier(tab, currentTier)
+  const isTargetAllowed = tab !== 'marriage' || isRelationshipTargetAllowed(relationshipTarget, currentTier)
+  const isSubTabAllowed = tab !== 'career' || isCareerSubTabAllowed(careerSubTab, currentTier)
+
+  const isAllowed = isTabAllowed && isTargetAllowed && isSubTabAllowed
+
+  // Auto-select first allowed relationship target if current choice is locked for user's tier
+  useEffect(() => {
+    if (tab === 'marriage' && !isRelationshipTargetAllowed(relationshipTarget, currentTier)) {
+      const allowedTarget = RELATIONSHIP_TARGETS.find((t) => isRelationshipTargetAllowed(t.id, currentTier))
+      if (allowedTarget) {
+        setRelationshipTarget(allowedTarget.id)
+      }
+    }
+  }, [tab, currentTier])
+
+  const tabConfig = ALL_TABS.find((t) => t.id === tab) || { label: tab }
 
   // Compute unique key for granular per-profile caching (prevents profile data leaks)
   const getCacheKey = () => {
@@ -54,7 +83,6 @@ export default function TabPanel({
     if (tab === 'career') return `${profilePrefix}career_${careerSubTab}`
     return `${profilePrefix}${tab}`
   }
-
 
   const cacheKey = getCacheKey()
   const cachedItem = tabCacheMap[cacheKey]
@@ -66,6 +94,8 @@ export default function TabPanel({
 
   // Sync state if cached item exists or cache key changes
   useEffect(() => {
+    if (!isAllowed || tab === 'matching') return // Don't fetch standard text for matching tab
+
     let cancelled = false
     const currentKey = getCacheKey()
     const existing = tabCacheMap[currentKey]
@@ -83,11 +113,9 @@ export default function TabPanel({
         let queryMsg = `Provide a detailed ${tab} analysis for my horoscope.`
         if (tab === 'marriage') {
           queryMsg = `Provide a detailed ${relationshipTarget} relationship analysis for my horoscope.`
-        } else if (tab === 'career' && (careerSubTab === 'kala_vidya' || (careerSubTab as string) === 'receptivity')) {
-          queryMsg = `Provide a detailed Kala, Vidya (64 classical talents), Student Receptivity (Shishya Grahana), and research pedagogy analysis for my horoscope.`
+        } else if (tab === 'career' && careerSubTab === 'kala_vidya') {
+          queryMsg = 'Provide a detailed 64 Kalas, Vidya & Academic Receptivity analysis for my horoscope.'
         }
-
-
 
         const res = await fetch(`${apiBaseUrl}/api/tab-chat`, {
           method: 'POST',
@@ -103,43 +131,45 @@ export default function TabPanel({
           }),
         })
 
-        if (res.ok) {
-          const data = await res.json()
-          if (!cancelled) {
-            setInitialReading(data.response)
-            setMessages([])
-            if (onUpdateCacheByKey) {
-              onUpdateCacheByKey(currentKey, { initialReading: data.response, messages: [] })
-            }
+        if (!res.ok) throw new Error('Failed to fetch initial reading')
+        const data = await res.json()
+
+        if (!cancelled) {
+          const text = data.response || getFallbackReading(tab, chartData)
+          setInitialReading(text)
+          setMessages([])
+          setLoadingInitial(false)
+          if (onUpdateCacheByKey) {
+            onUpdateCacheByKey(currentKey, { initialReading: text, messages: [] })
           }
         }
       } catch (err) {
-        console.error(`Failed to fetch reading for tab ${tab}:`, err)
+        console.error('Failed to load tab reading:', err)
         if (!cancelled) {
           const fallback = getFallbackReading(tab, chartData)
           setInitialReading(fallback)
           setMessages([])
-          if (onUpdateCacheByKey) {
-            onUpdateCacheByKey(currentKey, { initialReading: fallback, messages: [] })
-          }
+          setLoadingInitial(false)
         }
-      } finally {
-        if (!cancelled) setLoadingInitial(false)
       }
     }
 
     fetchTabReading()
+
     return () => {
       cancelled = true
     }
-  }, [tab, relationshipTarget, careerSubTab, sessionId, userId, apiBaseUrl])
+  }, [tab, relationshipTarget, careerSubTab, isAllowed])
 
-  // Handle user chat message within this tab
   const handleSendMessage = async (text: string) => {
-    if (!text.trim() || loadingChat) return
+    const userMsg: Message = {
+      id: Math.random().toString(),
+      sender: 'user',
+      text,
+    }
 
-    const newMsgs = [...messages, { role: 'user', content: text } as Message]
-    setMessages(newMsgs)
+    const updatedMessages = [...messages, userMsg]
+    setMessages(updatedMessages)
     setLoadingChat(true)
 
     try {
@@ -157,140 +187,210 @@ export default function TabPanel({
         }),
       })
 
+      if (!res.ok) throw new Error('Failed to send message')
+      const data = await res.json()
 
-      if (res.ok) {
-        const data = await res.json()
-        const updatedMsgs = [...newMsgs, { role: 'assistant', content: data.response } as Message]
-        setMessages(updatedMsgs)
-        if (onUpdateCacheByKey) {
-          onUpdateCacheByKey(getCacheKey(), { initialReading, messages: updatedMsgs })
-        }
+      const assistantMsg: Message = {
+        id: Math.random().toString(),
+        sender: 'assistant',
+        text: data.response,
+      }
+
+      const finalMessages = [...updatedMessages, assistantMsg]
+      setMessages(finalMessages)
+
+      if (onUpdateCacheByKey) {
+        onUpdateCacheByKey(cacheKey, { initialReading, messages: finalMessages })
       }
     } catch (err) {
-      console.error(`Failed to send message in tab ${tab}:`, err)
-      const errorMsg = {
-        role: 'assistant',
-        content: '🙏 I encountered a momentary connection glitch. Vedic wisdom reminds us that patience brings clarity. Please try asking again.',
-      } as Message
-      const updatedMsgs = [...newMsgs, errorMsg]
-      setMessages(updatedMsgs)
-      if (onUpdateCacheByKey) {
-        onUpdateCacheByKey(getCacheKey(), { initialReading, messages: updatedMsgs })
+      console.error('Chat error:', err)
+      const errorMsg: Message = {
+        id: Math.random().toString(),
+        sender: 'assistant',
+        text: '🙏 I apologize, but I encountered a network error while analyzing your question. Please try again.',
       }
+      setMessages((prev) => [...prev, errorMsg])
     } finally {
-
       setLoadingChat(false)
     }
   }
 
+  // Render Main Locked Tab Overlay only if user's subscription tier does not allow the entire top-level tab
+  if (!isTabAllowed) {
+    return (
+      <LockedTabOverlay
+        requiredTier={getRequiredTierForTab(tab)}
+        tabLabel={tabConfig.label}
+        onUpgrade={() => {
+          if (onOpenPricing) onOpenPricing()
+        }}
+      />
+    )
+  }
+
+  const getDisplayTitle = () => {
+    if (tab === 'marriage') {
+      const targetObj = RELATIONSHIP_TARGETS.find((t) => t.id === relationshipTarget)
+      return targetObj ? targetObj.label : 'Relationships'
+    }
+    if (tab === 'career' && careerSubTab === 'kala_vidya') {
+      return 'Kala, Vidya & Student Receptivity'
+    }
+    return tab.charAt(0).toUpperCase() + tab.slice(1)
+  }
+
+  const displayTitle = getDisplayTitle()
+
+  const renderMainContent = () => {
+    if (tab === 'matching') return null
+
+    if (!isTargetAllowed || !isSubTabAllowed) {
+      return (
+        <LockedTabOverlay
+          requiredTier="pro"
+          tabLabel={
+            !isSubTabAllowed
+              ? '🎓 Kala, Vidya & Student Receptivity (64 Kalas)'
+              : `${relationshipTarget.charAt(0).toUpperCase() + relationshipTarget.slice(1)} Relationship Engine`
+          }
+          onUpgrade={() => {
+            if (onOpenPricing) onOpenPricing()
+          }}
+        />
+      )
+    }
+
+    return (
+      <>
+        {/* Overview Tab Features */}
+        {tab === 'overview' && (
+          <>
+            {chartData?.mode === 'prashna' ? (
+              <PrashnaDashboardView chartData={chartData} />
+            ) : (
+              <>
+                <SummaryCards tab={tab} chartData={chartData} computed={computed} />
+                <div className="space-y-6">
+                  <AnimatedKundliChart chartData={chartData} />
+                  <PlanetaryTable chartData={chartData} />
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        {/* Marriage Tab Score Card */}
+        {tab === 'marriage' && (
+          <RelationshipScoreCard
+            target={relationshipTarget}
+            chartData={chartData}
+          />
+        )}
+
+        {/* Career Sub-Tab Dashboards */}
+        {tab === 'career' && careerSubTab === 'kala_vidya' && (
+          <KalaVidyaDashboard chartData={chartData} />
+        )}
+
+        {/* Personality Tab Temperaments Dashboard */}
+        {tab === 'personality' && (
+          <PersonalityDashboard chartData={chartData} computed={computed} />
+        )}
+
+        {/* Remedies Tab Dashboard */}
+        {tab === 'remedies' && (
+          <RemediesDashboard chartData={chartData} computed={computed} />
+        )}
+
+        {/* Tab AI Initial Reading Card */}
+        <div className="celestial-card p-6 sm:p-8 rounded-3xl">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-primary-fixed rounded-2xl flex items-center justify-center text-primary font-bold shadow-xs">
+              <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                auto_awesome
+              </span>
+            </div>
+            <div>
+              <h3 className="font-display text-2xl font-bold text-primary">
+                {displayTitle} Horoscope Analysis
+              </h3>
+              <p className="text-xs text-on-surface-variant">Personalized Vedic Insights & Guidance</p>
+            </div>
+          </div>
+
+          {loadingInitial ? (
+            <div className="py-12 text-center space-y-4">
+              <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs text-on-surface-variant font-medium animate-pulse">
+                Consulting Vedic Ephemeris & Reading Planetary Alignments...
+              </p>
+            </div>
+          ) : (
+            <div className="markdown-container text-sm leading-relaxed text-on-background">
+              <ReactMarkdown>{initialReading}</ReactMarkdown>
+            </div>
+          )}
+        </div>
+
+        {/* Tab Dedicated Chat Section */}
+        <TabChat
+          tab={tab}
+          tabName={displayTitle}
+          messages={messages}
+          loading={loadingChat}
+          onSendMessage={handleSendMessage}
+          onOpenPricing={onOpenPricing}
+        />
+      </>
+    )
+  }
+
   return (
     <div className="space-y-6 animate-fade-in-up">
-      {/* Sub-Tab Navigation for Career Module */}
-      {tab === 'career' && (
+      {/* Kundli Matching (Gun Milan) Dedicated Tab View */}
+      {tab === 'matching' && (
+        <KundliMatchingView
+          profiles={profiles}
+          apiBaseUrl={apiBaseUrl}
+          sessionId={sessionId}
+        />
+      )}
+
+      {/* Marriage Tab Relationship Target Selector (Always rendered if Marriage tab is allowed) */}
+      {tab === 'marriage' && isTabAllowed && (
+        <RelationshipTargetSelector
+          selectedTarget={relationshipTarget}
+          onSelectTarget={setRelationshipTarget}
+        />
+      )}
+
+      {/* Career Sub-Tab Navigation */}
+      {tab === 'career' && isTabAllowed && (
         <CareerSubTabNavigation
           activeSubTab={careerSubTab}
           onSubTabChange={setCareerSubTab}
         />
       )}
 
-      {/* Summary Cards */}
-      <SummaryCards tab={tab} chartData={chartData} computed={computed} />
-
-      {/* Interactive Animated Kundli Chart OR Prashna / Partial View (Overview Tab Only) */}
-      {tab === 'overview' && (
-        <>
-          {chartData?.mode === 'prashna' || chartData?.mode === 'partial' ? (
-            <PrashnaDashboardView chartData={chartData} />
-          ) : (
-            <>
-              <AnimatedKundliChart chartData={chartData} />
-              <PlanetaryTable chartData={chartData} />
-            </>
-          )}
-        </>
-      )}
-
-
-      {/* Interactive Multi-Target Relationship Engine (Marriage Tab Only) */}
-      {tab === 'marriage' && (
-        <>
-          <RelationshipTargetSelector
-            selectedTarget={relationshipTarget}
-            onSelectTarget={setRelationshipTarget}
-          />
-          <RelationshipScoreCard
-            target={relationshipTarget}
-            chartData={chartData}
-          />
-        </>
-      )}
-
-      {/* Kala, Vidya & Student Receptivity Interactive Dashboard (Career Sub-Tab Only) */}
-      {tab === 'career' && careerSubTab === 'kala_vidya' && (
-        <KalaVidyaDashboard chartData={chartData} />
-      )}
-
-      {/* The Four Temperaments Interactive Dashboard (Personality Tab Only) */}
-      {tab === 'personality' && (
-        <PersonalityDashboard chartData={chartData} computed={computed} />
-      )}
-
-      {/* Active Major Mahadasha & Specific Planetary Remedies Dashboard (Remedies Tab Only) */}
-      {tab === 'remedies' && (
-        <RemediesDashboard chartData={chartData} computed={computed} />
-      )}
-
-
-
-
-
-      {/* Main Tab Personal AI Reading Card */}
-      <div className="celestial-card p-6 rounded-3xl bg-surface border border-outline-variant/60 shadow-xs">
-        <div className="flex items-center justify-between border-b border-outline-variant/40 pb-4 mb-4">
-          <h2 className="font-display text-2xl font-bold text-primary flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-2xl">auto_awesome</span>
-            {tab === 'marriage'
-              ? `${relationshipTarget.charAt(0).toUpperCase() + relationshipTarget.slice(1)} Relationship AI Analysis`
-              : tab === 'career' && careerSubTab === 'kala_vidya'
-                ? 'Personal AI Astrological Analysis (Kala, Vidya & Receptivity)'
-                : `Detailed ${tab.charAt(0).toUpperCase() + tab.slice(1)} Analysis`}
-          </h2>
-          <span className="text-xs text-on-surface-variant bg-surface-variant px-3 py-1 rounded-full font-medium">
-            Personal AI Reading
-          </span>
-        </div>
-
-        {loadingInitial ? (
-          <div className="py-8 flex flex-col items-center justify-center gap-3">
-            <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs text-on-surface-variant italic">
-              Generating personal AI astrological analysis for your chart...
-            </p>
-          </div>
-        ) : (
-          <div className="font-body text-sm leading-relaxed text-on-surface markdown-container">
-            <ReactMarkdown>{initialReading}</ReactMarkdown>
-          </div>
-        )}
-      </div>
-
-      {/* Scoped Tab Interactive Chat */}
-      <TabChat
-        tab={tab}
-        sessionId={sessionId}
-        userId={userId}
-        messages={messages}
-        onSendMessage={handleSendMessage}
-        loading={loadingChat}
-      />
-
-
+      {/* Standard Tab View Content for Non-Matching Tabs */}
+      {renderMainContent()}
     </div>
   )
 }
 
-function getFallbackReading(tab: TabType, chartData: any): string {
-  const asc = chartData?.metadata?.ascendant_sign || chartData?.ascendant_sign || 'Aries'
-  const moon = chartData?.metadata?.moon_sign || chartData?.moon_sign || 'Cancer'
-  return `### ✨ ${tab.charAt(0).toUpperCase() + tab.slice(1)} Overview\n\nYour **${asc} Ascendant** and **${moon} Moon** create a unique blueprint. Ask any question below to explore deep astrological insights tailored to this domain.`
+function getFallbackReading(tab: string, chartData: any): string {
+  const asc = chartData?.metadata?.ascendant_sign || 'Aries'
+  const moon = chartData?.metadata?.moon_sign || 'Cancer'
+
+  return `### 🌟 Vedic ${tab.toUpperCase()} Reading Overview
+
+**Ascendant Sign:** ${asc}
+**Moon Sign (Rashi):** ${moon}
+
+Based on your planetary alignments, your chart shows significant Vedic activations in key house lords governing your **${tab}** area.
+
+- **Primary Driver:** Your Ascendant lord in ${asc} shapes your core vital approach.
+- **Mind & Emotions:** Moon in ${moon} governs your psychological receptivity and inner satisfaction.
+
+*You can ask any specific follow-up question below to explore deeper insights!*`
 }

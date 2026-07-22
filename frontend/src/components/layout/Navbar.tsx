@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import type { UserProfile } from '../../types/profile'
-import { MAX_PROFILES } from '../../utils/profileManager'
+import { getCurrentTier } from '../../utils/subscriptionManager'
+import { TIER_CONFIG } from '../../config/subscriptionConfig'
+import { getMaxProfilesForTier } from '../../config/subscriptionConfig'
 
 interface NavbarProps {
   profiles?: UserProfile[]
@@ -8,6 +10,7 @@ interface NavbarProps {
   onSelectProfile?: (profileId: string) => void
   onAddNewProfile?: () => void
   onDeleteProfile?: (profileId: string) => void
+  onOpenPricing?: () => void
 }
 
 export default function Navbar({
@@ -16,9 +19,14 @@ export default function Navbar({
   onSelectProfile,
   onAddNewProfile,
   onDeleteProfile,
+  onOpenPricing,
 }: NavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const currentTier = getCurrentTier()
+  const tierConfig = TIER_CONFIG[currentTier]
+  const maxProfiles = getMaxProfilesForTier(currentTier)
 
   const activeProfile = profiles.find((p) => p.id === activeProfileId) || profiles[0]
 
@@ -43,17 +51,40 @@ export default function Navbar({
           </span>
         </div>
         <div>
-          <h1 className="font-display text-[28px] leading-tight font-semibold text-primary">
-            AstroSutra AI
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-[24px] sm:text-[28px] leading-tight font-semibold text-primary">
+              AstroSutra AI
+            </h1>
+            {/* Subscription Tier Badge */}
+            <button
+              onClick={onOpenPricing}
+              title="Click to view subscription plans"
+              className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full text-white shadow-xs transition-all hover:scale-105 cursor-pointer"
+              style={{ backgroundColor: tierConfig.color }}
+            >
+              {tierConfig.label}
+            </button>
+          </div>
           <p className="text-[12px] leading-4 font-semibold text-on-surface-variant">
             Modular AI Astrology Platform
           </p>
         </div>
       </div>
 
-      {/* Navigation & Multi-Profile Switcher Dropdown */}
-      <div className="flex items-center gap-3 relative" ref={dropdownRef}>
+      {/* Navigation & Multi-Profile Switcher & Upgrade Button */}
+      <div className="flex items-center gap-2.5 sm:gap-3 relative" ref={dropdownRef}>
+        {/* Upgrade / Pricing Button */}
+        <button
+          onClick={onOpenPricing}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md shadow-orange-500/20 transition-all hover:scale-105 cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
+            workspace_premium
+          </span>
+          <span className="hidden sm:inline">Pricing & Plans</span>
+          <span className="sm:hidden">Plans</span>
+        </button>
+
         {/* Dynamic Active Profile Trigger Button */}
         {activeProfile ? (
           <button
@@ -85,7 +116,7 @@ export default function Navbar({
                 Switch Chart Profile
               </span>
               <span className="text-[10px] font-semibold text-primary bg-primary-fixed px-2 py-0.5 rounded-full">
-                {profiles.length}/{MAX_PROFILES} Profiles
+                {profiles.length}/{maxProfiles} Profiles
               </span>
             </div>
 
@@ -147,11 +178,11 @@ export default function Navbar({
                   setDropdownOpen(false)
                   if (onAddNewProfile) onAddNewProfile()
                 }}
-                disabled={profiles.length >= MAX_PROFILES}
+                disabled={profiles.length >= maxProfiles}
                 className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-container disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               >
                 <span className="material-symbols-outlined text-base">add</span>
-                {profiles.length >= MAX_PROFILES ? 'Profile Limit Reached (5)' : 'Add Profile (Family/Friend)'}
+                {profiles.length >= maxProfiles ? `Profile Limit Reached (${maxProfiles})` : 'Add Profile (Family/Friend)'}
               </button>
             </div>
           </div>

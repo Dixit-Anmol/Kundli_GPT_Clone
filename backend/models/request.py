@@ -28,7 +28,7 @@ class ChatRequest(BaseModel):
 class TabChatRequest(BaseModel):
     session_id: str
     message: str
-    tab: str  # "overview" | "career" | "marriage" | "health" | "food" | "remedies" | "finance" | "personality" | "spiritual"
+    tab: str  # "overview" | "career" | "marriage" | "health" | "food" | "remedies" | "finance" | "personality" | "spiritual" | "matching"
     user_id: Optional[str] = None
     is_initial: Optional[bool] = False
     relationship_type: Optional[str] = "spouse"  # father, mother, siblings, spouse, children, friends, boss, mentors, inlaws
@@ -37,8 +37,18 @@ class TabChatRequest(BaseModel):
     time_slot: Optional[str] = "unknown"
     question: Optional[str] = None
     category: Optional[str] = "general"
+    tier: Optional[str] = "free"
 
+class PersonMatchInput(BaseModel):
+    profile_id: Optional[str] = None
+    name: Optional[str] = "Partner"
+    date_str: Optional[str] = "2000-01-01"
+    time_str: Optional[str] = "12:00:00"
+    latitude: Optional[float] = 28.6139
+    longitude: Optional[float] = 77.2090
+    timezone_offset: Optional[float] = 5.5
 
-
-
-
+class KundliMatchRequest(BaseModel):
+    session_id: str
+    person_a: PersonMatchInput
+    person_b: PersonMatchInput

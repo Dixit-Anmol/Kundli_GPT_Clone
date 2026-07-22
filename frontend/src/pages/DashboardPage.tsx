@@ -6,7 +6,6 @@ import TabPanel, { type TabCacheItem } from '../components/dashboard/TabPanel'
 import type { UserProfile } from '../types/profile'
 import { formatSignWithHindi } from '../utils/hindiMapping'
 
-
 interface DashboardPageProps {
   chartData: any
   computed?: any
@@ -20,6 +19,7 @@ interface DashboardPageProps {
   onAddNewProfile?: () => void
   onDeleteProfile?: (profileId: string) => void
   onResetProfile: () => void
+  onOpenPricing?: () => void
 }
 
 export default function DashboardPage({
@@ -35,6 +35,7 @@ export default function DashboardPage({
   onAddNewProfile,
   onDeleteProfile,
   onResetProfile,
+  onOpenPricing,
 }: DashboardPageProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
 
@@ -53,13 +54,14 @@ export default function DashboardPage({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Navbar with Dynamic Profile Switcher */}
+      {/* Top Navbar with Dynamic Profile Switcher & Subscription Pricing Link */}
       <Navbar
         profiles={profiles}
         activeProfileId={activeProfileId}
         onSelectProfile={onSelectProfile}
         onAddNewProfile={onAddNewProfile}
         onDeleteProfile={onDeleteProfile}
+        onOpenPricing={onOpenPricing}
       />
 
       {/* Tab Navigation Sticky Bar */}
@@ -101,7 +103,6 @@ export default function DashboardPage({
           </button>
         </div>
 
-
         {/* Tab Panel View */}
         <TabPanel
           key={`${activeProfileId}-${activeTab}`}
@@ -113,8 +114,9 @@ export default function DashboardPage({
           apiBaseUrl={apiBaseUrl}
           tabCacheMap={tabCache}
           onUpdateCacheByKey={handleUpdateCacheByKey}
+          onOpenPricing={onOpenPricing}
+          profiles={profiles}
         />
-
       </main>
     </div>
   )

@@ -17,6 +17,7 @@ from api.chart import router as chart_router
 from api.chat import router as chat_router
 from api.tab_chat import router as tab_chat_router
 from api.profile import router as profile_router
+from api.matching import router as matching_router
 
 app = FastAPI(
     title="AstroSutra AI API",
@@ -53,14 +54,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-
 # Mount API Routers
 app.include_router(chart_router, prefix="/api", tags=["Astrology & Timezone"])
 app.include_router(chat_router, prefix="/api", tags=["Vedic Chat & RAG"])
 app.include_router(tab_chat_router, prefix="/api", tags=["Tab-Scoped Chat"])
 app.include_router(profile_router, prefix="/api", tags=["Profile"])
-
+app.include_router(matching_router, prefix="/api", tags=["Kundli Matching"])
 
 @app.get("/")
 def root():

@@ -22,6 +22,7 @@ from services.astrology.remedies_calc import generate_remedy_data
 
 from services.astrology.prashna_engine import calculate_prashna_chart
 from services.astrology.partial_horoscope_engine import calculate_partial_horoscope
+from backend.utils.date_parser import parse_date_str, parse_time_str
 
 router = APIRouter()
 
@@ -41,7 +42,8 @@ def find_timezone_offset(lat: float, lon: float, date_str: str) -> tuple:
             data = res.json()
             tz_name = data.get("timeZone", "UTC")
             tz = pytz.timezone(tz_name)
-            dt = datetime.strptime(date_str, "%Y-%m-%d")
+            dt_obj = parse_date_str(date_str)
+            dt = datetime(dt_obj.year, dt_obj.month, dt_obj.day)
             offset_seconds = tz.utcoffset(dt).total_seconds()
             return tz_name, offset_seconds / 3600.0
     except Exception as e:
@@ -176,8 +178,8 @@ def build_chart(req: ChartRequest):
         _, offset = find_timezone_offset(req.latitude, req.longitude, req.date_str)
         
         # Parse date and time
-        dt = datetime.strptime(req.date_str, "%Y-%m-%d")
-        tm = datetime.strptime(req.time_str, "%H:%M:%S")
+        dt = parse_date_str(req.date_str)
+        tm = parse_time_str(req.time_str)
         
         # Calculate full horoscope data
         chart_data = calculate_horoscope_data(

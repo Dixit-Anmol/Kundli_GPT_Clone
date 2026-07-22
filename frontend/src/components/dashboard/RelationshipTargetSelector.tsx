@@ -1,3 +1,6 @@
+import { isRelationshipTargetAllowed } from '../../config/subscriptionConfig'
+import { getCurrentTier } from '../../utils/subscriptionManager'
+
 export type RelationshipTarget =
   | 'spouse'
   | 'father'
@@ -37,6 +40,8 @@ export default function RelationshipTargetSelector({
   selectedTarget,
   onSelectTarget,
 }: RelationshipTargetSelectorProps) {
+  const currentTier = getCurrentTier()
+
   return (
     <div className="bg-surface p-4 rounded-3xl border border-outline-variant/60 shadow-xs mb-6 animate-fade-in-up">
       <div className="flex items-center justify-between mb-3 px-1">
@@ -54,6 +59,8 @@ export default function RelationshipTargetSelector({
       <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1 no-scrollbar">
         {RELATIONSHIP_TARGETS.map((target) => {
           const isActive = selectedTarget === target.id
+          const isAllowed = isRelationshipTargetAllowed(target.id, currentTier)
+
           return (
             <button
               key={target.id}
@@ -61,6 +68,8 @@ export default function RelationshipTargetSelector({
               className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl whitespace-nowrap transition-all text-xs font-semibold cursor-pointer shrink-0 border ${
                 isActive
                   ? 'bg-primary text-white border-primary shadow-md shadow-primary/20 scale-[1.02]'
+                  : !isAllowed
+                  ? 'bg-surface-variant/30 text-on-surface-variant/70 border-outline-variant/40 hover:bg-surface-variant/60'
                   : 'bg-surface text-on-surface-variant border-outline-variant/60 hover:border-primary/40 hover:text-primary hover:bg-surface-variant/30'
               }`}
             >
@@ -71,6 +80,13 @@ export default function RelationshipTargetSelector({
               <span className={`text-[10px] opacity-80 font-normal ${isActive ? 'text-white/90' : 'text-primary'}`}>
                 ({target.hindiLabel})
               </span>
+
+              {/* Pro Lock Badge for Pro-only targets */}
+              {!isAllowed && (
+                <span className="material-symbols-outlined text-xs text-amber-600" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  lock
+                </span>
+              )}
             </button>
           )
         })}

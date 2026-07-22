@@ -11,6 +11,7 @@ from services.memory.profile_store import profile_store
 from services.memory.session import session_store
 from services.astrology.horoscope import calculate_horoscope_data
 from api.chart import find_timezone_offset
+from backend.utils.date_parser import parse_date_str, parse_time_str
 
 from services.astrology.prakriti import estimate_prakriti
 from services.astrology.elements import calculate_element_distribution
@@ -119,8 +120,8 @@ def recalculate_chart(user_id: str):
         _, offset = find_timezone_offset(lat, lon, birth["date_of_birth"])
 
         # Parse date and time
-        dt = datetime.datetime.strptime(birth["date_of_birth"], "%Y-%m-%d")
-        tm = datetime.datetime.strptime(birth["time_of_birth"], "%H:%M:%S")
+        dt = parse_date_str(birth["date_of_birth"])
+        tm = parse_time_str(birth["time_of_birth"])
 
         # Recalculate
         chart_data = calculate_horoscope_data(

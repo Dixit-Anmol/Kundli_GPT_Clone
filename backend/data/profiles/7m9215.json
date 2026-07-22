@@ -1,9 +1,9 @@
 {
-  "user_id": "72e0a063-f7c1-4d56-bddf-207adabc74e4",
+  "user_id": "7m9215",
   "birth_details": {
-    "name": "Anmol Dixit",
+    "name": "Anmol DIxit",
     "date_of_birth": "2003-09-14",
-    "time_of_birth": "12:50:00",
+    "time_of_birth": "12:50",
     "latitude": 25.9863918,
     "longitude": 79.4534538,
     "timezone_offset": 5.5
@@ -544,7 +544,7 @@
     }
   },
   "chart_response": {
-    "name": "Anmol Dixit",
+    "name": "Anmol DIxit",
     "ascendant_sign": "Scorpio",
     "moon_sign": "Aries",
     "nakshatra": "Ashwini",
@@ -1224,6 +1224,6 @@
       }
     }
   },
-  "created_at": "2026-07-21T07:50:28.084203+00:00",
-  "updated_at": "2026-07-21T07:50:28.084203+00:00"
+  "created_at": "2026-07-22T07:00:21.166075+00:00",
+  "updated_at": "2026-07-22T07:00:21.166075+00:00"
 }

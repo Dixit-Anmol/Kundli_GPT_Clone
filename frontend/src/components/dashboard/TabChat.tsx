@@ -3,88 +3,165 @@ import ReactMarkdown from 'react-markdown'
 import AssistantMessage from '../chat/AssistantMessage'
 import SuggestionChips from '../chat/SuggestionChips'
 import type { TabType } from './TabNavigation'
+import { getCurrentTier, isChatLimitReached, getRemainingChats, incrementChatCount } from '../../utils/subscriptionManager'
+import { getChatLimitForTier } from '../../config/subscriptionConfig'
 
 export interface Message {
-  role: 'user' | 'assistant'
-  content: string
+  id?: string
+  sender?: 'user' | 'assistant'
+  role?: 'user' | 'assistant'
+  text?: string
+  content?: string
 }
 
 interface TabChatProps {
-  tab: TabType
-  sessionId: string
+  tab?: TabType
+  tabName?: string
+  sessionId?: string
   userId?: string
   messages: Message[]
   onSendMessage: (text: string) => void
   loading: boolean
+  onOpenPricing?: () => void
 }
 
-const TAB_SUGGESTIONS: Record<TabType, string[]> = {
+const TAB_SUGGESTIONS: Record<string, string[]> = {
   overview: [
-    'Explain my ascendant and moon sign',
-    'What are my strongest planets?',
-    'Explain active yogas in my chart',
-    'Current Dasha period overview',
+    '🔮 When will the luckiest phase of my life begin?',
+    '👑 What is my single biggest planetary superpower?',
+    '⚡ Which major Dasha shift will transform my life next?',
+    '🪐 Explain my Ascendant & Moon sign dynamic',
   ],
   career: [
-    'Best career fields for me',
-    'Should I do business or job?',
-    'Favorable period for job change',
-    'Government job chances',
+    '🚀 When will I get my big career promotion or breakthrough?',
+    '💼 Should I pursue a Business or a Job according to my 10th house?',
+    '🏛️ Do I have strong Raj Yogas for Government or High-Executive roles?',
+    '🌍 Will I settle abroad or gain wealth from foreign clients?',
+  ],
+  kala_vidya: [
+    '🎓 Which of the 64 Classical Kalas is my natural soul talent?',
+    '🧠 How to double my memory retention (Smriti Shakti) based on 5th lord?',
+    '📚 What is my optimal study & exam focus technique?',
+    '🌟 Which competitive fields suit my cognitive absorption speed?',
   ],
   marriage: [
-    'When will I get married?',
-    'How will my spouse be?',
-    'Love or arranged marriage?',
-    'Is my Manglik dosha harmful?',
+    '💖 When will I meet my soulmate and where will we cross paths?',
+    '💍 Will I have a Love or Arranged marriage?',
+    '🔮 What will be my spouse\'s personality, profession & looks?',
+    '⚠️ Is my Manglik or Bhakoot/Nadi dosha active and how to cancel it?',
+  ],
+  spouse: [
+    '💖 When will I meet my soulmate and where will we cross paths?',
+    '💍 Will I have a Love or Arranged marriage?',
+    '🔮 What will be my spouse\'s personality, profession & looks?',
+    '⚠️ Is my Manglik or Bhakoot/Nadi dosha active and how to cancel it?',
+  ],
+  father: [
+    '👑 How does my 9th house & Sun affect my relationship with my Father?',
+    '🌟 What karmic blessings or ancestral heritage do I receive from my Father?',
+    '🤝 How can I resolve communication gaps with my Father?',
+    '🌿 What remedies strengthen my Pitr (Father) connection & luck?',
+  ],
+  mother: [
+    '🤍 How is my emotional bond & psychological connection with my Mother?',
+    '🏡 How does my 4th house & Moon influence my Mother\'s peace & health?',
+    '✨ What hidden talents or emotional warmth did I inherit from my Mother?',
+    '🌊 Which remedies balance my Moon for motherly harmony?',
+  ],
+  siblings: [
+    '🤝 Will my brothers & sisters support me in times of financial need?',
+    '⚔️ How does Mars & 3rd house shape sibling rivalry vs co-operation?',
+    '🌟 Which of my siblings is karmically closest to me?',
+    '🛡️ How to heal friction and build lifelong bonds with siblings?',
+  ],
+  children: [
+    '👶 When will I be blessed with children (Santana Yoga)?',
+    '🌟 What will be the intelligence & achievements of my future children?',
+    '🧠 How to guide my children based on my 5th house Buddhi lord?',
+    '🌿 Which remedies enhance fertility & child prosperity?',
+  ],
+  friends: [
+    '🤝 Who among my friends are true loyal allies vs secret rivals?',
+    '👥 How does my 11th house shape my social circle & network gains?',
+    '⚠️ Which zodiac signs make the most compatible friends for me?',
+    '🌟 How to attract high-value, supportive friendships?',
+  ],
+  boss: [
+    '👔 How do senior authorities & bosses perceive my work ethic?',
+    '📈 When will my boss recognize my efforts and approve my promotion?',
+    '⚡ How to navigate power struggles with a dominant boss?',
+    '☀️ Which remedies enhance my workplace authority (Sun/10th Lord)?',
+  ],
+  mentors: [
+    '🎓 Who is my ideal spiritual or career Guru according to Jupiter & 9th house?',
+    '📚 How will a mentor accelerate my life success?',
+    '🔮 When will I find a guide who unlocks my true potential?',
+    '🌟 How to build a deep, respectful bond with my teachers?',
+  ],
+  inlaws: [
+    '🏠 How will my relationship with my In-Laws be after marriage?',
+    '🤝 Will my In-Laws support my career & financial freedom?',
+    '⚠️ How to avoid early friction with in-laws based on 8th house?',
+    '🌿 Remedies for harmony and respect with family-in-law',
   ],
   health: [
-    'What are my physical weak points?',
-    'Mental stress management tips',
-    'Immunity & disease tendencies',
-    'Vulnerable age periods',
+    '🩺 What are my primary physical & organ vulnerabilities?',
+    '🧠 How to eliminate mental anxiety & sleep issues using Moon remedies?',
+    '⚡ Which active Dasha period requires heightened immunity care?',
+    '🌿 What is my dominant Ayurvedic Dosha (Vata/Pitta/Kapha) balance?',
   ],
   food: [
-    'What foods should I avoid?',
-    'Best daily eating routine',
-    'Which spices balance my dosha?',
-    'Fasting recommendations for me',
+    '🍲 Which exact foods & spices balance my planetary Prakriti?',
+    '🚫 What dietary habits or foods should I strictly avoid for my 2nd house?',
+    '🥛 Which weekday fasting or Sattvic diet boosts my vitality?',
+    '🌿 Best daily eating schedule for my digestive Agni (Mars/Sun)?',
   ],
   remedies: [
-    'Which gemstone should I wear?',
-    'Daily mantra for peace',
-    'Charity for Saturn/Rahu',
-    'Dosha reduction practices',
+    '💎 Which gemstone (Ratna) is 100% safe and auspicious for my Lagna?',
+    '🕉️ What is my personal powerhouse daily Mantra for rapid peace & success?',
+    '🪐 Which planet needs urgent pacification (Dan/Pooja) right now?',
+    '⚡ How to perform simple home remedies to clear active Rahu/Saturn afflictions?',
   ],
   finance: [
-    'Will I accumulate wealth?',
-    'Investment strategy for my chart',
-    'Chances of sudden monetary gain',
-    'Debt relief & savings advice',
+    '💰 When will my biggest wealth accumulation phase manifest?',
+    '📈 Should I invest in Real Estate, Stocks, or Business according to D2 Hora?',
+    '🔮 Do I have Dhana Yogas for sudden monetary windfalls?',
+    '🛡️ How to eliminate debt & plug financial leakages in my chart?',
   ],
   personality: [
-    'My biggest hidden strength',
-    'My blind spots & fear patterns',
-    'How do people perceive me?',
-    'My decision-making style',
+    '🔮 What is my single most attractive, hidden personality trait?',
+    '👁️ How do people secretly perceive my vibe when I enter a room?',
+    '🧠 What is my subconscious emotional trigger & how to master it?',
+    '⚡ How does my Sun, Moon & Lagna combo shape my decision style?',
   ],
   spiritual: [
-    'What is my soul purpose?',
-    'Best meditation style for me',
-    'Karmic lessons in this life',
-    'Bhagavad Gita guidance for me',
+    '🕉️ What is my soul\'s ultimate purpose (Atmakaraka path) in this incarnation?',
+    '🧘 Which meditation style & deity (Ishta Devata) connects me to higher consciousness?',
+    '📖 Which Bhagavad Gita verse holds the secret key to my current life challenge?',
+    '🌊 How to clear karmic debts (Prarabdha Karma) & achieve inner peace?',
   ],
 }
 
 export default function TabChat({
-  tab,
+  tab = 'overview',
+  tabName,
   messages,
   onSendMessage,
   loading,
+  onOpenPricing,
 }: TabChatProps) {
   const [input, setInput] = useState('')
 
+  const currentTier = getCurrentTier()
+  const limitReached = isChatLimitReached(currentTier)
+  const remaining = getRemainingChats(currentTier)
+  const totalLimit = getChatLimitForTier(currentTier)
+
+  const activeTabName = tabName || (tab.charAt(0).toUpperCase() + tab.slice(1))
+
   const handleSend = () => {
-    if (!input.trim() || loading) return
+    if (!input.trim() || loading || limitReached) return
+    incrementChatCount()
     onSendMessage(input.trim())
     setInput('')
   }
@@ -96,32 +173,77 @@ export default function TabChat({
     }
   }
 
-  const suggestions = TAB_SUGGESTIONS[tab] || TAB_SUGGESTIONS.overview
+  const handleSuggestionSelect = (text: string) => {
+    if (limitReached) return
+    incrementChatCount()
+    onSendMessage(text)
+  }
+
+  const getSuggestions = () => {
+    const lowerName = (tabName || '').toLowerCase()
+    const lowerTab = (tab || 'overview').toLowerCase()
+
+    // Sub-target keys to check first against tabName (displayTitle)
+    const specificKeys = [
+      'mother', 'siblings', 'boss', 'father', 'spouse', 'children',
+      'friends', 'mentors', 'inlaws', 'kala_vidya'
+    ]
+
+    for (const key of specificKeys) {
+      if (lowerName.includes(key) && TAB_SUGGESTIONS[key]) {
+        return TAB_SUGGESTIONS[key]
+      }
+    }
+
+    // Direct tab key match
+    if (TAB_SUGGESTIONS[lowerTab]) {
+      return TAB_SUGGESTIONS[lowerTab]
+    }
+
+    return TAB_SUGGESTIONS.overview
+  }
+
+  const suggestions = getSuggestions()
 
   return (
     <div className="mt-8 border-t border-outline-variant/40 pt-6">
-      <h3 className="font-display text-2xl font-bold text-primary mb-4 flex items-center gap-2">
-        <span className="material-symbols-outlined text-primary text-xl">forum</span>
-        Ask {tab.charAt(0).toUpperCase() + tab.slice(1)} Guidance
-      </h3>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <h3 className="font-display text-2xl font-bold text-primary flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary text-xl">forum</span>
+          Ask {activeTabName} Guidance
+        </h3>
+
+        {/* Daily Chat Usage Badge */}
+        <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-surface-variant/50 border border-outline-variant/60">
+          <span className="material-symbols-outlined text-sm text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+            chat
+          </span>
+          <span className="text-on-surface-variant">
+            Daily Chat Limit: {isFinite(totalLimit) ? `${remaining}/${totalLimit} remaining` : 'Unlimited ✨'}
+          </span>
+        </div>
+      </div>
 
       {/* Message History */}
       <div className="space-y-4 mb-6">
-        {messages.map((msg, idx) =>
-          msg.role === 'assistant' ? (
+        {messages.map((msg, idx) => {
+          const isUser = msg.sender === 'user' || msg.role === 'user'
+          const textContent = msg.text || msg.content || ''
+
+          return !isUser ? (
             <AssistantMessage key={idx} icon="auto_awesome">
               <div className="font-body text-sm leading-relaxed text-on-surface markdown-container">
-                <ReactMarkdown>{msg.content}</ReactMarkdown>
+                <ReactMarkdown>{textContent}</ReactMarkdown>
               </div>
             </AssistantMessage>
           ) : (
             <div key={idx} className="flex justify-end animate-fade-in-up">
               <div className="max-w-[85%] bg-primary-fixed border border-primary/20 text-on-primary-fixed rounded-2xl rounded-tr-none px-4 py-3 text-sm leading-relaxed shadow-xs font-medium">
-                {msg.content}
+                {textContent}
               </div>
             </div>
           )
-        )}
+        })}
 
         {loading && (
           <div className="flex gap-3 items-center pl-4 py-3 opacity-70">
@@ -133,32 +255,58 @@ export default function TabChat({
         )}
       </div>
 
-      {/* Suggestion Chips */}
-      {!loading && (
-        <div className="mb-4">
-          <SuggestionChips suggestions={suggestions} onSelect={onSendMessage} />
+      {/* Chat Limit Reached Warning Banner */}
+      {limitReached ? (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-center mb-4 animate-fade-in-up">
+          <div className="flex items-center justify-center gap-2 text-amber-700 font-bold text-sm mb-1">
+            <span className="material-symbols-outlined text-base">warning</span>
+            Daily Chat Limit Reached ({totalLimit}/{totalLimit} Messages)
+          </div>
+          <p className="text-xs text-on-surface-variant mb-3">
+            You've reached your free daily AI chat limit for today. Upgrade your subscription for higher or unlimited daily chat limits!
+          </p>
+          {onOpenPricing && (
+            <button
+              onClick={onOpenPricing}
+              className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold shadow-xs hover:bg-primary-container transition-all cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+                workspace_premium
+              </span>
+              Upgrade Subscription Plan
+            </button>
+          )}
         </div>
-      )}
+      ) : (
+        <>
+          {/* Suggestion Chips */}
+          {!loading && (
+            <div className="mb-4">
+              <SuggestionChips suggestions={suggestions} onSelect={handleSuggestionSelect} />
+            </div>
+          )}
 
-      {/* Input Bar */}
-      <div className="flex items-center gap-2 bg-surface p-2 rounded-2xl border border-outline-variant shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={`Ask anything about your ${tab}...`}
-          disabled={loading}
-          className="flex-1 bg-transparent px-3 py-2 text-sm text-on-surface focus:outline-none placeholder:text-on-surface-variant/60"
-        />
-        <button
-          onClick={handleSend}
-          disabled={loading || !input.trim()}
-          className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center hover:bg-primary-container disabled:opacity-40 transition-all cursor-pointer shrink-0"
-        >
-          <span className="material-symbols-outlined text-xl">send</span>
-        </button>
-      </div>
+          {/* Input Bar */}
+          <div className="flex items-center gap-2 bg-surface p-2 rounded-2xl border border-outline-variant shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={`Ask anything about your ${activeTabName.toLowerCase()}...`}
+              disabled={loading}
+              className="flex-1 bg-transparent px-3 py-2 text-sm text-on-surface focus:outline-none placeholder:text-on-surface-variant/60"
+            />
+            <button
+              onClick={handleSend}
+              disabled={loading || !input.trim()}
+              className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center hover:bg-primary-container disabled:opacity-40 transition-all cursor-pointer shrink-0"
+            >
+              <span className="material-symbols-outlined text-xl">send</span>
+            </button>
+          </div>
+        </>
+      )}
     </div>
   )
 }

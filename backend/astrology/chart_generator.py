@@ -11,6 +11,7 @@ is cached and reused across all future LLM prompts.
 
 import datetime
 from dataclasses import asdict
+from backend.utils.date_parser import parse_date_str, parse_time_str
 
 from services.astrology.swiss_ephemeris import (
     datetime_to_jd,
@@ -338,9 +339,8 @@ def generate_all_charts(birth: BirthDetails) -> FullChartBundle:
     Call this once at birth-detail submission time and cache the result.
     """
     # 1. Parse birth details
-    dt = datetime.datetime.strptime(birth.date_of_birth, "%Y-%m-%d")
-    tm = datetime.datetime.strptime(birth.time_of_birth, "%H:%M:%S")
-    birth_date = dt.date()
+    birth_date = parse_date_str(birth.date_of_birth)
+    tm = parse_time_str(birth.time_of_birth)
 
     # Convert local time to UTC
     local_decimal_hour = tm.hour + tm.minute / 60.0 + tm.second / 3600.0

@@ -1,12 +1,13 @@
 /**
  * Feature Flags Configuration
- * Controls feature availability and tab visibility across Kundli GPT.
+ * Controls feature availability and tab visibility across Kundli GPT / AstroSutra AI.
  */
 
 export interface FeatureFlags {
   enableOverviewTab: boolean
   enableCareerTab: boolean
   enableMarriageTab: boolean
+  enableMatchingTab: boolean
   enableHealthTab: boolean
   enableFoodTab: boolean
   enableRemediesTab: boolean
@@ -19,11 +20,12 @@ export const FEATURE_FLAGS: FeatureFlags = {
   enableOverviewTab: true,
   enableCareerTab: true,
   enableMarriageTab: true,
+  enableMatchingTab: true,    // ✅ Enabled Kundli Matching (Gun Milan) tab
   enableHealthTab: true,
   enableFoodTab: true,
   enableRemediesTab: true,    // ✅ Enabled Remedies tab
   enableFinanceTab: true,
-  enablePersonalityTab: true, // ✅ Enabled Personality tab with The Four Temperaments
+  enablePersonalityTab: true, // ✅ Enabled Personality tab
   enableSpiritualTab: false,   // ❌ Disabled via feature flag per request
 }
 
@@ -37,6 +39,8 @@ export function isTabEnabled(tabId: string): boolean {
       return FEATURE_FLAGS.enableCareerTab
     case 'marriage':
       return FEATURE_FLAGS.enableMarriageTab
+    case 'matching':
+      return FEATURE_FLAGS.enableMatchingTab
     case 'health':
       return FEATURE_FLAGS.enableHealthTab
     case 'food':
