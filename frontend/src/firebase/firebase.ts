@@ -1,25 +1,25 @@
-import { initializeApp } from 'firebase/app'
+import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getAnalytics, isSupported } from 'firebase/analytics'
 
-// Firebase JS SDK configuration read from environment variables with fallback defaults
+// Firebase JS SDK configuration strictly read from environment variables (VITE_FIREBASE_*)
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBngPVS1uH69_QbIUVZr_Dpu7jNcngUe7U",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "astrosutraai-b524e.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "astrosutraai-b524e",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "astrosutraai-b524e.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "29791277131",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:29791277131:web:641a2e6b6216b959d43dce",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-59WZT4JJQY",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 }
 
-// Initialize Firebase Core App safely
-export const app = initializeApp(firebaseConfig)
+// Initialize Firebase Core App strictly from environment configuration
+export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
 
-// Initialize Firebase Authentication and export auth instance
+// Export Authentication instance
 export const auth = getAuth(app)
 
-// Initialize Analytics asynchronously (safe for SSR / browser compatibility)
+// Initialize Analytics asynchronously (safe for browser environments)
 export const analyticsPromise = isSupported().then((supported) => (supported ? getAnalytics(app) : null)).catch(() => null)
 
 export default app
