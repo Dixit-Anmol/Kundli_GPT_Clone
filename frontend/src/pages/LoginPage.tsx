@@ -77,19 +77,19 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center p-3 sm:p-6 py-6 relative overflow-x-hidden font-sans">
       {/* BACKGROUND CELESTIAL BLURS */}
-      <div className="absolute top-10 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-10 left-1/4 w-72 sm:w-96 h-72 sm:h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-1/4 w-72 sm:w-96 h-72 sm:h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* LOGIN CARD */}
-      <div className="w-full max-w-md bg-surface/90 backdrop-blur-xl border border-outline-variant/60 rounded-3xl p-6 sm:p-8 shadow-xl relative z-10 space-y-6">
+      <div className="w-full max-w-md bg-surface/95 sm:backdrop-blur-xl border border-outline-variant/60 rounded-3xl p-5 sm:p-8 shadow-xl relative z-10 space-y-5 sm:space-y-6 mx-auto my-auto">
         
         {/* CLOSE BUTTON (IF MODAL) */}
         {onClose && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface p-2 rounded-full hover:bg-surface-variant/40 transition-colors"
+            className="absolute top-3.5 right-3.5 text-on-surface-variant hover:text-on-surface p-2 rounded-full hover:bg-surface-variant/40 transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined text-xl">close</span>
           </button>
@@ -97,14 +97,14 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
 
         {/* LOGO & HEADER */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-800 text-xs font-bold uppercase tracking-wider">
-            <span className="material-symbols-outlined text-sm">auto_awesome</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-800 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
+            <span className="material-symbols-outlined text-xs sm:text-sm">auto_awesome</span>
             AstroSutra AI Auth
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-on-surface font-serif">
+          <h2 className="text-xl sm:text-3xl font-bold text-on-surface font-serif leading-tight">
             {mode === 'login' ? 'Welcome Back' : 'Begin Your Cosmic Journey'}
           </h2>
-          <p className="text-xs text-on-surface-variant max-w-xs mx-auto">
+          <p className="text-xs sm:text-xs text-on-surface-variant max-w-xs mx-auto leading-relaxed">
             {mode === 'login'
               ? 'Access your personalized horoscopes, Dasha timelines, & saved profiles.'
               : 'Create an account to unlock lifelong Vedic predictions & AI guidance.'}
@@ -113,9 +113,9 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
 
         {/* ERROR ALERT */}
         {error && (
-          <div className="p-3.5 bg-error-container/20 border border-error/30 text-error rounded-2xl text-xs flex items-center gap-2">
+          <div className="p-3 sm:p-3.5 bg-error-container/20 border border-error/30 text-error rounded-2xl text-xs flex items-center gap-2">
             <span className="material-symbols-outlined text-base shrink-0">error</span>
-            <span>{error}</span>
+            <span className="leading-snug">{error}</span>
           </div>
         )}
 
@@ -131,7 +131,7 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
             </div>
             <div>
               <div className="text-base font-bold text-on-surface">{user.displayName}</div>
-              <div className="text-xs text-on-surface-variant">{user.email}</div>
+              <div className="text-xs text-on-surface-variant truncate max-w-xs mx-auto">{user.email}</div>
             </div>
             <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-xs font-bold rounded-xl">
               ✓ Logged in & Authenticated
@@ -139,7 +139,7 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
             {onSuccess && (
               <button
                 onClick={onSuccess}
-                className="w-full py-3 bg-primary text-white font-bold text-sm rounded-2xl hover:bg-primary/90 transition-colors shadow-md"
+                className="w-full py-3.5 sm:py-3 min-h-[48px] bg-primary text-white font-bold text-base sm:text-sm rounded-2xl hover:bg-primary/90 transition-colors shadow-md cursor-pointer"
               >
                 Continue to Dashboard
               </button>
@@ -152,7 +152,7 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
               type="button"
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full py-3 px-4 bg-surface border border-outline-variant/80 hover:border-primary/50 text-on-surface font-semibold text-sm rounded-2xl transition-all shadow-2xs hover:shadow-md flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50"
+              className="w-full py-3.5 sm:py-3 px-4 min-h-[48px] bg-surface border border-outline-variant/80 hover:border-primary/50 text-on-surface font-semibold text-base sm:text-sm rounded-2xl transition-all shadow-2xs hover:shadow-md flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50 active:scale-[0.99]"
             >
               <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
                 <path
@@ -176,9 +176,9 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
             </button>
 
             {/* DIVIDER */}
-            <div className="flex items-center gap-3 my-2">
+            <div className="flex items-center gap-3 my-1 sm:my-2">
               <div className="h-[1px] bg-outline-variant/60 flex-1" />
-              <span className="text-xs text-on-surface-variant/70 uppercase tracking-wider font-semibold">Or with Email</span>
+              <span className="text-[11px] sm:text-xs text-on-surface-variant/70 uppercase tracking-wider font-semibold">Or with Email</span>
               <div className="h-[1px] bg-outline-variant/60 flex-1" />
             </div>
 
@@ -190,7 +190,7 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
                   setMode('login')
                   setError(null)
                 }}
-                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
+                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                   mode === 'login' ? 'bg-surface text-primary shadow-xs' : 'text-on-surface-variant hover:text-on-surface'
                 }`}
               >
@@ -202,7 +202,7 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
                   setMode('register')
                   setError(null)
                 }}
-                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
+                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                   mode === 'register' ? 'bg-surface text-primary shadow-xs' : 'text-on-surface-variant hover:text-on-surface'
                 }`}
               >
@@ -211,7 +211,7 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
             </div>
 
             {/* FORM */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4">
               {mode === 'register' && (
                 <div>
                   <label className="block text-xs font-semibold text-on-surface mb-1">Full Name</label>
@@ -220,7 +220,7 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Anmol Dixit"
-                    className="w-full px-4 py-2.5 bg-surface-variant/20 border border-outline-variant/60 rounded-xl text-sm text-on-surface focus:outline-none focus:border-primary"
+                    className="w-full px-4 py-3 sm:py-2.5 bg-surface-variant/20 border border-outline-variant/60 rounded-xl text-base sm:text-sm text-on-surface focus:outline-none focus:border-primary transition-all"
                   />
                 </div>
               )}
@@ -232,7 +232,7 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your.email@example.com"
-                  className="w-full px-4 py-2.5 bg-surface-variant/20 border border-outline-variant/60 rounded-xl text-sm text-on-surface focus:outline-none focus:border-primary"
+                  className="w-full px-4 py-3 sm:py-2.5 bg-surface-variant/20 border border-outline-variant/60 rounded-xl text-base sm:text-sm text-on-surface focus:outline-none focus:border-primary transition-all"
                 />
               </div>
 
@@ -243,14 +243,14 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-2.5 bg-surface-variant/20 border border-outline-variant/60 rounded-xl text-sm text-on-surface focus:outline-none focus:border-primary"
+                  className="w-full px-4 py-3 sm:py-2.5 bg-surface-variant/20 border border-outline-variant/60 rounded-xl text-base sm:text-sm text-on-surface focus:outline-none focus:border-primary transition-all"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-primary text-white font-bold text-sm rounded-2xl hover:bg-primary/90 transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3.5 sm:py-3 min-h-[48px] bg-primary text-white font-bold text-base sm:text-sm rounded-2xl hover:bg-primary/90 transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99]"
               >
                 {loading ? (
                   <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

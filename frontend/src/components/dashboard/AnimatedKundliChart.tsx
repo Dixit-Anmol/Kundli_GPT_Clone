@@ -113,7 +113,7 @@ export default function AnimatedKundliChart({ chartData }: AnimatedKundliChartPr
                   y2={line.y2}
                   stroke="var(--color-primary)"
                   strokeWidth="2.5"
-                  strokeLinecap="round"
+                  strokeLinecap="square"
                   className="kundli-line-animate opacity-90"
                   style={{ animationDelay: line.delay }}
                 />

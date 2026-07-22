@@ -44,43 +44,43 @@ export default function Navbar({
   }, [])
 
   return (
-    <nav className="glass border-b border-outline-variant/50 h-[72px] sticky top-0 z-50 flex items-center justify-between px-4 md:px-10">
+    <nav className="glass border-b border-outline-variant/50 min-h-[64px] py-2 sticky top-0 z-50 flex items-center justify-between px-2.5 sm:px-6 md:px-10 gap-1.5">
       {/* Logo */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-on-primary shadow-xs">
-          <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-xl flex items-center justify-center text-on-primary shadow-xs shrink-0">
+          <span className="material-symbols-outlined text-xl sm:text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
             auto_awesome
           </span>
         </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-[24px] sm:text-[28px] leading-tight font-semibold text-primary">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <h1 className="font-display text-[16px] sm:text-[22px] md:text-[26px] leading-tight font-bold text-primary truncate">
               AstroSutra AI
             </h1>
             {/* Subscription Tier Badge */}
             <button
               onClick={onOpenPricing}
               title="Click to view subscription plans"
-              className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full text-white shadow-xs transition-all hover:scale-105 cursor-pointer"
+              className="text-[9px] sm:text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-full text-white shadow-xs transition-all hover:scale-105 cursor-pointer shrink-0"
               style={{ backgroundColor: tierConfig.color }}
             >
               {tierConfig.label}
             </button>
           </div>
-          <p className="text-[12px] leading-4 font-semibold text-on-surface-variant">
+          <p className="text-[10px] sm:text-[12px] leading-none font-semibold text-on-surface-variant hidden sm:block">
             Modular AI Astrology Platform
           </p>
         </div>
       </div>
 
       {/* Navigation & Multi-Profile Switcher & Upgrade Button */}
-      <div className="flex items-center gap-2.5 sm:gap-3 relative" ref={dropdownRef}>
+      <div className="flex items-center gap-1.5 sm:gap-3 relative shrink-0" ref={dropdownRef}>
         {/* Upgrade / Pricing Button */}
         <button
           onClick={onOpenPricing}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md shadow-orange-500/20 transition-all hover:scale-105 cursor-pointer"
+          className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-[11px] sm:text-xs shadow-md shadow-orange-500/20 transition-all cursor-pointer shrink-0"
         >
-          <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
+          <span className="material-symbols-outlined text-sm sm:text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
             workspace_premium
           </span>
           <span className="hidden sm:inline">Pricing & Plans</span>
@@ -91,20 +91,20 @@ export default function Navbar({
         {activeProfile ? (
           <button
             onClick={() => setDropdownOpen((prev) => !prev)}
-            className="flex items-center gap-2 bg-surface border border-outline-variant hover:border-primary/50 px-3 py-1.5 rounded-2xl shadow-xs transition-all cursor-pointer hover:bg-surface-variant/30"
+            className="flex items-center gap-1.5 bg-surface border border-outline-variant hover:border-primary/50 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl shadow-xs transition-all cursor-pointer hover:bg-surface-variant/30 shrink-0"
           >
-            <div className="w-7 h-7 bg-primary-fixed rounded-full flex items-center justify-center text-primary text-xs font-bold">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 bg-primary-fixed rounded-full flex items-center justify-center text-primary text-xs font-bold shrink-0">
               {activeProfile.name.charAt(0).toUpperCase()}
             </div>
             <div className="text-left hidden sm:block">
-              <p className="text-xs font-bold text-on-surface leading-tight">
+              <p className="text-xs font-bold text-on-surface leading-tight truncate max-w-[100px]">
                 {activeProfile.name}
               </p>
               <p className="text-[10px] text-primary font-semibold leading-none">
                 {activeProfile.relationship || 'Self'}
               </p>
             </div>
-            <span className="material-symbols-outlined text-sm text-on-surface-variant ml-1">
+            <span className="material-symbols-outlined text-xs sm:text-sm text-on-surface-variant">
               {dropdownOpen ? 'expand_less' : 'expand_more'}
             </span>
           </button>

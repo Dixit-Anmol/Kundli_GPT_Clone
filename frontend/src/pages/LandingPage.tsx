@@ -1,0 +1,310 @@
+import HeroKundliChart from '../components/landing/HeroKundliChart'
+import GocharaOrbits from '../components/landing/GocharaOrbits'
+
+interface LandingPageProps {
+  onSignIn: () => void
+  onGetStarted: () => void
+  onPricing: () => void
+}
+
+export default function LandingPage({ onSignIn, onGetStarted, onPricing }: LandingPageProps) {
+  return (
+    <div className="min-h-screen font-sans text-on-background selection:bg-primary-fixed selection:text-primary overflow-x-hidden"
+      style={{
+        backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(137, 115, 101, 0.05) 1px, transparent 0)',
+        backgroundSize: '24px 24px',
+        backgroundColor: '#FAF8F3',
+      }}
+    >
+      {/* Decorative Motifs */}
+      <div className="fixed top-20 left-10 w-64 h-64 opacity-[0.08] pointer-events-none hidden md:block">
+        <svg className="text-primary" fill="none" stroke="currentColor" viewBox="0 0 100 100">
+          <path d="M50 10 C 60 40, 90 50, 50 90 C 10 50, 40 40, 50 10" strokeWidth="0.5" />
+          <circle cx="50" cy="50" r="5" strokeWidth="0.5" />
+        </svg>
+      </div>
+      <div className="fixed bottom-20 right-10 w-96 h-96 opacity-[0.08] pointer-events-none rotate-180 hidden md:block">
+        <svg className="text-primary" fill="none" stroke="currentColor" viewBox="0 0 100 100">
+          <path d="M50 0 L 100 50 L 50 100 L 0 50 Z" strokeWidth="0.2" />
+          <path d="M25 25 L 75 75 M 75 25 L 25 75" strokeWidth="0.2" />
+        </svg>
+      </div>
+
+      {/* ═══════════════════════════════════════════════ */}
+      {/* TOP NAVIGATION BAR                              */}
+      {/* ═══════════════════════════════════════════════ */}
+      <nav className="fixed top-0 w-full z-50 backdrop-blur-md border-b border-outline-variant/60"
+        style={{ backgroundColor: 'rgba(255, 248, 243, 0.9)' }}
+      >
+        <div className="flex justify-between items-center px-4 sm:px-6 md:px-10 py-3.5 sm:py-5 max-w-7xl mx-auto">
+          <div className="font-display text-2xl sm:text-3xl md:text-4xl text-primary font-bold italic tracking-tight">
+            AstroSutra AI
+          </div>
+
+          {/* Desktop Links */}
+          <div className="hidden md:flex items-center gap-8">
+            <a href="#features" className="text-on-surface-variant font-medium hover:text-primary transition-colors text-xs tracking-[0.15em] uppercase">Features</a>
+            <a href="#testimonials" className="text-on-surface-variant font-medium hover:text-primary transition-colors text-xs tracking-[0.15em] uppercase">Testimonials</a>
+            <button onClick={onPricing} className="text-on-surface-variant font-medium hover:text-primary transition-colors text-xs tracking-[0.15em] uppercase cursor-pointer bg-transparent border-none">Pricing</button>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={onSignIn}
+              className="text-primary border border-primary/40 hover:bg-primary-fixed/30 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold tracking-wider uppercase transition-all cursor-pointer"
+            >
+              Sign In
+            </button>
+            <button
+              onClick={onGetStarted}
+              className="bg-primary text-white px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold tracking-wider uppercase hover:bg-primary-container transition-all cursor-pointer shadow-md"
+              style={{ boxShadow: '2px 2px 0px rgba(137, 115, 101, 0.1)' }}
+            >
+              Get Started
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <main className="pt-24 sm:pt-28 relative">
+        {/* ═══════════════════════════════════════════════ */}
+        {/* HERO SECTION                                    */}
+        {/* ═══════════════════════════════════════════════ */}
+        <section className="relative min-h-[70vh] sm:min-h-[85vh] flex items-center px-4 sm:px-6 md:px-10 max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center relative z-10 w-full">
+            <div className="flex flex-col gap-5 sm:gap-6">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-outline-variant bg-white/50 w-fit"
+                style={{ boxShadow: '2px 2px 0px rgba(137, 115, 101, 0.1)' }}
+              >
+                <span className="material-symbols-outlined text-primary text-base">palette</span>
+                <span className="text-[10px] sm:text-xs uppercase tracking-[0.15em] font-semibold text-on-surface-variant">
+                  Handcrafted Vedic Intelligence
+                </span>
+              </div>
+
+              {/* Title */}
+              <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-[64px] leading-[1.1] text-on-background italic font-bold">
+                Ancient Wisdom, <br />
+                <span
+                  className="not-italic font-extrabold uppercase tracking-tighter"
+                  style={{
+                    background: 'linear-gradient(90deg, #E67E22 0%, #C89B3C 50%, #E67E22 100%)',
+                    backgroundSize: '200% auto',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    animation: 'shimmer 6s linear infinite',
+                  }}
+                >
+                  Reimagined
+                </span>{' '}
+                <br />
+                for the Modern Soul.
+              </h1>
+
+              {/* Subtitle */}
+              <p className="text-base sm:text-lg md:text-xl text-on-surface-variant max-w-lg leading-relaxed font-light">
+                Experience the precision of Vedic Astrology and the timeless truth of the Bhagavad Gita, curated through an artisanal neural lens.
+              </p>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 mt-2 sm:mt-4">
+                <button
+                  onClick={onGetStarted}
+                  className="bg-primary text-white px-6 sm:px-10 py-4 sm:py-5 text-sm sm:text-base tracking-[0.12em] uppercase hover:bg-primary-container transition-all flex items-center justify-center gap-3 cursor-pointer font-semibold"
+                  style={{ boxShadow: '0 10px 40px -10px rgba(230, 126, 34, 0.15)' }}
+                >
+                  Start Your Journey
+                  <span className="material-symbols-outlined">auto_awesome</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('features')
+                    el?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                  className="bg-transparent border border-outline-variant text-on-background px-6 sm:px-10 py-4 sm:py-5 text-sm sm:text-base tracking-[0.12em] uppercase hover:bg-primary-fixed/20 transition-all flex items-center justify-center gap-2 cursor-pointer font-semibold"
+                >
+                  Philosophy
+                </button>
+              </div>
+            </div>
+
+            {/* Animated Kundli Chart Visual */}
+            <div className="hidden md:flex justify-center items-center relative">
+              <HeroKundliChart />
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════ */}
+        {/* FEATURES BENTO GRID                             */}
+        {/* ═══════════════════════════════════════════════ */}
+        <section id="features" className="py-16 sm:py-24 px-4 sm:px-6 md:px-10 max-w-7xl mx-auto relative">
+          <div className="text-center mb-12 sm:mb-20">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-[42px] text-on-background mb-4 sm:mb-6 uppercase tracking-[0.08em] italic font-semibold leading-tight">
+              The Pillars of Insight
+            </h2>
+            <div className="w-24 h-[1px] bg-primary mx-auto mb-4 sm:mb-6" />
+            <p className="text-base sm:text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto font-light italic leading-relaxed">
+              Bridging millenia-old tradition with state-of-the-art computational neural networks.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-12">
+            {[
+              {
+                icon: 'menu_book',
+                title: 'Spiritual Lineage',
+                desc: 'Our intelligence is trained on authorized translations of the Vedas, Puranas, and the Samhitas, ensuring every insight carries the weight of tradition.',
+                tag: 'Discovery • 01',
+              },
+              {
+                icon: 'architecture',
+                title: 'Mathematical Precision',
+                desc: 'Calculations based on precise ephemeris data. Every degree, minute, and second of planetary movement is analyzed with surgical accuracy.',
+                tag: 'Precision • 02',
+                offset: true,
+              },
+              {
+                icon: 'history_edu',
+                title: 'Modern Eloquence',
+                desc: 'Insights delivered in a language that speaks to the modern soul. Complex astrological concepts translated into actionable, poetic advice.',
+                tag: 'Guidance • 03',
+              },
+            ].map((feat, i) => (
+              <div
+                key={i}
+                className={`p-6 sm:p-8 border border-outline-variant bg-white/60 relative group hover:bg-white transition-all duration-500 ${
+                  feat.offset ? 'md:translate-y-12' : ''
+                }`}
+                style={{ boxShadow: '2px 2px 0px rgba(137, 115, 101, 0.1)' }}
+              >
+                <div className="absolute -top-3 -left-3 w-6 h-6 border-t border-l border-primary/30" />
+                <div
+                  className="w-12 h-12 sm:w-14 sm:h-14 bg-primary-fixed/30 flex items-center justify-center mb-5 sm:mb-8 border border-outline-variant"
+                >
+                  <span className="material-symbols-outlined text-primary text-2xl sm:text-[32px]">{feat.icon}</span>
+                </div>
+                <h3 className="font-display text-xl sm:text-2xl mb-3 sm:mb-4 tracking-wide uppercase font-semibold">{feat.title}</h3>
+                <p className="text-sm sm:text-base text-on-surface-variant leading-relaxed font-light">{feat.desc}</p>
+                <div className="mt-5 sm:mt-8 flex justify-end">
+                  <span className="text-[10px] tracking-[0.25em] uppercase text-primary opacity-50">{feat.tag}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════ */}
+        {/* TESTIMONIAL SECTION                             */}
+        {/* ═══════════════════════════════════════════════ */}
+        <section id="testimonials" className="py-16 sm:py-24 bg-surface-variant/40 mt-12 sm:mt-16 border-y border-outline-variant relative">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6">
+            <div
+              className="relative bg-white p-8 sm:p-12 text-center"
+              style={{ border: '1.5px solid #E9DFC8', boxShadow: '0 10px 40px -10px rgba(230, 126, 34, 0.15)' }}
+            >
+              <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 bg-primary text-white flex items-center justify-center">
+                <span className="material-symbols-outlined text-lg">format_quote</span>
+              </div>
+              <div className="mt-4 sm:mt-6 flex flex-col gap-6 sm:gap-8">
+                <p className="font-display italic text-xl sm:text-2xl md:text-3xl text-on-background leading-relaxed">
+                  "AstroSutra AI didn't just give me predictions; it gave me clarity on my purpose. It was like speaking to a guide who knew my soul's map before I even asked the first question."
+                </p>
+                <div className="flex items-center justify-center gap-4 sm:gap-6">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 border border-outline-variant p-0.5 bg-white overflow-hidden">
+                    <div className="w-full h-full bg-primary-fixed/50 flex items-center justify-center text-primary text-lg sm:text-xl font-bold font-display">A</div>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs sm:text-sm text-on-background font-bold tracking-[0.12em] uppercase">Ananya Sharma</p>
+                    <p className="text-[11px] sm:text-xs text-on-surface-variant italic">Creative Director & Yoga Practitioner</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════ */}
+        {/* CELESTIAL ALIGNMENT SECTION                     */}
+        {/* ═══════════════════════════════════════════════ */}
+        <section className="py-16 sm:py-24 px-4 sm:px-6 overflow-hidden">
+          <div className="max-w-7xl mx-auto">
+            <GocharaOrbits />
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════ */}
+        {/* PRICING PREVIEW / FINAL CTA                     */}
+        {/* ═══════════════════════════════════════════════ */}
+        <section id="pricing" className="py-16 sm:py-24 px-4 sm:px-6 mb-12 sm:mb-24">
+          <div
+            className="max-w-4xl mx-auto border border-outline-variant p-8 sm:p-12 md:p-16 text-center relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, #fbf9f4 0%, #f5f3ee 100%)',
+              boxShadow: '0 10px 40px -10px rgba(230, 126, 34, 0.15)',
+            }}
+          >
+            <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary-container/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+
+            <h2 className="font-display text-3xl sm:text-4xl md:text-[42px] mb-4 sm:mb-6 uppercase tracking-[0.15em] italic font-semibold relative z-10 leading-tight">
+              Seek the Eternal
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl text-on-surface-variant mb-6 sm:mb-10 max-w-xl mx-auto font-light relative z-10 leading-relaxed">
+              Join thousands of seekers who have found clarity through the union of ancient truth and handcrafted intelligence.
+            </p>
+            <div className="flex flex-col items-center gap-4 sm:gap-6 relative z-10">
+              <button
+                onClick={onGetStarted}
+                className="bg-primary text-white px-8 sm:px-16 py-4 sm:py-6 text-base sm:text-lg tracking-[0.15em] uppercase hover:bg-primary-container transition-all w-full sm:w-auto cursor-pointer font-semibold"
+                style={{ boxShadow: '0 10px 40px -10px rgba(230, 126, 34, 0.15)' }}
+              >
+                Create Your Profile
+              </button>
+              <p className="text-[11px] sm:text-xs tracking-[0.15em] uppercase text-on-surface-variant italic opacity-70">
+                — No obligation. Purely spiritual growth —
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* ═══════════════════════════════════════════════ */}
+      {/* FOOTER                                          */}
+      {/* ═══════════════════════════════════════════════ */}
+      <footer className="w-full py-10 sm:py-16 bg-surface-variant/40 border-t border-outline-variant">
+        <div className="flex flex-col md:flex-row justify-between items-center px-4 sm:px-6 md:px-10 gap-6 sm:gap-8 max-w-7xl mx-auto">
+          <div className="flex flex-col items-center md:items-start gap-2">
+            <div className="font-display text-2xl sm:text-3xl text-primary font-bold italic tracking-tight">AstroSutra AI</div>
+            <p className="text-[11px] sm:text-xs tracking-[0.12em] uppercase text-on-surface-variant">
+              © 2025 AstroSutra AI. Handcrafted Vedic Intelligence.
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-5 sm:gap-10">
+            {['Privacy', 'Terms', 'Lineage', 'Contact'].map((link) => (
+              <a key={link} href="#" className="text-on-surface-variant hover:text-primary transition-colors text-[11px] sm:text-xs tracking-[0.12em] uppercase">
+                {link}
+              </a>
+            ))}
+          </div>
+          <div className="flex gap-4 sm:gap-6">
+            <button className="w-9 h-9 sm:w-10 sm:h-10 border border-outline-variant flex items-center justify-center hover:bg-primary hover:text-white transition-all cursor-pointer">
+              <span className="material-symbols-outlined text-sm">public</span>
+            </button>
+            <button className="w-9 h-9 sm:w-10 sm:h-10 border border-outline-variant flex items-center justify-center hover:bg-primary hover:text-white transition-all cursor-pointer">
+              <span className="material-symbols-outlined text-sm">mail</span>
+            </button>
+          </div>
+        </div>
+      </footer>
+
+      {/* Shimmer Animation Keyframes */}
+      <style>{`
+        @keyframes shimmer {
+          to { background-position: 200% center; }
+        }
+      `}</style>
+    </div>
+  )
+}

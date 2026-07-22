@@ -1,9 +1,15 @@
+import { useState } from 'react'
 import ChatPage from './pages/ChatPage'
 import LoginPage from './pages/LoginPage'
+import LandingPage from './pages/LandingPage'
+import PricingPage from './pages/PricingPage'
 import { AuthProvider, useAuth } from './context/AuthContext'
+
+type AppView = 'landing' | 'login' | 'pricing' | 'app'
 
 function AppContent() {
   const { user, loading } = useAuth()
+  const [view, setView] = useState<AppView>('landing')
 
   if (loading) {
     return (
@@ -16,11 +22,36 @@ function AppContent() {
     )
   }
 
-  if (!user) {
-    return <LoginPage />
+  // If user is already authenticated, go straight to the app
+  if (user) {
+    return <ChatPage />
   }
 
-  return <ChatPage />
+  // Show login page
+  if (view === 'login') {
+    return (
+      <LoginPage
+        onClose={() => setView('landing')}
+        onSuccess={() => {
+          // After successful login, ChatPage will render because user becomes non-null
+        }}
+      />
+    )
+  }
+
+  // Show pricing page
+  if (view === 'pricing') {
+    return <PricingPage onNavigateBack={() => setView('landing')} />
+  }
+
+  // Default: show the landing page
+  return (
+    <LandingPage
+      onSignIn={() => setView('login')}
+      onGetStarted={() => setView('login')}
+      onPricing={() => setView('pricing')}
+    />
+  )
 }
 
 function App() {

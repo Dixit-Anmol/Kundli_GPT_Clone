@@ -68,15 +68,15 @@ export default function DashboardPage({
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Main Container */}
-      <main className="max-w-[1200px] mx-auto px-4 py-8">
+      <main className="max-w-[1200px] mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* User Greeting Banner */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 bg-surface p-5 rounded-3xl border border-outline-variant/60 shadow-xs">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-display text-3xl font-bold text-primary">
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-2 sm:gap-4 bg-surface p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-outline-variant/60 shadow-xs">
+          <div className="min-w-0 w-full sm:w-auto">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <h1 className="font-display text-lg sm:text-2xl md:text-3xl font-bold text-primary leading-snug">
                 🙏 Welcome, {birthData?.fullName || 'Seeker'}!
               </h1>
-              <span className="text-xs font-semibold text-primary bg-primary-fixed px-2.5 py-0.5 rounded-full border border-primary/20">
+              <span className="text-[10px] sm:text-xs font-semibold text-primary bg-primary-fixed px-2 py-0.5 rounded-full border border-primary/20 whitespace-nowrap">
                 {chartData?.mode === 'prashna'
                   ? '🔮 Prashna Horary'
                   : chartData?.mode === 'partial'
@@ -84,7 +84,7 @@ export default function DashboardPage({
                   : birthData?.relationship || 'Janma Kundli'}
               </span>
             </div>
-            <p className="text-xs text-on-surface-variant mt-1 font-medium">
+            <p className="text-[11px] sm:text-xs text-on-surface-variant mt-1 font-medium leading-relaxed break-words">
               {chartData?.mode === 'prashna' ? (
                 <>Prashna Lagna: <strong className="text-primary">{formatSignWithHindi(chartData?.prashna_lagna?.sign || 'Aries')}</strong> · Moon Sign: <strong className="text-primary">{formatSignWithHindi(chartData?.planets?.moon?.sign || 'Cancer')}</strong> · Nakshatra: <strong className="text-primary">{chartData?.panchanga?.nakshatra}</strong></>
               ) : chartData?.mode === 'partial' ? (
@@ -97,7 +97,7 @@ export default function DashboardPage({
 
           <button
             onClick={onResetProfile}
-            className="text-xs text-on-surface-variant hover:text-primary transition-colors underline underline-offset-4 decoration-outline-variant hover:decoration-primary cursor-pointer"
+            className="text-xs text-on-surface-variant hover:text-primary transition-colors underline underline-offset-4 decoration-outline-variant hover:decoration-primary cursor-pointer shrink-0"
           >
             Edit Details
           </button>

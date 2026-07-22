@@ -19,28 +19,28 @@ export default function SummaryCards({ tab, chartData, computed }: SummaryCardsP
   const cards = getCardsForTab(tab, chartData, computed)
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
       {cards.map((card, i) => (
         <div
           key={i}
-          className="celestial-card p-4 rounded-2xl bg-surface border border-outline-variant/60 shadow-xs hover:border-primary/40 transition-all flex flex-col justify-between"
+          className="celestial-card p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border border-outline-variant/60 shadow-xs hover:border-primary/40 transition-all flex flex-col justify-between min-w-0"
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant/80">
+          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+            <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-on-surface-variant/80 truncate mr-1">
               {card.label}
             </span>
             {card.icon && (
-              <span className="material-symbols-outlined text-primary text-xl opacity-80">
+              <span className="material-symbols-outlined text-primary text-base sm:text-xl opacity-80 shrink-0">
                 {card.icon}
               </span>
             )}
           </div>
-          <div>
-            <p className="font-display text-xl font-bold text-primary leading-tight">
+          <div className="min-w-0">
+            <p className="font-display text-base sm:text-xl font-bold text-primary leading-tight truncate">
               {card.value}
             </p>
             {card.subtext && (
-              <p className="text-[11px] text-on-surface-variant mt-1 leading-snug line-clamp-1">
+              <p className="text-[10px] sm:text-[11px] text-on-surface-variant mt-0.5 sm:mt-1 leading-snug line-clamp-1">
                 {card.subtext}
               </p>
             )}

@@ -48,9 +48,9 @@ export default function TabNavigation({ activeTab, onTabChange }: TabNavigationP
   const currentTier = getCurrentTier()
 
   return (
-    <div className="bg-surface border-b border-outline-variant/60 sticky top-[72px] z-40 shadow-xs">
-      <div className="max-w-[1200px] mx-auto px-4">
-        <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar py-2 no-scrollbar">
+    <div className="bg-surface border-b border-outline-variant/60 sticky top-[64px] z-40 shadow-xs">
+      <div className="max-w-[1200px] mx-auto px-2 sm:px-4">
+        <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto custom-scrollbar py-1.5 sm:py-2 no-scrollbar">
           {visibleTabs.map((tab) => {
             const isActive = activeTab === tab.id
             const isAllowed = isTabAllowedForTier(tab.id, currentTier)
@@ -62,7 +62,7 @@ export default function TabNavigation({ activeTab, onTabChange }: TabNavigationP
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
                 title={!isAllowed ? `Requires ${tierInfo.label} Plan` : tab.description}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl whitespace-nowrap transition-all text-sm font-medium cursor-pointer shrink-0 relative ${
+                className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl whitespace-nowrap transition-all text-xs sm:text-sm font-medium cursor-pointer shrink-0 relative ${
                   isActive
                     ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]'
                     : !isAllowed
@@ -71,12 +71,13 @@ export default function TabNavigation({ activeTab, onTabChange }: TabNavigationP
                 }`}
               >
                 <span
-                  className={`material-symbols-outlined text-lg ${isActive ? 'text-white' : !isAllowed ? 'text-on-surface-variant/60' : 'text-primary'}`}
+                  className={`material-symbols-outlined text-base sm:text-lg ${isActive ? 'text-white' : !isAllowed ? 'text-on-surface-variant/60' : 'text-primary'}`}
                   style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
                 >
                   {tab.icon}
                 </span>
-                <span>{tab.label}</span>
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden text-[11px]">{tab.label.length > 8 ? tab.label.substring(0, 7) + '…' : tab.label}</span>
 
                 {/* Lock Badge if Tab Requires Higher Subscription Tier */}
                 {!isAllowed && (

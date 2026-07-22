@@ -212,20 +212,20 @@ export default function TabChat({
   const suggestions = getSuggestions()
 
   return (
-    <div className="mt-8 border-t border-outline-variant/40 pt-6">
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h3 className="font-display text-2xl font-bold text-primary flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary text-xl">forum</span>
+    <div className="mt-5 sm:mt-8 border-t border-outline-variant/40 pt-4 sm:pt-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2">
+        <h3 className="font-display text-lg sm:text-2xl font-bold text-primary flex items-center gap-1.5 sm:gap-2">
+          <span className="material-symbols-outlined text-primary text-base sm:text-xl">forum</span>
           Ask {activeTabName} Guidance
         </h3>
 
         {/* Daily Chat Usage Badge */}
-        <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-surface-variant/50 border border-outline-variant/60">
-          <span className="material-symbols-outlined text-sm text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+        <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-surface-variant/50 border border-outline-variant/60">
+          <span className="material-symbols-outlined text-xs sm:text-sm text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
             chat
           </span>
           <span className="text-on-surface-variant">
-            Daily Chat Limit: {isFinite(totalLimit) ? `${remaining}/${totalLimit} remaining` : 'Unlimited ✨'}
+            {isFinite(totalLimit) ? `${remaining}/${totalLimit} remaining` : 'Unlimited ✨'}
           </span>
         </div>
       </div>
@@ -244,7 +244,7 @@ export default function TabChat({
             </AssistantMessage>
           ) : (
             <div key={idx} className="flex justify-end animate-fade-in-up">
-              <div className="max-w-[85%] bg-primary-fixed border border-primary/20 text-on-primary-fixed rounded-2xl rounded-tr-none px-4 py-3 text-sm leading-relaxed shadow-xs font-medium">
+              <div className="max-w-[90%] sm:max-w-[85%] bg-primary-fixed border border-primary/20 text-on-primary-fixed rounded-2xl rounded-tr-none px-3 sm:px-4 py-2.5 sm:py-3 text-sm leading-relaxed shadow-xs font-medium break-words">
                 {textContent}
               </div>
             </div>
@@ -293,22 +293,22 @@ export default function TabChat({
           )}
 
           {/* Input Bar */}
-          <div className="flex items-center gap-2 bg-surface p-2 rounded-2xl border border-outline-variant shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-surface p-1.5 sm:p-2 rounded-xl sm:rounded-2xl border border-outline-variant shadow-xs focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`Ask anything about your ${activeTabName.toLowerCase()}...`}
+              placeholder={`Ask about ${activeTabName.toLowerCase()}...`}
               disabled={loading}
-              className="flex-1 bg-transparent px-3 py-2 text-sm text-on-surface focus:outline-none placeholder:text-on-surface-variant/60"
+              className="flex-1 bg-transparent px-2 sm:px-3 py-2.5 sm:py-2 text-base sm:text-sm text-on-surface focus:outline-none placeholder:text-on-surface-variant/60 min-w-0"
             />
             <button
               onClick={handleSend}
               disabled={loading || !input.trim()}
-              className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center hover:bg-primary-container disabled:opacity-40 transition-all cursor-pointer shrink-0"
+              className="w-10 h-10 sm:w-10 sm:h-10 bg-primary text-white rounded-xl flex items-center justify-center hover:bg-primary-container disabled:opacity-40 transition-all cursor-pointer shrink-0"
             >
-              <span className="material-symbols-outlined text-xl">send</span>
+              <span className="material-symbols-outlined text-lg sm:text-xl">send</span>
             </button>
           </div>
         </>
