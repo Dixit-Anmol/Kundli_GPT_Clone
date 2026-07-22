@@ -154,7 +154,8 @@ def handle_tab_chat(req: TabChatRequest):
         if api_key:
             client.api_key = api_key
 
-        response_text = client.generate(system_prompt, user_prompt)
+        target_tokens = 750 if is_initial else 420
+        response_text = client.generate(system_prompt, user_prompt, max_tokens=target_tokens)
 
         # Save chat turn to session history
         session_store.add_message(req.session_id, "user", req.message)

@@ -72,7 +72,7 @@ def match_kundli(req: KundliMatchRequest):
 
         client = LLMFactory.get_client()
         try:
-            ai_report = client.generate(MATCHING_SYSTEM_PROMPT, user_prompt)
+            ai_report = client.generate(MATCHING_SYSTEM_PROMPT, user_prompt, max_tokens=850)
         except Exception as llm_err:
             print(f"[Matching API] LLM Generation warning: {llm_err}")
             ai_report = f"### 💖 Kundli Compatibility Summary\n\nOverall Ashtakoota Score: **{match_result.get('ashtakoota', {}).get('total_score')}/36 Gunas** ({match_result.get('ashtakoota', {}).get('verdict')}).\n\n{match_result.get('ashtakoota', {}).get('recommendation')}"

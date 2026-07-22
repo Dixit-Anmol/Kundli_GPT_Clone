@@ -96,29 +96,25 @@ def build_overview_context(
                 f"{r['planet'].capitalize()} ({r['status']})" for r in bot2
             )
 
-    return f"""[CONVERSATION HISTORY]
-{format_history(history)}
+    hist_text = format_history(history)
+    hist_block = f"[CONVERSATION HISTORY]\n{hist_text}\n\n" if hist_text else ""
 
-[USER PROFILE]
+    return f"""{hist_block}[USER PROFILE]
 {format_profile(profile)}
 
 [CORE CHART]
 {format_core_chart(chart_data)}
-{lucky}
-{elements}
 {rankings}
 
 [PLANETARY POSITIONS]
 {format_planets(planets)}
 
-[ALL HOUSES]
-{format_all_houses(houses, planets)}
+[KEY HOUSES]
+{format_houses_subset(houses, planets, [1, 4, 5, 7, 9, 10])}
 
-[YOGAS]
+[YOGAS & DOSHAS]
 {format_yogas(yogas)}
-
-[DOSHAS]
 {format_doshas(doshas)}
 
 [USER QUESTION]
-\"{query}\""""
+"{query}" """

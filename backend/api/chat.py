@@ -123,7 +123,7 @@ def handle_chat(req: ChatRequest):
         if api_key:
             client.api_key = api_key # Override client key with session key
             
-        response_text = client.generate(system_prompt, user_prompt)
+        response_text = client.generate(system_prompt, user_prompt, max_tokens=420)
         
         # 7. Save chat turn to session history
         session_store.add_message(req.session_id, "user", req.message)

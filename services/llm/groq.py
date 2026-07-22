@@ -5,7 +5,7 @@ class GroqClient:
     def __init__(self, api_key: str = None):
         self.api_key = api_key or os.environ.get("GROQ_API_KEY")
         
-    def generate(self, system_prompt: str, user_prompt: str) -> str:
+    def generate(self, system_prompt: str, user_prompt: str, max_tokens: int = 700) -> str:
         """Call Groq API using HTTP requests directly (saves install size), with multi-key rotational fallback."""
         raw_keys = [
             self.api_key,
@@ -21,46 +21,50 @@ class GroqClient:
             os.environ.get("GROQ_API_KEY_FALLBACK10"),
         ]
 
-
         keys_to_try = []
         for k in raw_keys:
             if k and k not in keys_to_try:
                 keys_to_try.append(k)
-
 
         last_error_message = "No API key configured."
 
         for key in keys_to_try:
             if not key:
                 continue
-            try:
-                url = "https://api.groq.com/openai/v1/chat/completions"
-                headers = {
-                    "Authorization": f"Bearer {key}",
-                    "Content-Type": "application/json"
-                }
-                data = {
-                    "model": "llama-3.3-70b-versatile",
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    "temperature": 0.7,
-                    "max_tokens": 650
-                }
+            
+            # Models to try in order of priority: 70b -> 8b-instant -> mixtral
+            models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"]
+            for model_name in models:
+                try:
+                    url = "https://api.groq.com/openai/v1/chat/completions"
+                    headers = {
+                        "Authorization": f"Bearer {key}",
+                        "Content-Type": "application/json"
+                    }
+                    data = {
+                        "model": model_name,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        "temperature": 0.7,
+                        "max_tokens": max_tokens
+                    }
 
-                response = requests.post(url, headers=headers, json=data, timeout=30)
-                if response.ok:
-                    res_data = response.json()
-                    return res_data["choices"][0]["message"]["content"]
-                else:
-                    last_error_message = response.text
-                    print(f"Groq API error with key {key[:12]}...: {response.text}")
-            except Exception as e:
-                last_error_message = str(e)
-                print(f"Groq connection error with key {key[:12]}...: {e}")
+                    response = requests.post(url, headers=headers, json=data, timeout=30)
+                    if response.ok:
+                        res_data = response.json()
+                        return res_data["choices"][0]["message"]["content"]
+                    else:
+                        last_error_message = response.text
+                        # If rate limited (429), break inner loop to try next model or next key
+                        if response.status_code == 429:
+                            continue
+                except Exception as e:
+                    last_error_message = str(e)
+                    continue
                 
-        # If all keys fail
+        # If all keys and models fail
         return f"Cosmic connection failed: {last_error_message}\n\n{self._offline_fallback(user_prompt)}"
             
     def _offline_fallback(self, user_prompt: str) -> str:
