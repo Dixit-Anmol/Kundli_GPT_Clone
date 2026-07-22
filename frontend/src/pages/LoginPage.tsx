@@ -25,7 +25,11 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
       if (onSuccess) onSuccess()
     } catch (err: any) {
       console.error('Google login error:', err)
-      setError(err.message || 'Google sign-in failed. Please try again.')
+      let msg = err.message || 'Google sign-in failed. Please try again.'
+      if (msg.includes('auth/api-key-not-valid') || msg.includes('api-key-not-valid')) {
+        msg = 'Firebase configuration missing on host. Please add VITE_FIREBASE_* environment variables in your Render Dashboard.'
+      }
+      setError(msg)
     } finally {
       setLoading(false)
     }
@@ -57,7 +61,9 @@ export default function LoginPage({ onSuccess, onClose }: LoginPageProps) {
     } catch (err: any) {
       console.error('Auth error:', err)
       let msg = err.message || 'Authentication failed'
-      if (msg.includes('auth/invalid-credential') || msg.includes('auth/wrong-password')) {
+      if (msg.includes('auth/api-key-not-valid') || msg.includes('api-key-not-valid')) {
+        msg = 'Firebase configuration missing on host. Please add VITE_FIREBASE_* environment variables in your Render Dashboard.'
+      } else if (msg.includes('auth/invalid-credential') || msg.includes('auth/wrong-password')) {
         msg = 'Invalid email or password.'
       } else if (msg.includes('auth/email-already-in-use')) {
         msg = 'An account with this email already exists.'
