@@ -3,6 +3,7 @@ import type { UserProfile } from '../../types/profile'
 import { getCurrentTier } from '../../utils/subscriptionManager'
 import { TIER_CONFIG } from '../../config/subscriptionConfig'
 import { getMaxProfilesForTier } from '../../config/subscriptionConfig'
+import { useAuth } from '../../context/AuthContext'
 
 interface NavbarProps {
   profiles?: UserProfile[]
@@ -21,6 +22,7 @@ export default function Navbar({
   onDeleteProfile,
   onOpenPricing,
 }: NavbarProps) {
+  const { user, logout } = useAuth()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -172,7 +174,7 @@ export default function Navbar({
             </div>
 
             {/* Add New Profile CTA */}
-            <div className="px-3 pt-2 border-t border-outline-variant/40">
+            <div className="px-3 pt-2 border-t border-outline-variant/40 space-y-2">
               <button
                 onClick={() => {
                   setDropdownOpen(false)
@@ -184,6 +186,19 @@ export default function Navbar({
                 <span className="material-symbols-outlined text-base">add</span>
                 {profiles.length >= maxProfiles ? `Profile Limit Reached (${maxProfiles})` : 'Add Profile (Family/Friend)'}
               </button>
+
+              {user && (
+                <button
+                  onClick={() => {
+                    setDropdownOpen(false)
+                    logout()
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-error/10 hover:bg-error/20 text-error border border-error/20 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-base">logout</span>
+                  Sign Out ({user.displayName || user.email})
+                </button>
+              )}
             </div>
           </div>
         )}

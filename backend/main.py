@@ -19,6 +19,7 @@ from api.tab_chat import router as tab_chat_router
 from api.profile import router as profile_router
 from api.matching import router as matching_router
 from api.dasha import router as dasha_router
+from api.auth import router as auth_router
 
 app = FastAPI(
     title="AstroSutra AI API",
@@ -62,6 +63,7 @@ app.include_router(tab_chat_router, prefix="/api", tags=["Tab-Scoped Chat"])
 app.include_router(profile_router, prefix="/api", tags=["Profile"])
 app.include_router(matching_router, prefix="/api", tags=["Kundli Matching"])
 app.include_router(dasha_router, prefix="/api", tags=["Dasha Timeline"])
+app.include_router(auth_router, prefix="/api", tags=["Firebase Authentication"])
 
 @app.get("/")
 def root():

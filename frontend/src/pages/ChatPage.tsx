@@ -15,6 +15,8 @@ import {
   saveProfile,
   deleteProfile,
 } from '../utils/profileManager'
+import { useAuth } from '../context/AuthContext'
+import { authenticatedFetch } from '../utils/apiClient'
 
 type ChatStep = 'loading' | 'welcome' | 'birthplace' | 'computing' | 'ready'
 
@@ -26,6 +28,7 @@ const API_BASE_URL =
 
 
 export default function ChatPage() {
+  const { user } = useAuth()
   const [sessionId] = useState(() => Math.random().toString(36).substring(7))
   const [step, setStep] = useState<ChatStep>('loading')
   const [showPricing, setShowPricing] = useState(false)
@@ -39,7 +42,7 @@ export default function ChatPage() {
   const [chartData, setChartData] = useState<any>(null)
 
   // -----------------------------------------------------------------------
-  // On Mount — Load saved profiles from localStorage & hydrate from backend if needed
+  // On Mount & User Change — Load saved profiles / hydrate from backend for active User
   // -----------------------------------------------------------------------
   useEffect(() => {
     const saved = getSavedProfiles()
@@ -47,8 +50,11 @@ export default function ChatPage() {
 
     setProfiles(saved)
 
+    // User account key: use user.uid if available
+    const userKey = user?.uid || savedActiveId
+
     if (saved.length > 0) {
-      const active = saved.find((p) => p.id === savedActiveId) || saved[0]
+      const active = saved.find((p) => p.id === userKey || p.id === savedActiveId) || saved[0]
       setActiveId(active.id)
       setActiveProfileId(active.id)
       setBirthData(active.birthData || null)
@@ -58,7 +64,7 @@ export default function ChatPage() {
         setStep('ready')
       } else if (active.id) {
         // Attempt to load from backend profile store
-        fetch(`${API_BASE_URL}/api/profile/${active.id}`)
+        authenticatedFetch(`${API_BASE_URL}/api/profile/${active.id}`)
           .then((res) => (res.ok ? res.json() : null))
           .then((data) => {
             if (data && data.exists && data.chart_summary) {
@@ -68,17 +74,45 @@ export default function ChatPage() {
               // Re-trigger chart calculation from saved birth details
               handleBirthSubmit(active.birthData, active.id)
             } else {
-              setStep('ready')
+              setStep('welcome')
             }
           })
-          .catch(() => setStep('ready'))
+          .catch(() => setStep('welcome'))
       } else {
         setStep('ready')
       }
+    } else if (userKey) {
+      // Check backend profile store for existing user profile
+      authenticatedFetch(`${API_BASE_URL}/api/profile/${userKey}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.exists && (data.chart_summary || data.natal_chart)) {
+            const chart = data.chart_summary || data.natal_chart
+            const restoredProfile: UserProfile = {
+              id: userKey,
+              name: user?.displayName || data.birth_details?.name || 'Seeker',
+              relationship: 'Self',
+              birthData: data.birth_details || null,
+              chartData: chart,
+              computed: data.computed,
+              createdAt: new Date().toISOString(),
+            }
+            saveProfile(restoredProfile)
+            setProfiles([restoredProfile])
+            setActiveId(userKey)
+            setActiveProfileId(userKey)
+            setChartData(chart)
+            setBirthData(data.birth_details || null)
+            setStep('ready')
+          } else {
+            setStep('welcome')
+          }
+        })
+        .catch(() => setStep('welcome'))
     } else {
       setStep('welcome')
     }
-  }, [])
+  }, [user?.uid])
 
   // -----------------------------------------------------------------------
   // Switch active profile
@@ -95,7 +129,6 @@ export default function ChatPage() {
       setChartData(selected.chartData)
       setStep('ready')
     } else {
-      // Re-calculate if missing chart data
       if (selected.birthData) handleBirthSubmit(selected.birthData, selected.id)
     }
   }
@@ -128,21 +161,21 @@ export default function ChatPage() {
   }
 
   // -----------------------------------------------------------------------
-  // Form submission -> Calculate Kundli chart
+  // Form submission -> Calculate Kundli chart & save user profile
   // -----------------------------------------------------------------------
   const handleBirthSubmit = async (data: BirthData, targetProfileId?: string) => {
     setBirthData(data)
     setStep('computing')
 
-    const newProfileId = targetProfileId || `prof_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+    const userProfileId = user?.uid || targetProfileId || `prof_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
 
     try {
       const payload: any = {
-        name: data.fullName || 'Seeker',
+        name: data.fullName || user?.displayName || 'Seeker',
         latitude: data.latitude || 28.6139,
         longitude: data.longitude || 77.209,
         session_id: sessionId,
-        user_id: newProfileId,
+        user_id: userProfileId,
         mode: data.mode || 'exact',
         time_slot: data.timeSlot || 'unknown',
         question: data.question || null,
@@ -152,7 +185,7 @@ export default function ChatPage() {
       if (data.dateOfBirth) payload.date_str = data.dateOfBirth
       if (data.timeOfBirth) payload.time_str = data.timeOfBirth
 
-      const response = await fetch(`${API_BASE_URL}/api/chart`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/api/chart`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -168,10 +201,10 @@ export default function ChatPage() {
       setBirthData(data)
       setChartData(chart)
 
-      // Save to multi-profile storage
+      // Save to multi-profile storage linked to user account
       const newProfile: UserProfile = {
-        id: newProfileId,
-        name: data.fullName || 'Seeker',
+        id: userProfileId,
+        name: data.fullName || user?.displayName || 'Seeker',
         relationship: data.relationship || 'Self',
         birthData: data,
         chartData: chart,
@@ -179,14 +212,14 @@ export default function ChatPage() {
         createdAt: new Date().toISOString(),
       }
 
-      const updatedProfiles = saveProfile(newProfile)
-      setProfiles(updatedProfiles)
-      setActiveId(newProfileId)
-      setActiveProfileId(newProfileId)
+      const updated = saveProfile(newProfile)
+      setProfiles(updated)
+      setActiveId(userProfileId)
+      setActiveProfileId(userProfileId)
       setStep('ready')
-    } catch (error) {
-      console.error('Error submitting birth details:', error)
-      alert('Failed to compute birth chart. Please check your internet connection and backend status.')
+    } catch (err) {
+      console.error('Error computing chart:', err)
+      alert('Failed to compute birth chart. Please check your network or backend server.')
       setStep('welcome')
     }
   }
