@@ -5,13 +5,15 @@ Endpoints for looking up, deleting, and recalculating stored user profiles.
 """
 
 import datetime
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
+from typing import Optional
 from models.response import ProfileResponse
 from services.memory.profile_store import profile_store
 from services.memory.session import session_store
 from services.astrology.horoscope import calculate_horoscope_data
 from api.chart import find_timezone_offset
 from backend.utils.date_parser import parse_date_str, parse_time_str
+from core.auth import verify_firebase_token
 
 from services.astrology.prakriti import estimate_prakriti
 from services.astrology.elements import calculate_element_distribution
@@ -22,16 +24,30 @@ from services.astrology.remedies_calc import generate_remedy_data
 router = APIRouter()
 
 
+def resolve_user_id(user_id: str, authorization: Optional[str] = None) -> str:
+    """Check Authorization token and return verified uid if present, else original user_id."""
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+        try:
+            claims = verify_firebase_token(token)
+            if claims and "uid" in claims:
+                return claims["uid"]
+        except Exception as e:
+            print(f"[Profile] Token verification failed: {e}")
+    return user_id
+
 
 @router.get("/profile/{user_id}", response_model=ProfileResponse)
-def get_profile(user_id: str):
+def get_profile(user_id: str, authorization: Optional[str] = Header(None)):
     """
-    Look up a stored profile by anonymous user ID.
+    Look up a stored profile by anonymous user ID or verified Firebase UID.
 
     If found, hydrates the in-memory session store so /api/chat works
     seamlessly without re-computing the chart.
     """
+    user_id = resolve_user_id(user_id, authorization)
     profile = profile_store.load_profile(user_id)
+
 
     if not profile:
         return {
@@ -90,8 +106,9 @@ def get_profile(user_id: str):
 
 
 @router.delete("/profile/{user_id}")
-def delete_profile(user_id: str):
+def delete_profile(user_id: str, authorization: Optional[str] = Header(None)):
     """Delete a stored profile so the user can re-enter birth details."""
+    user_id = resolve_user_id(user_id, authorization)
     deleted = profile_store.delete_profile(user_id)
     # Also clear the in-memory session
     session_store.clear_session(user_id)
@@ -99,12 +116,13 @@ def delete_profile(user_id: str):
 
 
 @router.post("/profile/{user_id}/recalculate")
-def recalculate_chart(user_id: str):
+def recalculate_chart(user_id: str, authorization: Optional[str] = Header(None)):
     """
     Force-recalculate the natal chart from stored birth details.
 
     Use when chart data might be corrupted or a manual refresh is requested.
     """
+    user_id = resolve_user_id(user_id, authorization)
     profile = profile_store.load_profile(user_id)
     if not profile:
         raise HTTPException(status_code=404, detail="No profile found for this user ID.")

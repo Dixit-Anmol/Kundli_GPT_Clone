@@ -1,7 +1,8 @@
 import requests
 import pytz
 from datetime import datetime
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
+from typing import Optional
 from models.request import TimezoneRequest, ChartRequest
 from models.response import TimezoneResponse, ChartResponse
 from services.astrology.horoscope import calculate_horoscope_data
@@ -63,8 +64,19 @@ def get_timezone(req: TimezoneRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/chart", response_model=ChartResponse)
-def build_chart(req: ChartRequest):
+def build_chart(req: ChartRequest, authorization: Optional[str] = Header(None)):
     try:
+        # Resolve authenticated user_id from token if present
+        if authorization and authorization.startswith("Bearer "):
+            token = authorization.split(" ")[1]
+            try:
+                from core.auth import verify_firebase_token
+                claims = verify_firebase_token(token)
+                if claims and "uid" in claims:
+                    req.user_id = claims["uid"]
+            except Exception as e:
+                print(f"[Chart] Token verification failed: {e}")
+
         mode = (req.mode or "exact").lower()
 
         # ---------------------------------------------------------------
