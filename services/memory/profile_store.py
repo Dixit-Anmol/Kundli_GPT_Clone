@@ -113,8 +113,7 @@ class ProfileStore:
             if not profile:
                 profile = AstroProfile(
                     user_id=db_user_id,
-                    name=birth_details.get("name", "Profile"),
-                    status="active"
+                    name=birth_details.get("name", "Profile")
                 )
                 db.add(profile)
                 db.commit()
@@ -161,7 +160,7 @@ class ProfileStore:
                 details.timezone_offset = birth_details.get("timezone_offset", details.timezone_offset)
 
             # 5. Insert or update AstroChart
-            chart = db.query(AstroChart).filter(AstroChart.profile_id == profile.id, AstroChart.chart_type == "birth").first()
+            chart = db.query(AstroChart).filter(AstroChart.profile_id == profile.id, AstroChart.chart_type == "natal").first()
             
             raw_payload = {
                 "natal_chart": natal_chart,
@@ -171,7 +170,7 @@ class ProfileStore:
             if not chart:
                 chart = AstroChart(
                     profile_id=profile.id,
-                    chart_type="birth",
+                    chart_type="natal",
                     raw_data=raw_payload
                 )
                 db.add(chart)
@@ -199,7 +198,7 @@ class ProfileStore:
                 return None
 
             details = db.query(AstroBirthDetails).filter(AstroBirthDetails.profile_id == profile.id).first()
-            chart = db.query(AstroChart).filter(AstroChart.profile_id == profile.id, AstroChart.chart_type == "birth").first()
+            chart = db.query(AstroChart).filter(AstroChart.profile_id == profile.id, AstroChart.chart_type == "natal").first()
 
             if not details or not chart:
                 return None
