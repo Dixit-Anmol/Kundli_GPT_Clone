@@ -34,7 +34,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // Cache to deduplicate concurrent verification requests for the same token
-const syncCache: Record<string, Promise<any>> = {}
+const syncCache: Record<string, Promise<any> | undefined> = {}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
