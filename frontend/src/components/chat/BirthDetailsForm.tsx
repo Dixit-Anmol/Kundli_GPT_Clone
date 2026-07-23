@@ -17,6 +17,7 @@ export interface BirthData {
   placeName?: string
   latitude?: number
   longitude?: number
+  timezone_offset?: number
 }
 
 interface Suggestion {
