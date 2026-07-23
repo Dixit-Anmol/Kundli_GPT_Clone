@@ -74,6 +74,7 @@ class ProfileStore:
         birth_details: dict,
         natal_chart: dict,
         chart_response: dict,
+        owner_id: str | None = None,
     ):
         """
         Persist a user profile to the database.
@@ -88,34 +89,50 @@ class ProfileStore:
             The full calculated natal chart context (planets, houses, yogas, doshas).
         chart_response : dict
             The summary response sent back to the frontend.
+        owner_id : str, optional
+            The authenticated primary user's UID to link the profile to.
         """
         db = SessionLocal()
         try:
-            # 1. Resolve database User
-            user = resolve_db_user(db, user_id)
-            if not user:
+            profile_uuid = get_valid_uuid(user_id)
+
+            # 1. Resolve owner User
+            owner = None
+            if owner_id:
+                owner = resolve_db_user(db, owner_id)
+            if not owner:
+                owner = resolve_db_user(db, user_id)
+
+            if not owner:
                 # Create new anonymous guest user
                 db_user_id = get_valid_uuid(user_id)
-                user = User(
+                owner = User(
                     id=db_user_id,
                     email=f"anonymous_{user_id}@astrosutra.ai",
                     display_name=birth_details.get("name", "Astro User"),
                     status="active",
                     email_verified=False
                 )
-                db.add(user)
+                db.add(owner)
                 db.commit()
             
-            db_user_id = user.id
+            db_user_id = owner.id
 
             # 2. Find or create AstroProfile
-            profile = db.query(AstroProfile).filter(AstroProfile.user_id == db_user_id).first()
+            profile = db.query(AstroProfile).filter(AstroProfile.id == profile_uuid).first()
+            if not profile:
+                profile = db.query(AstroProfile).filter(AstroProfile.user_id == profile_uuid).first()
+
             if not profile:
                 profile = AstroProfile(
+                    id=profile_uuid,
                     user_id=db_user_id,
                     name=birth_details.get("name", "Profile")
                 )
                 db.add(profile)
+                db.commit()
+            else:
+                profile.name = birth_details.get("name", profile.name)
                 db.commit()
 
             # 3. Parse date and time values safely
@@ -190,10 +207,11 @@ class ProfileStore:
         """Load a profile from the database. Returns None if not found."""
         db = SessionLocal()
         try:
-            user = resolve_db_user(db, user_id)
-            if not user:
-                return None
-            profile = db.query(AstroProfile).filter(AstroProfile.user_id == user.id).first()
+            profile_uuid = get_valid_uuid(user_id)
+            profile = db.query(AstroProfile).filter(AstroProfile.id == profile_uuid).first()
+            if not profile:
+                profile = db.query(AstroProfile).filter(AstroProfile.user_id == profile_uuid).first()
+            
             if not profile:
                 return None
 

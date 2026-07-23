@@ -35,7 +35,8 @@ def handle_chat(req: ChatRequest, current_user: dict = Depends(require_current_u
             db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
             if not db_user:
                 raise HTTPException(status_code=404, detail="User not synchronized")
-            req.user_id = str(db_user.id)
+            if not req.user_id:
+                req.user_id = str(db_user.id)
         finally:
             db.close()
 

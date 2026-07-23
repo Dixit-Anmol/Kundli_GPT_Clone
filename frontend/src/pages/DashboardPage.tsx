@@ -110,7 +110,7 @@ export default function DashboardPage({
           chartData={chartData}
           computed={computed || chartData?.computed}
           birthData={birthData}
-          sessionId={sessionId}
+          sessionId={`${sessionId}_${userId}`}
           userId={userId}
           apiBaseUrl={apiBaseUrl}
           tabCacheMap={tabCache}

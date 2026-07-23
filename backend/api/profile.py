@@ -31,7 +31,9 @@ def resolve_user_id(user_id: str, authorization: Optional[str] = None) -> str:
         try:
             claims = verify_firebase_token(token)
             if claims and "uid" in claims:
-                return claims["uid"]
+                firebase_uid = claims["uid"]
+                if not user_id or user_id == "self" or user_id == firebase_uid:
+                    return firebase_uid
         except Exception as e:
             print(f"[Profile] Token verification failed: {e}")
     return user_id

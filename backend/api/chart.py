@@ -67,13 +67,16 @@ def get_timezone(req: TimezoneRequest):
 def build_chart(req: ChartRequest, authorization: Optional[str] = Header(None)):
     try:
         # Resolve authenticated user_id from token if present
+        owner_id = None
         if authorization and authorization.startswith("Bearer "):
             token = authorization.split(" ")[1]
             try:
                 from core.auth import verify_firebase_token
                 claims = verify_firebase_token(token)
                 if claims and "uid" in claims:
-                    req.user_id = claims["uid"]
+                    owner_id = claims["uid"]
+                    if not req.user_id or req.user_id == owner_id:
+                        req.user_id = owner_id
             except Exception as e:
                 print(f"[Chart] Token verification failed: {e}")
 
@@ -318,6 +321,7 @@ def build_chart(req: ChartRequest, authorization: Optional[str] = Header(None)):
                     birth_details=birth_details,
                     natal_chart=natal_chart,
                     chart_response=chart_response,
+                    owner_id=owner_id
                 )
             if req.session_id:
                 profile_store.save_profile(
