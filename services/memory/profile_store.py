@@ -146,7 +146,6 @@ class ProfileStore:
             if not details:
                 details = AstroBirthDetails(
                     profile_id=profile.id,
-                    name=birth_details.get("name", "Birth Details"),
                     date_of_birth=dob,
                     time_of_birth=tob,
                     latitude=birth_details.get("latitude"),
@@ -155,7 +154,6 @@ class ProfileStore:
                 )
                 db.add(details)
             else:
-                details.name = birth_details.get("name", details.name)
                 details.date_of_birth = dob or details.date_of_birth
                 details.time_of_birth = tob or details.time_of_birth
                 details.latitude = birth_details.get("latitude", details.latitude)
@@ -208,7 +206,7 @@ class ProfileStore:
 
             # Reconstruct birth details
             birth_details = {
-                "name": details.name,
+                "name": profile.name,
                 "date_of_birth": details.date_of_birth.isoformat() if details.date_of_birth else None,
                 "time_of_birth": details.time_of_birth.isoformat() if details.time_of_birth else None,
                 "latitude": float(details.latitude) if details.latitude is not None else None,
