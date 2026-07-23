@@ -33,6 +33,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Cache to deduplicate concurrent verification requests for the same token
+const syncCache: Record<string, Promise<any>> = {}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
   const [authUser, setAuthUser] = useState<AuthUser | null>(null)
@@ -40,20 +43,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true)
 
   const syncWithPostgreSQL = async (idToken: string): Promise<any> => {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
-    const res = await fetch(`${backendUrl}/api/auth/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ token: idToken }),
-    })
-    if (!res.ok) {
-      const errJson = await res.json().catch(() => ({}))
-      const errMsg = errJson.detail || res.statusText || 'Unknown error'
-      throw new Error(`Database synchronization failed: ${errMsg}`)
+    if (syncCache[idToken]) {
+      return syncCache[idToken]
     }
-    return res.json()
+
+    const promise = (async () => {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
+      const res = await fetch(`${backendUrl}/api/auth/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token: idToken }),
+      })
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}))
+        const errMsg = errJson.detail || res.statusText || 'Unknown error'
+        throw new Error(`Database synchronization failed: ${errMsg}`)
+      }
+      return res.json()
+    })()
+
+    syncCache[idToken] = promise
+
+    try {
+      return await promise
+    } finally {
+      // Evict from cache after a short window to allow fresh synchronization if needed later
+      setTimeout(() => {
+        delete syncCache[idToken]
+      }, 5000)
+    }
   }
 
   const mapUser = async (user: User | null): Promise<AuthUser | null> => {
