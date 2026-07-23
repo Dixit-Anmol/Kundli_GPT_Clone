@@ -31,7 +31,8 @@ def handle_tab_chat(req: TabChatRequest):
         )
 
         session = session_store.get_session(req.session_id)
-        history = session.get("history", [])
+        from services.memory.chat_store import chat_store
+        history = chat_store.get_history(req.session_id)
 
         if not chart_data:
             return {
@@ -113,12 +114,12 @@ def handle_tab_chat(req: TabChatRequest):
         response_text = client.generate(system_prompt, user_prompt, max_tokens=target_tokens)
 
         # Save chat turn to session history
-        session_store.add_message(req.session_id, "user", req.message)
-        session_store.add_message(req.session_id, "assistant", response_text)
+        chat_store.add_message(req.session_id, req.user_id, "user", req.message)
+        chat_store.add_message(req.session_id, req.user_id, "assistant", response_text)
 
         return {
             "response": response_text,
-            "session_count": len(session_store.get_history(req.session_id)),
+            "session_count": len(chat_store.get_history(req.session_id)),
         }
 
     except Exception as e:

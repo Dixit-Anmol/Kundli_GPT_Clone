@@ -16,6 +16,8 @@ from services.llm.factory import LLMFactory
 from backend.astrology.chart_storage import chart_cache
 from backend.astrology.chart_selector import select_charts_for_topic
 
+from services.memory.chat_store import chat_store
+
 router = APIRouter()
 
 # Instantiate global collection-specific RAG pipeline for Bhagavad Gita Chapter 16
@@ -32,7 +34,7 @@ def handle_chat(req: ChatRequest):
         )
 
         session = session_store.get_session(req.session_id)
-        history = session.get("history", [])
+        history = chat_store.get_history(req.session_id)
 
         # 1. Block if birth chart is not generated yet
         if not chart_data:
@@ -107,12 +109,12 @@ def handle_chat(req: ChatRequest):
         response_text = client.generate(system_prompt, user_prompt, max_tokens=420)
         
         # 7. Save chat turn to session history
-        session_store.add_message(req.session_id, "user", req.message)
-        session_store.add_message(req.session_id, "assistant", response_text)
+        chat_store.add_message(req.session_id, req.user_id, "user", req.message)
+        chat_store.add_message(req.session_id, req.user_id, "assistant", response_text)
         
         return {
             "response": response_text,
-            "session_count": len(session_store.get_history(req.session_id))
+            "session_count": len(chat_store.get_history(req.session_id))
         }
         
     except Exception as e:
