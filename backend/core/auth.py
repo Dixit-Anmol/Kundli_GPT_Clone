@@ -89,8 +89,58 @@ def initialize_firebase_admin():
 initialize_firebase_admin()
 
 
+def verify_firebase_token_manually(id_token: str) -> Dict[str, Any]:
+    """Fallback manual JWT decoder validating signature using Google's public certificates."""
+    import requests
+    import jwt
+    from cryptography.x509 import load_pem_x509_certificate
+    from cryptography.hazmat.backends import default_backend
+
+    project_id = os.environ.get("FIREBASE_PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT") or "astrosutraai-b524e"
+
+    # 1. Decode header to extract Key ID (kid)
+    header = jwt.get_unverified_header(id_token)
+    kid = header.get("kid")
+    if not kid:
+        raise ValueError("No 'kid' claim found in token header")
+
+    # 2. Fetch Google's public x509 certificates
+    res = requests.get("https://www.googleapis.com/robot/v1/metadata/x509/securetoken-system@system.gserviceaccount.com", timeout=5)
+    if not res.ok:
+        raise ValueError("Failed to fetch Google public certificates")
+    certs = res.json()
+
+    cert_pem = certs.get(kid)
+    if not cert_pem:
+        raise ValueError(f"No matching certificate found for key ID: {kid}")
+
+    # 3. Parse public key from certificate PEM
+    cert = load_pem_x509_certificate(cert_pem.encode("utf-8"), default_backend())
+    public_key = cert.public_key()
+
+    # 4. Decode and cryptographically verify claims using PyJWT
+    expected_issuer = f"https://securetoken.google.com/{project_id}"
+    decoded = jwt.decode(
+        id_token,
+        public_key,
+        algorithms=["RS256"],
+        audience=project_id,
+        issuer=expected_issuer,
+        options={"verify_signature": True}
+    )
+    
+    return {
+        "uid": decoded.get("sub"),
+        "email": decoded.get("email"),
+        "name": decoded.get("name") or decoded.get("email", "").split("@")[0] or "Seeker",
+        "picture": decoded.get("picture"),
+        "auth_time": decoded.get("auth_time"),
+        "user_id": decoded.get("sub"),
+    }
+
+
 def verify_firebase_token(id_token: str) -> Dict[str, Any]:
-    """Verify Firebase JWT ID token using Firebase Admin SDK."""
+    """Verify Firebase JWT ID token using Firebase Admin SDK with manual cryptographic fallback."""
     if not HAS_FIREBASE_ADMIN or auth is None:
         print("[Auth Warning] firebase_admin package is not installed.")
         return {
@@ -113,8 +163,12 @@ def verify_firebase_token(id_token: str) -> Dict[str, Any]:
             "user_id": decoded.get("user_id"),
         }
     except Exception as e:
-        print(f"[Auth Error] Token verification failed: {e}")
-        raise HTTPException(status_code=401, detail=f"Unauthorized: Invalid or expired Firebase Token ({str(e)})")
+        print(f"[Firebase Admin] verify_id_token failed: {e}. Attempting manual fallback verification...")
+        try:
+            return verify_firebase_token_manually(id_token)
+        except Exception as fallback_err:
+            print(f"[Auth Error] Fallback token verification failed: {fallback_err}")
+            raise HTTPException(status_code=401, detail=f"Unauthorized: Invalid or expired Firebase Token ({str(fallback_err)})")
 
 
 def get_current_user(authorization: Optional[str] = Header(None)) -> Optional[Dict[str, Any]]:
