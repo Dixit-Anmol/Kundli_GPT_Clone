@@ -82,6 +82,8 @@ class AIAnalytics(Base):
         Index("idx_ai_analytics_model", "model_used"),
         Index("idx_ai_analytics_created", "created_at"),
         Index("idx_ai_analytics_success", "is_success"),
+        Index("idx_ai_analytics_session", "session_id"),
+        Index("idx_ai_analytics_message", "message_id"),
         {"schema": "analytics"},
     )
 

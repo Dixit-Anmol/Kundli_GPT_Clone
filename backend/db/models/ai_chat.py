@@ -103,7 +103,11 @@ class ChatMessage(Base):
 # ---------------------------------------------------------------------------
 class ChatAttachment(Base):
     __tablename__ = "chat_attachments"
-    __table_args__ = {"schema": "ai"}
+    __table_args__ = (
+        Index("idx_attachments_message", "message_id"),
+        Index("idx_attachments_file", "file_asset_id"),
+        {"schema": "ai"},
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=new_uuid)
     message_id: Mapped[uuid.UUID] = mapped_column(

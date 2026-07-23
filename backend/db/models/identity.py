@@ -168,6 +168,7 @@ class UserSession(Base):
     __table_args__ = (
         Index("idx_sessions_user", "user_id"),
         Index("idx_sessions_active", "is_active", postgresql_where="is_active = TRUE"),
+        Index("idx_sessions_device", "device_id"),
         {"schema": "platform"},
     )
 

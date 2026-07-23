@@ -92,6 +92,8 @@ class Subscription(Base, TimestampMixin):
         Index("idx_subscriptions_user", "user_id"),
         Index("idx_subscriptions_status", "status"),
         Index("idx_subscriptions_period", "current_period_end"),
+        Index("idx_subscriptions_plan", "plan_id"),
+        Index("uq_active_subscription", "user_id", "product_id", unique=True, postgresql_where="status = 'active'"),
         {"schema": "billing"},
     )
 
@@ -174,6 +176,7 @@ class Payment(Base):
         ),
         Index("idx_payments_user", "user_id"),
         Index("idx_payments_gateway", "gateway", "gateway_payment_id"),
+        Index("idx_payments_invoice", "invoice_id"),
         {"schema": "billing"},
     )
 
