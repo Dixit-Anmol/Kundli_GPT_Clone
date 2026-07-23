@@ -53,8 +53,13 @@ def initialize_firebase_admin():
             firebase_admin.initialize_app(cred)
             _firebase_app_initialized = True
         else:
-            print("[Firebase Admin] Service Account JSON not found. Attempting default credentials...")
-            firebase_admin.initialize_app()
+            project_id = os.environ.get("FIREBASE_PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT") or "astrosutraai-b524e"
+            if project_id:
+                print(f"[Firebase Admin] Service Account JSON not found. Initializing with Project ID: {project_id}")
+                firebase_admin.initialize_app(options={"projectId": project_id})
+            else:
+                print("[Firebase Admin] Service Account JSON and Project ID not found. Attempting default credentials...")
+                firebase_admin.initialize_app()
             _firebase_app_initialized = True
     except Exception as e:
         print(f"[Firebase Admin] Initialization notice: {e}")
