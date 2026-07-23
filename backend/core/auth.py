@@ -136,6 +136,7 @@ def verify_firebase_token_manually(id_token: str) -> Dict[str, Any]:
         algorithms=["RS256"],
         audience=project_id,
         issuer=expected_issuer,
+        leeway=60,  # Tolerates clock drift between Google and local servers
         options={"verify_signature": True}
     )
     
