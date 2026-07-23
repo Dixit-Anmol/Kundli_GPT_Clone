@@ -72,3 +72,23 @@ def root():
         "service": "KundliGPT Astrological Compute Engine",
         "version": "1.0.0"
     }
+
+@app.get("/api/health/db")
+def database_health():
+    """Verify database connectivity with a simple SELECT 1 query."""
+    from sqlalchemy import text
+    from db import engine
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return {
+            "status": "connected",
+            "message": "Database Connection is Healthy!"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Database Connection Failed: {str(e)}"
+        }
+
+
