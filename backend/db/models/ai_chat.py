@@ -94,35 +94,7 @@ class ChatMessage(Base):
     edited_at: Mapped[datetime | None] = mapped_column()
 
     session = relationship("ChatSession", back_populates="messages")
-    attachments = relationship("ChatAttachment", back_populates="message", cascade="all, delete-orphan")
     feedback = relationship("ChatFeedback", back_populates="message", cascade="all, delete-orphan")
-
-
-# ---------------------------------------------------------------------------
-# 26. CHAT ATTACHMENTS
-# ---------------------------------------------------------------------------
-class ChatAttachment(Base):
-    __tablename__ = "chat_attachments"
-    __table_args__ = (
-        Index("idx_attachments_message", "message_id"),
-        Index("idx_attachments_file", "file_asset_id"),
-        {"schema": "ai"},
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=new_uuid)
-    message_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("ai.chat_messages.id", ondelete="CASCADE"), nullable=False
-    )
-    file_asset_id: Mapped[uuid.UUID | None] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("storage.file_assets.id")
-    )
-    file_type: Mapped[str | None] = mapped_column(String(20))
-    file_url: Mapped[str | None] = mapped_column(Text)
-    file_name: Mapped[str | None] = mapped_column(String(255))
-    file_size_bytes: Mapped[int | None] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-
-    message = relationship("ChatMessage", back_populates="attachments")
 
 
 # ---------------------------------------------------------------------------

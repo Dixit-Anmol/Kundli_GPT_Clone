@@ -1,7 +1,7 @@
 """
 Module 7 — Subscriptions & Billing Models.
 
-Tables: subscription_plans, subscriptions, coupons, invoices, payments, transaction_history
+Tables: subscription_plans, subscriptions, payments
 Schema: billing
 """
 
@@ -12,7 +12,7 @@ from sqlalchemy import (
     Boolean, CheckConstraint, ForeignKey, Index, Integer, Numeric,
     SmallInteger, String, Text,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.base import Base, TimestampMixin, new_uuid
@@ -45,34 +45,6 @@ class SubscriptionPlan(Base, TimestampMixin):
     sort_order: Mapped[int] = mapped_column(SmallInteger, default=0)
 
     subscriptions = relationship("Subscription", back_populates="plan")
-
-
-# ---------------------------------------------------------------------------
-# 31. COUPONS (declared before Subscription for FK reference)
-# ---------------------------------------------------------------------------
-class Coupon(Base):
-    __tablename__ = "coupons"
-    __table_args__ = (
-        CheckConstraint(
-            "discount_type IN ('percent','fixed')",
-            name="ck_coupon_discount_type",
-        ),
-        {"schema": "billing"},
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=new_uuid)
-    code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
-    description: Mapped[str | None] = mapped_column(Text)
-    discount_type: Mapped[str | None] = mapped_column(String(10))
-    discount_value: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    currency: Mapped[str] = mapped_column(String(3), default="INR")
-    max_uses: Mapped[int | None] = mapped_column(Integer)
-    times_used: Mapped[int] = mapped_column(Integer, default=0)
-    valid_from: Mapped[datetime | None] = mapped_column()
-    valid_until: Mapped[datetime | None] = mapped_column()
-    applicable_plans: Mapped[list] = mapped_column(ARRAY(PG_UUID(as_uuid=True)), default=list)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
 
 # ---------------------------------------------------------------------------
@@ -115,53 +87,12 @@ class Subscription(Base, TimestampMixin):
     trial_end: Mapped[datetime | None] = mapped_column()
     cancelled_at: Mapped[datetime | None] = mapped_column()
     cancel_reason: Mapped[str | None] = mapped_column(Text)
-    coupon_id: Mapped[uuid.UUID | None] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("billing.coupons.id")
-    )
     gateway: Mapped[str | None] = mapped_column(String(30))
     gateway_subscription_id: Mapped[str | None] = mapped_column(String(255))
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
 
     plan = relationship("SubscriptionPlan", back_populates="subscriptions")
-    invoices = relationship("Invoice", back_populates="subscription", cascade="all, delete-orphan")
-
-
-# ---------------------------------------------------------------------------
-# 32. INVOICES
-# ---------------------------------------------------------------------------
-class Invoice(Base):
-    __tablename__ = "invoices"
-    __table_args__ = (
-        CheckConstraint(
-            "status IN ('pending','paid','failed','refunded','void')",
-            name="ck_invoice_status",
-        ),
-        Index("idx_invoices_user", "user_id"),
-        Index("idx_invoices_sub", "subscription_id"),
-        {"schema": "billing"},
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=new_uuid)
-    subscription_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("billing.subscriptions.id", ondelete="CASCADE"), nullable=False
-    )
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("platform.users.id"), nullable=False
-    )
-    invoice_number: Mapped[str | None] = mapped_column(String(50), unique=True)
-    amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    tax_amount: Mapped[float] = mapped_column(Numeric(10, 2), default=0)
-    total_amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    currency: Mapped[str] = mapped_column(String(3), default="INR")
-    status: Mapped[str] = mapped_column(String(20), default="pending")
-    due_date: Mapped[datetime | None] = mapped_column()
-    paid_at: Mapped[datetime | None] = mapped_column()
-    pdf_url: Mapped[str | None] = mapped_column(Text)
-    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-
-    subscription = relationship("Subscription", back_populates="invoices")
-    payments = relationship("Payment", back_populates="invoice", cascade="all, delete-orphan")
+    payments = relationship("Payment", back_populates="subscription", cascade="all, delete-orphan")
 
 
 # ---------------------------------------------------------------------------
@@ -176,13 +107,13 @@ class Payment(Base):
         ),
         Index("idx_payments_user", "user_id"),
         Index("idx_payments_gateway", "gateway", "gateway_payment_id"),
-        Index("idx_payments_invoice", "invoice_id"),
+        Index("idx_payments_subscription", "subscription_id"),
         {"schema": "billing"},
     )
 
     id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=new_uuid)
-    invoice_id: Mapped[uuid.UUID | None] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("billing.invoices.id")
+    subscription_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("billing.subscriptions.id", ondelete="SET NULL")
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("platform.users.id"), nullable=False
@@ -200,33 +131,4 @@ class Payment(Base):
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
-    invoice = relationship("Invoice", back_populates="payments")
-
-
-# ---------------------------------------------------------------------------
-# 34. TRANSACTION HISTORY — Immutable ledger
-# ---------------------------------------------------------------------------
-class TransactionHistory(Base):
-    __tablename__ = "transaction_history"
-    __table_args__ = (
-        CheckConstraint(
-            "type IN ('charge','refund','credit','adjustment')",
-            name="ck_txn_type",
-        ),
-        Index("idx_txn_user", "user_id"),
-        Index("idx_txn_created", "created_at"),
-        {"schema": "billing"},
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=new_uuid)
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("platform.users.id"), nullable=False
-    )
-    type: Mapped[str] = mapped_column(String(20), nullable=False)
-    amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    currency: Mapped[str] = mapped_column(String(3), default="INR")
-    description: Mapped[str | None] = mapped_column(Text)
-    reference_type: Mapped[str | None] = mapped_column(String(30))
-    reference_id: Mapped[uuid.UUID | None] = mapped_column(PG_UUID(as_uuid=True))
-    balance_after: Mapped[float | None] = mapped_column(Numeric(10, 2))
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    subscription = relationship("Subscription", back_populates="payments")

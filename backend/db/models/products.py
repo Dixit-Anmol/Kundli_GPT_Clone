@@ -1,7 +1,7 @@
 """
 Module 3 — Multi-Product Support Models.
 
-Tables: products, user_products, product_features, feature_flags
+Tables: products, user_products, product_features
 Schema: catalog
 """
 
@@ -12,7 +12,7 @@ from sqlalchemy import (
     Boolean, CheckConstraint, ForeignKey, Index, Integer, SmallInteger,
     String, Text, UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.base import Base, TimestampMixin, new_uuid
@@ -40,7 +40,6 @@ class Product(Base, TimestampMixin):
     launched_at: Mapped[datetime | None] = mapped_column()
 
     features = relationship("ProductFeature", back_populates="product", cascade="all, delete-orphan")
-    flags = relationship("FeatureFlag", back_populates="product", cascade="all, delete-orphan")
 
 
 # ---------------------------------------------------------------------------
@@ -92,26 +91,3 @@ class ProductFeature(Base):
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
     product = relationship("Product", back_populates="features")
-
-
-# ---------------------------------------------------------------------------
-# 14. FEATURE FLAGS
-# ---------------------------------------------------------------------------
-class FeatureFlag(Base, TimestampMixin):
-    __tablename__ = "feature_flags"
-    __table_args__ = (
-        UniqueConstraint("product_id", "slug", name="uq_feature_flag_slug"),
-        {"schema": "catalog"},
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=new_uuid)
-    product_id: Mapped[uuid.UUID | None] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("catalog.products.id", ondelete="CASCADE")
-    )
-    slug: Mapped[str] = mapped_column(String(100), nullable=False)
-    is_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
-    rollout_pct: Mapped[int] = mapped_column(SmallInteger, default=0)
-    user_ids: Mapped[list] = mapped_column(ARRAY(PG_UUID(as_uuid=True)), default=list)
-    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
-
-    product = relationship("Product", back_populates="flags")

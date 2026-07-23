@@ -1,8 +1,8 @@
-"""initial_schema
+"""initial_core_schema
 
-Revision ID: 763a1349fb03
+Revision ID: 7b7e422b7a8d
 Revises: 
-Create Date: 2026-07-23 12:32:25.964190
+Create Date: 2026-07-23 12:42:39.870753
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '763a1349fb03'
+revision: str = '7b7e422b7a8d'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,15 +24,15 @@ def upgrade() -> None:
     
     connection = op.get_bind()
     
-    # Pre-create all target schemas
+    # Pre-create all core target schemas (excluding system)
     schemas = [
         "platform", "authz", "catalog", "astrology", "ai", "billing",
-        "storage", "comms", "analytics", "audit", "system"
+        "storage", "comms", "analytics", "audit"
     ]
     for schema in schemas:
         connection.execute(sa.text(f"CREATE SCHEMA IF NOT EXISTS {schema}"))
         
-    # Create all tables using metadata mapping
+    # Create all core tables using metadata mapping
     Base.metadata.create_all(connection)
 
 
@@ -42,13 +42,13 @@ def downgrade() -> None:
     
     connection = op.get_bind()
     
-    # Drop all tables using metadata mapping
+    # Drop all core tables using metadata mapping
     Base.metadata.drop_all(connection)
     
-    # Drop all schemas
+    # Drop all core schemas
     schemas = [
         "platform", "authz", "catalog", "astrology", "ai", "billing",
-        "storage", "comms", "analytics", "audit", "system"
+        "storage", "comms", "analytics", "audit"
     ]
     for schema in schemas:
         connection.execute(sa.text(f"DROP SCHEMA IF EXISTS {schema} CASCADE"))

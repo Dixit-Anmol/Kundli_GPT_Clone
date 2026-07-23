@@ -52,26 +52,6 @@ class UserAnalyticsEvent(Base):
     os: Mapped[str | None] = mapped_column(String(50))
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
-
-# ---------------------------------------------------------------------------
-# 39. SYSTEM METRICS — Periodic system health snapshots
-# ---------------------------------------------------------------------------
-class SystemMetric(Base):
-    __tablename__ = "system_metrics"
-    __table_args__ = (
-        Index("idx_system_metrics_name", "metric_name"),
-        Index("idx_system_metrics_time", "recorded_at"),
-        {"schema": "analytics"},
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=new_uuid)
-    metric_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    metric_value: Mapped[float] = mapped_column(Float, nullable=False)
-    unit: Mapped[str | None] = mapped_column(String(20))
-    tags: Mapped[dict] = mapped_column(JSONB, default=dict)
-    recorded_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-
-
 # ---------------------------------------------------------------------------
 # 41. AI ANALYTICS — Per-interaction tracking (Module 12)
 # ---------------------------------------------------------------------------
@@ -123,30 +103,3 @@ class AIAnalytics(Base):
     conversation_length: Mapped[int | None] = mapped_column(Integer)
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-
-
-# ---------------------------------------------------------------------------
-# 47. USER DAILY USAGE — Materialized daily aggregates
-# ---------------------------------------------------------------------------
-class UserDailyUsage(Base):
-    __tablename__ = "user_daily_usage"
-    __table_args__ = (
-        Index("idx_daily_usage_user", "user_id"),
-        Index("idx_daily_usage_date", "usage_date"),
-        {"schema": "analytics"},
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=new_uuid)
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("platform.users.id", ondelete="CASCADE"), nullable=False
-    )
-    product_id: Mapped[uuid.UUID | None] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("catalog.products.id")
-    )
-    usage_date: Mapped[date] = mapped_column(Date, nullable=False)
-    chat_count: Mapped[int] = mapped_column(Integer, default=0)
-    reports_generated: Mapped[int] = mapped_column(Integer, default=0)
-    tokens_consumed: Mapped[int] = mapped_column(Integer, default=0)
-    api_calls: Mapped[int] = mapped_column(Integer, default=0)
-    active_minutes: Mapped[int] = mapped_column(Integer, default=0)
-    cost_incurred: Mapped[float] = mapped_column(Numeric(10, 6), default=0)

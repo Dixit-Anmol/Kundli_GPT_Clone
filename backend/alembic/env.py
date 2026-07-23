@@ -46,8 +46,7 @@ SCHEMAS = [
     "storage",
     "comms",
     "analytics",
-    "audit",
-    "system"
+    "audit"
 ]
 
 def include_object(object, name, type_, reflected, compare_to):
