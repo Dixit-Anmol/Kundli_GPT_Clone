@@ -221,7 +221,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
   ]
 
   const getReceptivityPower = (pillarName: string) => {
-    let score = 75
+    let score = 72
     const h5Lord = (h5.lord || '').toLowerCase()
     const h9Lord = (h9.lord || '').toLowerCase()
     const p5Data = rawPositions[h5Lord]
@@ -233,37 +233,57 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
     if (pillarName === 'Smriti Shakti') {
       if (p5Data) {
         const dig = (p5Data.dignity || '').toLowerCase()
-        if (dig === 'exalted' || dig === 'own') score += 15
-        else if (dig === 'debilitated') score -= 15
+        if (dig.includes('exalted') || dig.includes('own')) score += 18
+        else if (dig.includes('friendly')) score += 8
+        else if (dig.includes('debilitated') || dig.includes('enemy')) score -= 12
+      }
+      const h5Sign = h5.sign || ''
+      if (['Scorpio', 'Cancer', 'Pisces', 'Taurus', 'Virgo', 'Capricorn'].includes(h5Sign)) {
+        score += 4
       }
     } else if (pillarName === 'Grahana Capacity') {
       if (mercData) {
         const dig = (mercData.dignity || '').toLowerCase()
-        if (dig === 'exalted' || dig === 'own') score += 15
-        else if (dig === 'debilitated') score -= 15
+        if (dig.includes('exalted') || dig.includes('own')) score += 18
+        else if (dig.includes('friendly')) score += 8
+        else if (dig.includes('debilitated') || dig.includes('enemy')) score -= 12
+      }
+      if (mercData?.house && [1, 3, 4, 5, 9, 10].includes(Number(mercData.house))) {
+        score += 6
       }
     } else if (pillarName === 'Ekagrata & Dhyana') {
       if (moonData) {
         const dig = (moonData.dignity || '').toLowerCase()
-        if (dig === 'exalted' || dig === 'own') score += 15
-        else if (dig === 'debilitated') score -= 15
+        if (dig.includes('exalted') || dig.includes('own')) score += 18
+        else if (dig.includes('friendly')) score += 8
+        else if (dig.includes('debilitated') || dig.includes('enemy')) score -= 12
+      }
+      if (moonData?.house) {
+        const houseNum = Number(moonData.house)
+        if ([4, 9].includes(houseNum)) score += 6
+        else if ([6, 8, 12].includes(houseNum)) score -= 10
       }
     } else if (pillarName === 'Guru Receptivity') {
       if (p9Data) {
         const dig = (p9Data.dignity || '').toLowerCase()
-        if (dig === 'exalted' || dig === 'own') score += 8
+        if (dig.includes('exalted') || dig.includes('own')) score += 8
+        else if (dig.includes('friendly')) score += 4
       }
       if (jupData) {
         const dig = (jupData.dignity || '').toLowerCase()
-        if (dig === 'exalted' || dig === 'own') score += 8
-        else if (dig === 'debilitated') score -= 10
+        if (dig.includes('exalted') || dig.includes('own')) score += 10
+        else if (dig.includes('friendly')) score += 4
+        else if (dig.includes('debilitated')) score -= 8
+      }
+      if (jupData?.house && [1, 5, 9, 10].includes(Number(jupData.house))) {
+        score += 6
       }
     }
     const finalScore = Math.min(98, Math.max(50, score))
     let level = 'Moderate'
     if (finalScore >= 88) level = 'Outstanding'
     else if (finalScore >= 78) level = 'Strong'
-    else if (finalScore >= 65) level = 'Moderate'
+    else if (finalScore >= 66) level = 'Moderate'
     else level = 'Average'
     return { score: finalScore, level }
   }
@@ -282,7 +302,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-display text-2xl font-bold text-primary">
-                  64 Kalas & Student Receptivity (६४ कलाएँ एवं शिष्य ग्रहण क्षमता)
+                  64 Kalas & Student Receptivity
                 </h3>
                 <span className="text-[11px] font-extrabold bg-primary-fixed text-primary px-2.5 py-0.5 rounded-full">
                   Unified Vedic Engine
@@ -320,7 +340,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
         <div className="flex items-center justify-between border-b border-outline-variant/40 pb-3">
           <h4 className="font-display text-lg font-bold text-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-amber-500 text-xl">auto_awesome</span>
-            Top Predicted Kalas (प्रमुख कलाएँ)
+            Top Predicted Kalas
           </h4>
           <span className="text-xs font-bold text-primary bg-primary-fixed px-3 py-1 rounded-full border border-primary/20">
             64 Kalas (६४ कलाएँ)
@@ -368,7 +388,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
           <div>
             <h4 className="font-display text-xl font-bold text-primary flex items-center gap-2">
               <span className="material-symbols-outlined text-amber-600 text-2xl">menu_book</span>
-              Interactive 64 Kalas Explorer (६४ कला खोजक एवं विस्तृत विवरण)
+              Interactive 64 Kalas Explorer
             </h4>
             <p className="text-xs text-on-surface-variant mt-0.5">
               Select any of the 64 Classical Kalas to read modern real-world examples, mastery methods, and horoscope alignment reasons.
@@ -419,11 +439,10 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
             </div>
 
             {/* Horoscope Association & Astrological Reason Card */}
-            <div className={`p-4 rounded-xl border text-xs font-medium space-y-1 ${
-              selectedKalaEval.isTopAligned
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900'
-                : 'bg-amber-500/10 border-amber-500/30 text-amber-900'
-            }`}>
+            <div className={`p-4 rounded-xl border text-xs font-medium space-y-1 ${selectedKalaEval.isTopAligned
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900'
+              : 'bg-amber-500/10 border-amber-500/30 text-amber-900'
+              }`}>
               <div className="flex items-center gap-2 font-bold text-sm">
                 <span className="material-symbols-outlined text-base">
                   {selectedKalaEval.isTopAligned ? 'stars' : 'balance'}
