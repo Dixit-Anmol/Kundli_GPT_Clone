@@ -167,7 +167,8 @@ export default function ChatPage() {
     setBirthData(data)
     setStep('computing')
 
-    const userProfileId = user?.uid || targetProfileId || `prof_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+    const userProfileId = targetProfileId || 
+      ((user?.uid && profiles.length === 0) ? user.uid : `prof_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`)
 
     try {
       const payload: any = {

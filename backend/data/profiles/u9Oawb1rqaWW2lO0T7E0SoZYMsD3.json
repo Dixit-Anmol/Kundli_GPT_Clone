@@ -1,15 +1,15 @@
 {
   "user_id": "u9Oawb1rqaWW2lO0T7E0SoZYMsD3",
   "birth_details": {
-    "fullName": "Shivom Gupta",
+    "fullName": "Anmol Dixit",
     "gender": "male",
-    "dateOfBirth": "1991-11-03",
-    "timeOfBirth": "19:50",
+    "dateOfBirth": "2003-09-14",
+    "timeOfBirth": "12:50",
     "relationship": "Self",
     "mode": "exact",
-    "placeName": "\u0915\u093e\u0938\u0917\u0902\u091c, Kasganj, Uttar Pradesh, 207123, India",
-    "latitude": 27.8077034,
-    "longitude": 78.6456226
+    "placeName": "\u0909\u0930\u0908, Orai, \u091c\u093e\u0932\u094c\u0928, Uttar Pradesh, India",
+    "latitude": 25.9863918,
+    "longitude": 79.4534538
   },
   "natal_chart": {
     "natal": {
@@ -244,5 +244,5 @@
     "ascendant_sign": "Taurus"
   },
   "created_at": "2026-07-23T06:01:00.881586+00:00",
-  "updated_at": "2026-07-23T06:08:04.477449+00:00"
+  "updated_at": "2026-07-23T06:16:11.123733+00:00"
 }
