@@ -39,9 +39,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
 
+  const syncWithPostgreSQL = async (idToken: string): Promise<any> => {
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
+    const res = await fetch(`${backendUrl}/api/auth/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: idToken }),
+    })
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}))
+      const errMsg = errJson.detail || res.statusText || 'Unknown error'
+      throw new Error(`Database synchronization failed: ${errMsg}`)
+    }
+    return res.json()
+  }
+
   const mapUser = async (user: User | null): Promise<AuthUser | null> => {
     if (!user) return null
     const idToken = await user.getIdToken()
+    
+    try {
+      await syncWithPostgreSQL(idToken)
+    } catch (err: any) {
+      console.error('PostgreSQL authentication sync failed:', err)
+      await signOut(auth)
+      throw err
+    }
+
     setToken(idToken)
     return {
       uid: user.uid,
