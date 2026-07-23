@@ -120,10 +120,10 @@ export default function DashaTimelineView({ sessionId, userId, birthData, chartD
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<DashaPackage | null>(null)
-  
+
   // State for expanded Mahadasha card
   const [expandedPlanet, setExpandedPlanet] = useState<string | null>(null)
-  
+
   // State for Year Lookup
   const [lookupYear, setLookupYear] = useState<number>(new Date().getFullYear() + 5)
   const [yearLookupResult, setYearLookupResult] = useState<DashaPackage['year_lookup']>(null)
@@ -218,11 +218,11 @@ export default function DashaTimelineView({ sessionId, userId, birthData, chartD
 
   return (
     <div className="space-y-8 my-6">
-      
+
       {/* HEADER BANNER */}
       <div className="bg-gradient-to-r from-[#FFF8F0] via-[#FDF2E9] to-[#FFF6ED] border border-[#E9DFC8] rounded-3xl p-6 sm:p-8 shadow-xs relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-        
+
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-800 text-xs font-semibold uppercase tracking-wider mb-3">
@@ -400,15 +400,14 @@ export default function DashaTimelineView({ sessionId, userId, birthData, chartD
                     backgroundColor: item.color,
                   }}
                   title={`${item.planet_name}: ${item.start_date.slice(0, 4)} – ${item.end_date.slice(0, 4)} (${item.duration_years} yrs)`}
-                  className={`h-full rounded-xl transition-all relative flex items-center justify-center group cursor-pointer ${
-                    isCurrent
-                      ? 'ring-2 ring-amber-400 ring-offset-2 scale-[1.02] z-20 shadow-md animate-pulse'
-                      : isSelected
+                  className={`h-full rounded-xl transition-all relative flex items-center justify-center group cursor-pointer ${isCurrent
+                    ? 'ring-2 ring-amber-400 ring-offset-2 scale-[1.02] z-20 shadow-md animate-pulse'
+                    : isSelected
                       ? 'ring-2 ring-primary ring-offset-1 z-10 scale-[1.01]'
                       : item.status === 'completed'
-                      ? 'opacity-65 hover:opacity-100'
-                      : 'hover:opacity-90'
-                  }`}
+                        ? 'opacity-65 hover:opacity-100'
+                        : 'hover:opacity-90'
+                    }`}
                 >
                   <span className="material-symbols-outlined text-white text-base font-bold drop-shadow-sm">
                     {item.icon}
@@ -438,9 +437,8 @@ export default function DashaTimelineView({ sessionId, userId, birthData, chartD
               <span
                 key={item.planet}
                 onClick={() => setExpandedPlanet(item.planet)}
-                className={`cursor-pointer hover:text-primary transition-colors ${
-                  item.status === 'current' ? 'font-bold text-primary underline' : ''
-                }`}
+                className={`cursor-pointer hover:text-primary transition-colors ${item.status === 'current' ? 'font-bold text-primary underline' : ''
+                  }`}
               >
                 {item.planet_name}
               </span>
@@ -519,7 +517,7 @@ export default function DashaTimelineView({ sessionId, userId, birthData, chartD
 
       {/* SECTION 6 & SECTION 7: AI INTERPRETATION & UPCOMING DASHA */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* AI INTERPRETATION CARD (2 Columns) */}
         {ai_interpretation && (
           <div className="lg:col-span-2 bg-gradient-to-br from-surface to-amber-500/5 rounded-3xl border border-amber-500/30 p-6 sm:p-8 shadow-xs space-y-5">
@@ -636,13 +634,12 @@ export default function DashaTimelineView({ sessionId, userId, birthData, chartD
             return (
               <div
                 key={item.planet}
-                className={`bg-surface rounded-3xl border transition-all duration-300 overflow-hidden shadow-xs ${
-                  isCurrent
-                    ? 'border-amber-500/50 ring-2 ring-amber-500/20 shadow-md'
-                    : isExpanded
+                className={`bg-surface rounded-3xl border transition-all duration-300 overflow-hidden shadow-xs ${isCurrent
+                  ? 'border-amber-500/50 ring-2 ring-amber-500/20 shadow-md'
+                  : isExpanded
                     ? 'border-primary/50 shadow-md'
                     : 'border-outline-variant/60 hover:border-primary/30'
-                } ${item.status === 'completed' ? 'opacity-90' : ''}`}
+                  } ${item.status === 'completed' ? 'opacity-90' : ''}`}
               >
                 {/* CARD HEADER / MAIN ROW */}
                 <div
@@ -665,7 +662,7 @@ export default function DashaTimelineView({ sessionId, userId, birthData, chartD
                       <div className="flex items-center gap-2.5">
                         <h4 className="text-lg font-bold text-on-surface">{item.planet_name} Mahadasha</h4>
                         <span className="text-xs font-semibold text-on-surface-variant/70">({item.sanskrit_name})</span>
-                        
+
                         {/* STATUS BADGE */}
                         {isCurrent && (
                           <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-800 border border-amber-500/30 text-[11px] font-bold tracking-wider uppercase">
@@ -697,11 +694,10 @@ export default function DashaTimelineView({ sessionId, userId, birthData, chartD
                   {/* EXPAND ACTION BUTTON */}
                   <div className="flex items-center gap-3 self-end sm:self-center">
                     <button
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                        isExpanded
-                          ? 'bg-primary text-white shadow-sm'
-                          : 'bg-surface-variant/40 text-on-surface hover:bg-surface-variant/70'
-                      }`}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${isExpanded
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'bg-surface-variant/40 text-on-surface hover:bg-surface-variant/70'
+                        }`}
                     >
                       <span>{isExpanded ? 'Hide Antardashas' : 'Inspect Antardashas'}</span>
                       <span className="material-symbols-outlined text-base">
@@ -714,7 +710,7 @@ export default function DashaTimelineView({ sessionId, userId, birthData, chartD
                 {/* EXPANDED SECTION 5: ANTARDASHA TIMELINE & BREAKDOWN TABLE */}
                 {isExpanded && (
                   <div className="border-t border-outline-variant/50 bg-surface-variant/15 p-5 sm:p-7 space-y-6 animate-fadeIn">
-                    
+
                     {/* ANTARDASHA HORIZONTAL BAR */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-xs font-bold text-on-surface-variant">
@@ -731,13 +727,12 @@ export default function DashaTimelineView({ sessionId, userId, birthData, chartD
                               backgroundColor: antar.color,
                             }}
                             title={`${antar.combination}: ${antar.start_date.slice(0, 4)} - ${antar.end_date.slice(0, 4)}`}
-                            className={`h-full rounded-lg transition-all relative ${
-                              antar.status === 'current'
-                                ? 'ring-2 ring-amber-400 z-10 animate-pulse'
-                                : antar.status === 'completed'
+                            className={`h-full rounded-lg transition-all relative ${antar.status === 'current'
+                              ? 'ring-2 ring-amber-400 z-10 animate-pulse'
+                              : antar.status === 'completed'
                                 ? 'opacity-60'
                                 : 'opacity-90'
-                            }`}
+                              }`}
                           />
                         ))}
                       </div>
@@ -762,9 +757,8 @@ export default function DashaTimelineView({ sessionId, userId, birthData, chartD
                             return (
                               <tr
                                 key={antar.planet}
-                                className={`transition-colors ${
-                                  isAntarCurrent ? 'bg-amber-500/10 font-bold text-on-surface' : 'hover:bg-surface-variant/20'
-                                }`}
+                                className={`transition-colors ${isAntarCurrent ? 'bg-amber-500/10 font-bold text-on-surface' : 'hover:bg-surface-variant/20'
+                                  }`}
                               >
                                 <td className="py-3 px-4 flex items-center gap-2.5">
                                   <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: antar.color }} />
@@ -802,3 +796,4 @@ export default function DashaTimelineView({ sessionId, userId, birthData, chartD
     </div>
   )
 }
+
