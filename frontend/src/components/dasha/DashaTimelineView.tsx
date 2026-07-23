@@ -177,7 +177,7 @@ export default function DashaTimelineView({ sessionId, userId, birthData, chartD
 
   useEffect(() => {
     fetchDashaTimeline()
-  }, [sessionId, userId])
+  }, [sessionId, userId, birthData, chartData])
 
   const handleYearSearch = (e: React.FormEvent) => {
     e.preventDefault()
