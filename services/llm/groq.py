@@ -40,9 +40,6 @@ class GroqClient:
             if k:
                 raw_keys.append(k)
 
-        # Include default keys as backup
-        raw_keys.extend(self.DEFAULT_KEYS)
-
         # Deduplicate while preserving insertion order
         unique_keys = []
         for k in raw_keys:
