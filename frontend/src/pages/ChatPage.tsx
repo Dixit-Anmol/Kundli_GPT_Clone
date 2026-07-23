@@ -36,6 +36,7 @@ export default function ChatPage() {
   // Multi-profile state
   const [profiles, setProfiles] = useState<UserProfile[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [editProfileId, setEditProfileId] = useState<string | null>(null)
 
   // Current active profile's chart and birth data
   const [birthData, setBirthData] = useState<BirthData | null>(null)
@@ -142,6 +143,7 @@ export default function ChatPage() {
   // -----------------------------------------------------------------------
   const handleAddNewProfile = () => {
     setActiveId(null)
+    setEditProfileId(null)
     setBirthData(null)
     setChartData(null)
     setStep('welcome')
@@ -171,37 +173,68 @@ export default function ChatPage() {
     setBirthData(data)
     setStep('computing')
 
-    const userProfileId = targetProfileId || 
+    const userProfileId = editProfileId || targetProfileId || 
       ((user?.uid && profiles.length === 0) ? user.uid : `prof_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`)
 
     try {
-      const payload: any = {
-        name: data.fullName || user?.displayName || 'Seeker',
-        latitude: data.latitude || 28.6139,
-        longitude: data.longitude || 77.209,
-        session_id: sessionId,
-        user_id: userProfileId,
-        mode: data.mode || 'exact',
-        time_slot: data.timeSlot || 'unknown',
-        question: data.question || null,
-        category: data.category || 'general',
+      let chart: any = null
+      let resData: any = null
+
+      if (editProfileId) {
+        // Edit Mode: PUT /api/profile/{profile_id}
+        const updatePayload = {
+          name: data.fullName || user?.displayName || 'Seeker',
+          date_of_birth: data.dateOfBirth,
+          time_of_birth: data.timeOfBirth,
+          latitude: data.latitude || 28.6139,
+          longitude: data.longitude || 77.209,
+          timezone_offset: data.timezone_offset || 5.5,
+          gender: data.gender || 'male',
+          relationship_type: data.relationship || 'Self'
+        }
+
+        const response = await authenticatedFetch(`${API_BASE_URL}/api/profile/${editProfileId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatePayload),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to update profile')
+        }
+
+        resData = await response.json()
+        chart = resData.natal || resData
+      } else {
+        // Create Mode: POST /api/chart
+        const payload: any = {
+          name: data.fullName || user?.displayName || 'Seeker',
+          latitude: data.latitude || 28.6139,
+          longitude: data.longitude || 77.209,
+          session_id: sessionId,
+          user_id: userProfileId,
+          mode: data.mode || 'exact',
+          time_slot: data.timeSlot || 'unknown',
+          question: data.question || null,
+          category: data.category || 'general',
+        }
+
+        if (data.dateOfBirth) payload.date_str = data.dateOfBirth
+        if (data.timeOfBirth) payload.time_str = data.timeOfBirth
+
+        const response = await authenticatedFetch(`${API_BASE_URL}/api/chart`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to calculate birth chart')
+        }
+
+        resData = await response.json()
+        chart = resData.natal || resData
       }
-
-      if (data.dateOfBirth) payload.date_str = data.dateOfBirth
-      if (data.timeOfBirth) payload.time_str = data.timeOfBirth
-
-      const response = await authenticatedFetch(`${API_BASE_URL}/api/chart`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to calculate birth chart')
-      }
-
-      const resData = await response.json()
-      const chart = resData.natal || resData
 
       setBirthData(data)
       setChartData(chart)
@@ -221,10 +254,11 @@ export default function ChatPage() {
       setProfiles(updated)
       setActiveId(userProfileId)
       setActiveProfileId(userProfileId)
+      setEditProfileId(null) // clear edit target!
       setStep('ready')
     } catch (err) {
-      console.error('Error computing chart:', err)
-      alert('Failed to compute birth chart. Please check your network or backend server.')
+      console.error('Error computing/updating chart:', err)
+      alert('Failed to compute or update birth chart. Please check your network or backend server.')
       setStep('welcome')
     }
   }
@@ -253,7 +287,10 @@ export default function ChatPage() {
         onSelectProfile={handleSelectProfile}
         onAddNewProfile={handleAddNewProfile}
         onDeleteProfile={handleDeleteProfile}
-        onResetProfile={() => setStep('welcome')}
+        onResetProfile={() => {
+          setEditProfileId(activeId)
+          setStep('welcome')
+        }}
         onOpenPricing={() => setShowPricing(true)}
       />
     )
@@ -294,7 +331,12 @@ export default function ChatPage() {
           )}
 
           {/* Birth Details & Location Form (Single Page) */}
-          {step === 'welcome' && <BirthDetailsForm onSubmit={handleBirthSubmit} />}
+          {step === 'welcome' && (
+            <BirthDetailsForm
+              onSubmit={handleBirthSubmit}
+              initialData={editProfileId ? (profiles.find(p => p.id === editProfileId)?.birthData || undefined) : undefined}
+            />
+          )}
 
           {/* Computing State */}
           {step === 'computing' && (

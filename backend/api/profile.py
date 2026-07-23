@@ -6,6 +6,7 @@ Endpoints for looking up, deleting, and recalculating stored user profiles.
 
 import datetime
 from fastapi import APIRouter, HTTPException, Header
+from pydantic import BaseModel
 from typing import Optional
 from models.response import ProfileResponse
 from services.memory.profile_store import profile_store
@@ -105,6 +106,89 @@ def get_profile(user_id: str, authorization: Optional[str] = Header(None)):
         "birth_details": birth_details,
         "chart_summary": profile.get("chart_response"),
     }
+
+
+class ProfileUpdateRequest(BaseModel):
+    name: str
+    date_of_birth: Optional[str] = None
+    time_of_birth: Optional[str] = None
+    latitude: float
+    longitude: float
+    timezone_offset: Optional[float] = 5.5
+    gender: Optional[str] = "male"
+    relationship_type: Optional[str] = "self"
+
+@router.put("/profile/{profile_id}")
+def update_profile(profile_id: str, req: ProfileUpdateRequest, authorization: Optional[str] = Header(None)):
+    """Update an existing profile and recalculate its chart details in place."""
+    owner_id = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+        try:
+            claims = verify_firebase_token(token)
+            if claims and "uid" in claims:
+                owner_id = claims["uid"]
+        except Exception as e:
+            print(f"[Profile Update] Token verification failed: {e}")
+
+    try:
+        lat = req.latitude
+        lon = req.longitude
+        _, offset = find_timezone_offset(lat, lon, req.date_of_birth or "2000-01-01")
+
+        dt = parse_date_str(req.date_of_birth or "2000-01-01")
+        tm = parse_time_str(req.time_of_birth or "12:00:00")
+
+        # Recalculate horoscope chart
+        chart_data = calculate_horoscope_data(
+            year=dt.year, month=dt.month, day=dt.day,
+            hour=tm.hour, minute=tm.minute, second=tm.second,
+            lat=lat, lon=lon, timezone_offset=offset
+        )
+
+        natal = _extract_natal(chart_data)
+        meta = chart_data.get("metadata", {})
+
+        chart_response = {
+            "name": req.name,
+            "ascendant_sign": meta.get("ascendant_sign", ""),
+            "moon_sign": meta.get("moon_sign", ""),
+            "nakshatra": meta.get("nakshatra", ""),
+            "pada": meta.get("pada", 1),
+            "yogas": chart_data.get("yogas", []),
+            "doshas": chart_data.get("doshas", {}),
+        }
+
+        birth_details = {
+            "name": req.name,
+            "date_of_birth": req.date_of_birth,
+            "time_of_birth": req.time_of_birth,
+            "latitude": lat,
+            "longitude": lon,
+            "timezone_offset": offset,
+            "gender": req.gender,
+            "relationship": req.relationship_type,
+        }
+
+        # Update in database in-place
+        profile_store.save_profile(
+            user_id=profile_id,
+            birth_details=birth_details,
+            natal_chart=natal,
+            chart_response=chart_response,
+            owner_id=owner_id
+        )
+
+        # Clear session and history to trigger fresh reload
+        session_store.clear_session(profile_id)
+
+        return {
+            "success": True,
+            "profile_id": profile_id,
+            "natal": chart_response
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/profile/{user_id}")

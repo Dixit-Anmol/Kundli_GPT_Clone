@@ -28,28 +28,34 @@ interface Suggestion {
 
 interface BirthDetailsFormProps {
   onSubmit: (data: BirthData) => void
+  initialData?: BirthData
 }
 
-export default function BirthDetailsForm({ onSubmit }: BirthDetailsFormProps) {
-  const [mode, setMode] = useState<OnboardingMode>('exact')
+export default function BirthDetailsForm({ onSubmit, initialData }: BirthDetailsFormProps) {
+  const [mode, setMode] = useState<OnboardingMode>(
+    initialData?.mode === 'partial' || initialData?.mode === 'prashna' ? 'partial' : 'exact'
+  )
 
   // Form State
-  const [name, setName] = useState('')
-  const [gender, setGender] = useState<'male' | 'female' | 'other'>('male')
-  const [relationship, setRelationship] = useState<RelationshipType>('Self')
-  const [dob, setDob] = useState('1995-01-01')
-  const [tob, setTob] = useState('12:00')
+  const [name, setName] = useState(initialData?.fullName || '')
+  const [gender, setGender] = useState<'male' | 'female' | 'other'>(initialData?.gender || 'male')
+  const [relationship, setRelationship] = useState<RelationshipType>(initialData?.relationship || 'Self')
+  const [dob, setDob] = useState(initialData?.dateOfBirth || '1995-01-01')
+  const [tob, setTob] = useState(initialData?.timeOfBirth || '12:00')
 
   // Location & Map State (Embedded on Same Page)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedPlace, setSelectedPlace] = useState('Delhi, India')
-  const [coordinates, setCoordinates] = useState({ lat: 28.6139, lon: 77.2090 })
+  const [searchQuery, setSearchQuery] = useState(initialData?.placeName || '')
+  const [selectedPlace, setSelectedPlace] = useState(initialData?.placeName || 'Delhi, India')
+  const [coordinates, setCoordinates] = useState({
+    lat: initialData?.latitude ?? 28.6139,
+    lon: initialData?.longitude ?? 77.2090,
+  })
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loadingGeo, setLoadingGeo] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
 
   // Partial / Unknown Time State
-  const [timeSlot, setTimeSlot] = useState<string>('unknown')
+  const [timeSlot, setTimeSlot] = useState<string>(initialData?.timeSlot || 'unknown')
 
   // Debounced Geocoding Search
   useEffect(() => {
@@ -439,9 +445,15 @@ export default function BirthDetailsForm({ onSubmit }: BirthDetailsFormProps) {
           className="w-full bg-primary text-white font-bold py-4 rounded-2xl text-sm sm:text-base shadow-lg shadow-primary/25 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
         >
           <span>
-            {mode === 'exact' ? '✨ Generate Complete Janma Kundli' : '✨ Start Astrological Guidance'}
+            {initialData
+              ? '💾 Save Profile Changes'
+              : mode === 'exact'
+              ? '✨ Generate Complete Janma Kundli'
+              : '✨ Start Astrological Guidance'}
           </span>
-          <span className="material-symbols-outlined text-lg">arrow_forward</span>
+          <span className="material-symbols-outlined text-lg">
+            {initialData ? 'save' : 'arrow_forward'}
+          </span>
         </button>
       </div>
     </div>
