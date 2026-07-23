@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from models.request import ChatRequest
 from models.response import ChatResponse
 from services.memory.session import session_store
@@ -11,6 +11,9 @@ from services.prompts.horoscope import build_horoscope_prompt
 from services.prompts.geeta import build_geeta_prompt, assemble_unified_prompt, classify_intent
 from services.prompts.financial import is_financial_query, get_financial_system_prompt
 from services.llm.factory import LLMFactory
+from core.auth import require_current_user
+from db import SessionLocal
+from db.models.identity import User
 
 # New astrology engine imports
 from backend.astrology.chart_storage import chart_cache
@@ -24,8 +27,18 @@ router = APIRouter()
 rag_pipeline = BG16Pipeline()
 
 @router.post("/chat", response_model=ChatResponse)
-def handle_chat(req: ChatRequest):
+def handle_chat(req: ChatRequest, current_user: dict = Depends(require_current_user)):
     try:
+        firebase_uid = current_user.get("uid")
+        db = SessionLocal()
+        try:
+            db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+            if not db_user:
+                raise HTTPException(status_code=404, detail="User not synchronized")
+            req.user_id = str(db_user.id)
+        finally:
+            db.close()
+
         chart_data, birth_details = resolve_chart_data(
             session_id=req.session_id,
             user_id=req.user_id,

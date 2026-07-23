@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
+import { authenticatedFetch } from '../../utils/apiClient'
 import type { TabType } from './TabNavigation'
 import { ALL_TABS } from './TabNavigation'
 import SummaryCards from './SummaryCards'
@@ -120,7 +121,7 @@ export default function TabPanel({
           queryMsg = 'Provide a detailed 64 Kalas, Vidya & Academic Receptivity analysis for my horoscope.'
         }
 
-        const res = await fetch(`${apiBaseUrl}/api/tab-chat`, {
+        const res = await authenticatedFetch(`${apiBaseUrl}/api/tab-chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -180,7 +181,7 @@ export default function TabPanel({
     setLoadingChat(true)
 
     try {
-      const res = await fetch(`${apiBaseUrl}/api/tab-chat`, {
+      const res = await authenticatedFetch(`${apiBaseUrl}/api/tab-chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

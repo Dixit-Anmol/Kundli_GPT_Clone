@@ -20,24 +20,18 @@ class ChatStore:
 
     def get_or_create_session(self, session_id: str, user_id: str | None, tab_context: str | None = None) -> uuid.UUID:
         """Find or create a database ChatSession, ensuring the parent User exists."""
+        if not user_id:
+            raise ValueError("Authentication required: user_id is missing")
+
         db_session_id = get_valid_uuid(session_id)
-        # Use session_id as fallback user_id if anonymous
-        db_user_id = get_valid_uuid(user_id or session_id)
+        db_user_id = get_valid_uuid(user_id)
 
         db = SessionLocal()
         try:
             # 1. Ensure User exists in platform.users (needed for Foreign Key constraint)
             user = db.query(User).filter(User.id == db_user_id).first()
             if not user:
-                user = User(
-                    id=db_user_id,
-                    email=f"anonymous_chat_{session_id}@astrosutra.ai",
-                    display_name="Astro Seeker",
-                    status="active",
-                    email_verified=False
-                )
-                db.add(user)
-                db.commit()
+                raise ValueError("User not synchronized in database")
 
             # 2. Check if ChatSession exists
             session = db.query(ChatSession).filter(ChatSession.id == db_session_id).first()

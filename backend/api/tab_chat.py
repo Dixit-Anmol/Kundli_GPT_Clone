@@ -4,7 +4,7 @@ Tab-scoped Chat Endpoint.
 Handles domain-specific chat by selecting the appropriate system prompt
 and context builder based on the active tab.
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from models.request import TabChatRequest
 from models.response import ChatResponse
 from services.memory.session import session_store
@@ -13,6 +13,9 @@ from services.astrology.chart_resolver import resolve_chart_data
 from services.rag.bg_16 import BG16Pipeline
 from services.prompts.tabs import get_tab_system_prompt, build_tab_context
 from services.llm.factory import LLMFactory
+from core.auth import require_current_user
+from db import SessionLocal
+from db.models.identity import User
 
 router = APIRouter()
 
@@ -21,8 +24,18 @@ rag_pipeline = BG16Pipeline()
 
 
 @router.post("/tab-chat", response_model=ChatResponse)
-def handle_tab_chat(req: TabChatRequest):
+def handle_tab_chat(req: TabChatRequest, current_user: dict = Depends(require_current_user)):
     try:
+        firebase_uid = current_user.get("uid")
+        db = SessionLocal()
+        try:
+            db_user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+            if not db_user:
+                raise HTTPException(status_code=404, detail="User not synchronized")
+            req.user_id = str(db_user.id)
+        finally:
+            db.close()
+
         chart_data, birth_details = resolve_chart_data(
             session_id=req.session_id,
             user_id=req.user_id,
