@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 
 class TimezoneRequest(BaseModel):
     latitude: float
@@ -24,6 +24,8 @@ class ChatRequest(BaseModel):
     session_id: str
     message: str
     user_id: Optional[str] = None   # For profile-store fallback loading
+    birth_details: Optional[Dict[str, Any]] = None
+    chart_data: Optional[Dict[str, Any]] = None
 
 class TabChatRequest(BaseModel):
     session_id: str
@@ -38,6 +40,8 @@ class TabChatRequest(BaseModel):
     question: Optional[str] = None
     category: Optional[str] = "general"
     tier: Optional[str] = "free"
+    birth_details: Optional[Dict[str, Any]] = None
+    chart_data: Optional[Dict[str, Any]] = None
 
 class PersonMatchInput(BaseModel):
     profile_id: Optional[str] = None

@@ -1,14 +1,24 @@
 import os
 import requests
+import threading
 
 class GroqClient:
+    _lock = threading.Lock()
+    _rr_index = 0
+
+   
+
     def __init__(self, api_key: str = None):
-        self.api_key = api_key or os.environ.get("GROQ_API_KEY")
-        
-    def generate(self, system_prompt: str, user_prompt: str, max_tokens: int = 700) -> str:
-        """Call Groq API using HTTP requests directly (saves install size), with multi-key rotational fallback."""
-        raw_keys = [
-            self.api_key,
+        self.api_key = api_key
+
+    def _get_all_keys(self) -> list:
+        raw_keys = []
+        if self.api_key:
+            raw_keys.append(self.api_key)
+
+        # Gather keys from standard environment variables
+        env_keys = [
+            os.environ.get("GROQ_API_KEY"),
             os.environ.get("GROQ_API_KEY_FALLBACK"),
             os.environ.get("GROQ_API_KEY_FALLBACK2"),
             os.environ.get("GROQ_API_KEY_FALLBACK3"),
@@ -21,17 +31,45 @@ class GroqClient:
             os.environ.get("GROQ_API_KEY_FALLBACK10"),
         ]
 
-        keys_to_try = []
+        # Gather any dynamically configured GROQ_API_KEY_* env vars
+        for env_name, env_val in os.environ.items():
+            if env_name.startswith("GROQ_API_KEY") and env_val:
+                raw_keys.append(env_val)
+
+        for k in env_keys:
+            if k:
+                raw_keys.append(k)
+
+        # Include default keys as backup
+        raw_keys.extend(self.DEFAULT_KEYS)
+
+        # Deduplicate while preserving insertion order
+        unique_keys = []
         for k in raw_keys:
-            if k and k not in keys_to_try:
-                keys_to_try.append(k)
+            if k and k not in unique_keys:
+                unique_keys.append(k)
+        return unique_keys
+
+    def generate(self, system_prompt: str, user_prompt: str, max_tokens: int = 700) -> str:
+        """Call Groq API using thread-safe round-robin across all available API keys with model fallback."""
+        keys = self._get_all_keys()
+        if not keys:
+            return f"Cosmic connection failed: No Groq API keys available.\n\n{self._offline_fallback(user_prompt)}"
+
+        # Get round-robin starting index atomically
+        with GroqClient._lock:
+            start_idx = GroqClient._rr_index % len(keys)
+            GroqClient._rr_index += 1
+
+        # Re-order keys starting from start_idx for full rotation & fallback
+        ordered_keys = keys[start_idx:] + keys[:start_idx]
 
         last_error_message = "No API key configured."
 
-        for key in keys_to_try:
+        for key in ordered_keys:
             if not key:
                 continue
-            
+
             # Models to try in order of priority: 70b -> 8b-instant -> mixtral
             models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"]
             for model_name in models:
@@ -56,17 +94,17 @@ class GroqClient:
                         res_data = response.json()
                         return res_data["choices"][0]["message"]["content"]
                     else:
-                        last_error_message = response.text
-                        # If rate limited (429), break inner loop to try next model or next key
-                        if response.status_code == 429:
-                            continue
+                        last_error_message = f"Key ending ...{key[-6:]} HTTP {response.status_code}: {response.text}"
+                        # If rate-limited (429) or unauthorized (401), break inner model loop to try the next key immediately
+                        if response.status_code in (429, 401):
+                            break
                 except Exception as e:
-                    last_error_message = str(e)
+                    last_error_message = f"Key ending ...{key[-6:]} Error: {str(e)}"
                     continue
-                
+
         # If all keys and models fail
         return f"Cosmic connection failed: {last_error_message}\n\n{self._offline_fallback(user_prompt)}"
-            
+
     def _offline_fallback(self, user_prompt: str) -> str:
         from services.llm.claude import AnthropicClient
         return AnthropicClient()._offline_vedic_interpretation(user_prompt)

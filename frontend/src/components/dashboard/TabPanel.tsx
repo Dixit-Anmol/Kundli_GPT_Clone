@@ -34,6 +34,7 @@ interface TabPanelProps {
   tab: TabType
   chartData: any
   computed?: any
+  birthData?: any
   sessionId: string
   userId?: string
   apiBaseUrl: string
@@ -47,6 +48,7 @@ export default function TabPanel({
   tab,
   chartData,
   computed,
+  birthData,
   sessionId,
   userId,
   apiBaseUrl,
@@ -95,7 +97,7 @@ export default function TabPanel({
 
   // Sync state if cached item exists or cache key changes
   useEffect(() => {
-    if (!isAllowed || tab === 'matching') return // Don't fetch standard text for matching tab
+    if (!isAllowed || tab === 'matching' || tab === 'dasha_timeline') return // Don't fetch standard text for matching/dasha
 
     let cancelled = false
     const currentKey = getCacheKey()
@@ -129,6 +131,8 @@ export default function TabPanel({
             is_initial: true,
             relationship_type: relationshipTarget,
             sub_tab: careerSubTab,
+            birth_details: birthData,
+            chart_data: chartData,
           }),
         })
 
@@ -185,6 +189,8 @@ export default function TabPanel({
           is_initial: false,
           relationship_type: relationshipTarget,
           sub_tab: careerSubTab,
+          birth_details: birthData,
+          chart_data: chartData,
         }),
       })
 
@@ -263,19 +269,19 @@ export default function TabPanel({
 
     return (
       <>
+        {/* SummaryCards for every tab */}
+        <SummaryCards tab={tab} chartData={chartData} computed={computed} />
+
         {/* Overview Tab Features */}
         {tab === 'overview' && (
           <>
             {chartData?.mode === 'prashna' ? (
               <PrashnaDashboardView chartData={chartData} />
             ) : (
-              <>
-                <SummaryCards tab={tab} chartData={chartData} computed={computed} />
-                <div className="space-y-6">
-                  <AnimatedKundliChart chartData={chartData} />
-                  <PlanetaryTable chartData={chartData} />
-                </div>
-              </>
+              <div className="space-y-6 mb-6">
+                <AnimatedKundliChart chartData={chartData} />
+                <PlanetaryTable chartData={chartData} />
+              </div>
             )}
           </>
         )}
@@ -353,6 +359,8 @@ export default function TabPanel({
         <DashaTimelineView
           sessionId={sessionId}
           userId={userId}
+          birthData={birthData}
+          chartData={chartData}
         />
       )}
 

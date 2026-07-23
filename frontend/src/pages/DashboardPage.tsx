@@ -109,6 +109,7 @@ export default function DashboardPage({
           tab={activeTab}
           chartData={chartData}
           computed={computed || chartData?.computed}
+          birthData={birthData}
           sessionId={sessionId}
           userId={userId}
           apiBaseUrl={apiBaseUrl}

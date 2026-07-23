@@ -9,6 +9,7 @@ from models.request import TabChatRequest
 from models.response import ChatResponse
 from services.memory.session import session_store
 from services.memory.profile_store import profile_store
+from services.astrology.chart_resolver import resolve_chart_data
 from services.rag.bg_16 import BG16Pipeline
 from services.prompts.tabs import get_tab_system_prompt, build_tab_context
 from services.llm.factory import LLMFactory
@@ -22,55 +23,15 @@ rag_pipeline = BG16Pipeline()
 @router.post("/tab-chat", response_model=ChatResponse)
 def handle_tab_chat(req: TabChatRequest):
     try:
+        chart_data, birth_details = resolve_chart_data(
+            session_id=req.session_id,
+            user_id=req.user_id,
+            req_birth_details=req.birth_details,
+            req_chart_data=req.chart_data,
+        )
+
         session = session_store.get_session(req.session_id)
-
-        # Enforce strict profile isolation: if session user_id does not match req.user_id, reset session chart_data
-        if req.user_id and session.get("user_id") != req.user_id:
-            session["chart_data"] = None
-            session["user_id"] = req.user_id
-            session["history"] = []
-            session["computed_analyses"] = None
-
-        chart_data = session.get("chart_data")
         history = session.get("history", [])
-
-        # Fallback: load from persistent disk profile store if backend restarted or profile switched
-        if not chart_data:
-            user_key = req.user_id or req.session_id
-            stored = profile_store.load_profile(user_key) if user_key else None
-            if not stored and req.session_id:
-                stored = profile_store.load_profile(req.session_id)
-
-
-            if stored and stored.get("natal_chart"):
-                natal = stored["natal_chart"]
-                chart_data = natal.get("natal", natal)
-                session_store.save_chart(req.session_id, chart_data)
-                session = session_store.get_session(req.session_id)
-                session["profile"] = stored.get("birth_details", {})
-                
-                # Restore or compute computed analyses
-                computed = natal.get("computed") or stored.get("chart_response", {}).get("computed")
-                if not computed:
-                    from services.astrology.prakriti import estimate_prakriti
-                    from services.astrology.elements import calculate_element_distribution
-                    from services.astrology.lucky import calculate_lucky_attributes
-                    from services.astrology.planet_ranking import rank_planets
-                    from services.astrology.remedies_calc import generate_remedy_data
-
-                    prakriti = estimate_prakriti(chart_data)
-                    elements = calculate_element_distribution(chart_data)
-                    lucky = calculate_lucky_attributes(chart_data)
-                    rankings = rank_planets(chart_data)
-                    remedies = generate_remedy_data(chart_data, rankings)
-                    computed = {
-                        "prakriti": prakriti,
-                        "elements": elements,
-                        "lucky": lucky,
-                        "planet_rankings": rankings,
-                        "remedy_data": remedies,
-                    }
-                session["computed_analyses"] = computed
 
         if not chart_data:
             return {
@@ -78,8 +39,7 @@ def handle_tab_chat(req: TabChatRequest):
                 "session_count": 0,
             }
 
-
-        profile = session.get("profile")
+        profile = birth_details or session.get("profile")
         mode = chart_data.get("mode", "exact")
 
         computed = session.get("computed_analyses") or chart_data.get("computed")
@@ -111,7 +71,6 @@ def handle_tab_chat(req: TabChatRequest):
             or len(history) == 0
         )
 
-
         # Use Prashna/Partial initial prompt ONLY for overview tab initial reading
         if mode == "prashna" and req.tab == "overview" and is_initial:
             from services.prompts.prashna import get_prashna_prompt
@@ -124,7 +83,7 @@ def handle_tab_chat(req: TabChatRequest):
             system_prompt = get_prashna_prompt("partial")
             user_prompt = format_partial_horoscope_context(chart_data, profile)
         else:
-            # Get domain-specific system prompt (Career, Marriage, Health, Food, Remedies, Finance, Personality, Spiritual, etc.)
+            # Get domain-specific system prompt
             system_prompt = get_tab_system_prompt(req.tab, is_initial=is_initial, sub_tab=req.sub_tab)
 
             # Build domain-specific user context
@@ -143,10 +102,6 @@ def handle_tab_chat(req: TabChatRequest):
                 relationship_type=req.relationship_type,
                 sub_tab=req.sub_tab,
             )
-
-
-
-
 
         # Invoke LLM
         client = LLMFactory.get_client()

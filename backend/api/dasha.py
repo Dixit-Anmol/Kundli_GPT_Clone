@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from services.memory.session import session_store
 from services.memory.profile_store import profile_store
 from services.astrology.dasha import calculate_full_dasha_package, lookup_dasha_by_year, PLANET_METADATA
-from services.llm.factory import LLMFactory
+from services.astrology.chart_resolver import resolve_chart_data
 
 router = APIRouter()
 
@@ -14,26 +14,22 @@ class DashaTimelineRequest(BaseModel):
     session_id: str
     user_id: Optional[str] = None
     lookup_year: Optional[int] = None
+    birth_details: Optional[Dict[str, Any]] = None
+    chart_data: Optional[Dict[str, Any]] = None
 
 @router.post("/dasha-timeline")
 def get_dasha_timeline(req: DashaTimelineRequest):
     try:
+        chart_data, birth_details = resolve_chart_data(
+            session_id=req.session_id,
+            user_id=req.user_id,
+            req_birth_details=req.birth_details,
+            req_chart_data=req.chart_data,
+        )
+
         session = session_store.get_session(req.session_id)
-        chart_data = session.get("chart_data")
 
-        user_key = req.user_id or req.session_id
-        stored = profile_store.load_profile(user_key) if user_key else None
-        if not stored and req.session_id:
-            stored = profile_store.load_profile(req.session_id)
-
-        # Fallback load from profile_store if backend restarted or session reset
-        if not chart_data and stored and stored.get("natal_chart"):
-            natal = stored["natal_chart"]
-            chart_data = natal.get("natal", natal)
-            session_store.save_chart(req.session_id, chart_data)
-            session = session_store.get_session(req.session_id)
-
-        if not chart_data:
+        if not chart_data or not isinstance(chart_data, dict) or not chart_data.get("planets"):
             raise HTTPException(
                 status_code=404,
                 detail="Natal chart data not found for session. Please enter birth details first."
@@ -46,8 +42,8 @@ def get_dasha_timeline(req: DashaTimelineRequest):
 
         # Comprehensive birth date parsing across all potential keys
         meta = chart_data.get("metadata", {}) if isinstance(chart_data.get("metadata"), dict) else {}
-        sess_bd = session.get("birth_details") or {}
-        stored_bd = stored.get("birth_details") if stored else {}
+        sess_bd = session.get("birth_details") or session.get("profile") or {}
+        stored_bd = birth_details or {}
 
         raw_dob = (
             meta.get("date_of_birth") or
@@ -57,93 +53,56 @@ def get_dasha_timeline(req: DashaTimelineRequest):
             chart_data.get("birth_date") or
             chart_data.get("date_str") or
             sess_bd.get("date_of_birth") or
+            sess_bd.get("dateOfBirth") or
             sess_bd.get("date_str") or
             stored_bd.get("date_of_birth") or
-            stored_bd.get("date_str")
+            stored_bd.get("dateOfBirth") or
+            stored_bd.get("date_str") or
+            "2000-01-01"
         )
 
-        birth_dt = None
-        if raw_dob:
-            try:
-                from backend.utils.date_parser import parse_date_str
-                birth_dt = parse_date_str(str(raw_dob))
-            except Exception:
-                try:
-                    birth_dt = datetime.date.fromisoformat(str(raw_dob)[:10])
-                except Exception:
-                    pass
-
-        if not birth_dt:
-            birth_dt = datetime.date(1998, 5, 15)
-
-        today_dt = datetime.date.today()
-
-        # Compute full Vimshottari package
-        package = calculate_full_dasha_package(moon_long, birth_dt, today_dt)
-
-        # Optional Year Lookup
-        lookup_result = None
-        if req.lookup_year:
-            lookup_result = lookup_dasha_by_year(package["timeline"], req.lookup_year)
-        package["year_lookup"] = lookup_result
-
-        # Generate Dynamic AI Interpretation for active Dasha
-        curr_maha = package["current_mahadasha"]
-        curr_antar = package["current_antardasha"]
-        next_maha = package["next_mahadasha"]
-        
-        user_name = meta.get("name") or "Seeker"
-        
-        maha_name = curr_maha.get("planet_name", "Rahu")
-        antar_name = curr_antar.get("planet_name", "Venus") if curr_antar else "Moon"
-
-        # AI prompt for Dasha Interpretation
-        sys_prompt = """You are AstroSutra AI — a master Vedic Dasha & Timing Analyst.
-
-MANDATORY CONVERSATIONAL STYLE:
-- Write in 2–3 clean, highly readable prose paragraphs.
-- DO NOT use bullet points (- / *), raw asterisks, or markdown section headers.
-- Directly address the seeker by their name in sentence 1.
-- Synthesize the active Mahadasha and Antardasha themes, emotional shifts, career focus, and spiritual alignment."""
-
-        user_prompt = f"""User: {user_name}
-Active Mahadasha: {maha_name} ({curr_maha.get('start_date')} to {curr_maha.get('end_date')})
-Active Antardasha: {antar_name} ({curr_antar.get('start_date') if curr_antar else 'N/A'} to {curr_antar.get('end_date') if curr_antar else 'N/A'})
-Next Mahadasha: {next_maha.get('planet_name')} (starts {next_maha.get('start_date')})
-
-Explain the core life themes, career focus, relationship dynamics, and strategic opportunities during this active {maha_name}-{antar_name} period. Target length: 150–200 words."""
-
         try:
-            client = LLMFactory.get_client()
-            ai_text = client.generate(sys_prompt, user_prompt, max_tokens=380)
-        except Exception as e:
-            ai_text = (
-                f"{user_name}, your active **{maha_name} Mahadasha** brings significant personal transformation and "
-                f"strategic movement. Under **{antar_name} Antardasha**, your emotional focus, creative pursuits, "
-                f"and key partnerships are heightened. Aligning your daily routine with {maha_name}'s strengths will unlock unexpected growth."
-            )
+            if isinstance(raw_dob, datetime.date):
+                dob_dt = datetime.datetime.combine(raw_dob, datetime.time.min)
+            elif isinstance(raw_dob, datetime.datetime):
+                dob_dt = raw_dob
+            else:
+                from backend.utils.date_parser import parse_date_str
+                dob_dt = parse_date_str(str(raw_dob))
+        except Exception:
+            dob_dt = datetime.datetime(2000, 1, 1)
 
-        package["ai_interpretation"] = {
-            "summary": ai_text,
-            "mahadasha_name": maha_name,
-            "antardasha_name": antar_name,
-            "focus_areas": {
-                "career": f"High potential for growth, expansion, and strategic execution during {maha_name} period.",
-                "relationships": f"{antar_name} Antardasha enhances emotional resonance, bonding, and harmony.",
-                "health": "Maintain daily discipline, balanced sleep cycles, and mindful vitality management.",
-                "spiritual": f"Embrace self-reflection and inner growth aligned with {maha_name}'s karmic lessons."
-            },
-            "challenges": [
-                f"Navigating sudden transition phases during {maha_name} shift",
-                "Balancing ambition with emotional stability"
-            ],
-            "opportunities": [
-                f"Favorable windows for relationship & financial growth under {antar_name} Antardasha",
-                "New professional networks and expansion"
-            ]
+        # Calculate complete Dasha timeline
+        dasha_package = calculate_full_dasha_package(moon_long, dob_dt.date() if isinstance(dob_dt, datetime.datetime) else dob_dt)
+
+        # Perform optional year lookup if requested
+        if req.lookup_year:
+            year_info = lookup_dasha_by_year(dasha_package["mahadashas"], req.lookup_year)
+            dasha_package["year_lookup"] = year_info
+
+        # Add active planet guidance text
+        active = dasha_package.get("current_mahadasha", {})
+        p_name = active.get("planet", "jupiter")
+        p_info = PLANET_METADATA.get(p_name, {})
+        
+        s_date = str(active.get("start_date", ""))
+        e_date = str(active.get("end_date", ""))
+        s_year = s_date[:4] if len(s_date) >= 4 else s_date
+        e_year = e_date[:4] if len(e_date) >= 4 else e_date
+
+        dasha_package["current_mahadasha_guidance"] = {
+            "planet": p_name,
+            "title": p_info.get("title", f"{active.get('planet_name', p_name.capitalize())} Dasha Period"),
+            "theme": p_info.get("theme", "Transformation and Growth"),
+            "summary": f"You are currently navigating your {active.get('planet_name', p_name.capitalize())} Mahadasha ({s_year} to {e_year}). This major planetary period emphasizes {', '.join(p_info.get('themes', ['karmic evolution']))}.",
+            "opportunities": p_info.get("themes", ["Personal growth", "Spiritual alignment"])[:2],
+            "challenges": ["Mindfulness & Karma Balance", "Patience during planetary transits"],
         }
 
-        return package
+        return dasha_package
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"[DashaTimeline Error] {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to calculate Dasha timeline: {str(e)}")

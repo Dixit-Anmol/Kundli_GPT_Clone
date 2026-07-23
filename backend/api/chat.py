@@ -4,6 +4,7 @@ from models.response import ChatResponse
 from services.memory.session import session_store
 from services.memory.profile_store import profile_store
 from services.memory.history import ChatHistory
+from services.astrology.chart_resolver import resolve_chart_data
 from services.rag.bg_16 import BG16Pipeline
 from services.prompts.system import get_system_prompt
 from services.prompts.horoscope import build_horoscope_prompt
@@ -23,34 +24,16 @@ rag_pipeline = BG16Pipeline()
 @router.post("/chat", response_model=ChatResponse)
 def handle_chat(req: ChatRequest):
     try:
+        chart_data, birth_details = resolve_chart_data(
+            session_id=req.session_id,
+            user_id=req.user_id,
+            req_birth_details=req.birth_details,
+            req_chart_data=req.chart_data,
+        )
+
         session = session_store.get_session(req.session_id)
-
-        # Enforce strict profile isolation: if session user_id does not match req.user_id, reset session chart_data
-        if req.user_id and session.get("user_id") != req.user_id:
-            session["chart_data"] = None
-            session["user_id"] = req.user_id
-            session["history"] = []
-
-        chart_data = session.get("chart_data")
         history = session.get("history", [])
 
-        
-        # Fallback: If session has no chart data (e.g. server restart),
-        # load from persistent disk profile store
-        if not chart_data:
-            user_key = req.user_id or req.session_id
-            stored = profile_store.load_profile(user_key) if user_key else None
-            if not stored and req.session_id:
-                stored = profile_store.load_profile(req.session_id)
-
-            if stored and stored.get("natal_chart"):
-                natal = stored["natal_chart"]
-                chart_data = natal.get("natal", natal)
-                session_store.save_chart(req.session_id, chart_data)
-                session = session_store.get_session(req.session_id)
-                session["profile"] = stored.get("birth_details", {})
-
-        
         # 1. Block if birth chart is not generated yet
         if not chart_data:
             return {
@@ -71,7 +54,6 @@ def handle_chat(req: ChatRequest):
             selected_charts = select_charts_for_topic(detected_intent, chart_bundle)
             
         # 5. Determine prompt style based on context and history
-        # Use specialised financial system prompt when the query is finance-related
         if not (len(history) == 0) and is_financial_query(req.message):
             system_prompt = get_financial_system_prompt()
         else:
@@ -80,7 +62,7 @@ def handle_chat(req: ChatRequest):
         # Retrieve relevant Bhagavad Gita verses using RAG
         gita_passages = rag_pipeline.search_wisdom(req.message, top_k=2)
         
-        profile = session.get("profile")
+        profile = birth_details or session.get("profile")
         
         # Is this the initial analysis request?
         is_initial = len(history) == 0
@@ -115,13 +97,12 @@ def handle_chat(req: ChatRequest):
                 else:
                     raise e
             
-        # 6. Invoke LLM (Groq or Claude based on setup)
-        # Use session-saved API key if provided, else use system environment keys
+        # 6. Invoke LLM
         api_key = session.get("key")
         
         client = LLMFactory.get_client()
         if api_key:
-            client.api_key = api_key # Override client key with session key
+            client.api_key = api_key
             
         response_text = client.generate(system_prompt, user_prompt, max_tokens=420)
         

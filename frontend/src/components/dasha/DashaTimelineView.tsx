@@ -112,9 +112,11 @@ interface DashaPackage {
 interface Props {
   sessionId: string
   userId?: string
+  birthData?: any
+  chartData?: any
 }
 
-export default function DashaTimelineView({ sessionId, userId }: Props) {
+export default function DashaTimelineView({ sessionId, userId, birthData, chartData }: Props) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<DashaPackage | null>(null)
@@ -141,6 +143,8 @@ export default function DashaTimelineView({ sessionId, userId }: Props) {
           session_id: sessionId,
           user_id: userId,
           lookup_year: searchYear,
+          birth_details: birthData,
+          chart_data: chartData,
         }),
       })
 
