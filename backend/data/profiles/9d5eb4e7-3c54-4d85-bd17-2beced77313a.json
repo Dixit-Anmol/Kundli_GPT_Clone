@@ -1,19 +1,19 @@
 {
-  "user_id": "9088895f-b5f2-4e44-9e87-4af46b19f37f",
+  "user_id": "9d5eb4e7-3c54-4d85-bd17-2beced77313a",
   "birth_details": {
     "name": "Shivom Gupta",
     "date_of_birth": "1991-11-03",
     "time_of_birth": "07:15:00",
-    "latitude": 28.6328027,
-    "longitude": 77.2197713,
+    "latitude": 25.9863918,
+    "longitude": 79.4534538,
     "timezone_offset": 5.5,
-    "fullName": "Shivi",
-    "gender": "female",
-    "dateOfBirth": "1990-12-09",
-    "timeOfBirth": "11:55",
+    "fullName": "Anmol Dixit",
+    "gender": "male",
+    "dateOfBirth": "2003-09-14",
+    "timeOfBirth": "07:15",
     "relationship": "Self",
-    "placeName": "Delhi, India",
-    "mode": "exact",
+    "placeName": "\u0909\u0930\u0908, Orai, \u091c\u093e\u0932\u094c\u0928, Uttar Pradesh, India",
+    "mode": "partial",
     "timeSlot": "unknown"
   },
   "natal_chart": {
@@ -454,6 +454,6 @@
   "chart_response": {
     "ascendant_sign": "Libra"
   },
-  "created_at": "2026-07-21T06:22:19.154202+00:00",
-  "updated_at": "2026-07-23T06:17:54.477404+00:00"
+  "created_at": "2026-07-23T06:17:30.110080+00:00",
+  "updated_at": "2026-07-23T06:17:30.437201+00:00"
 }
