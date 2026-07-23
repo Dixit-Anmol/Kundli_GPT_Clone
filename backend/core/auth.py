@@ -34,6 +34,12 @@ def initialize_firebase_admin():
     client_email = os.environ.get("FIREBASE_CLIENT_EMAIL")
     project_id = os.environ.get("FIREBASE_PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT") or "astrosutraai-b524e"
 
+    print("=== FIREBASE DEBUG ===")
+    print("Project ID:", project_id)
+    print("Client Email Present:", bool(client_email))
+    print("Private Key Present:", bool(private_key))
+    print("======================")
+
     try:
         # Priority 1: Environment Variables (e.g. Render)
         if private_key and client_email:
@@ -45,6 +51,8 @@ def initialize_firebase_admin():
                 "private_key": formatted_key,
                 "client_email": client_email,
                 "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
             }
             cred = credentials.Certificate(sa_info)
             firebase_admin.initialize_app(cred)
@@ -81,8 +89,10 @@ def initialize_firebase_admin():
                 firebase_admin.initialize_app()
             _firebase_app_initialized = True
     except Exception as e:
-        print(f"[Firebase Admin] Initialization notice: {e}")
-        _firebase_app_initialized = True
+        print(f"[Firebase Admin] Initialization FAILED: {e}")
+        _firebase_app_initialized = False
+        raise
+
 
 
 # Initialize on import
