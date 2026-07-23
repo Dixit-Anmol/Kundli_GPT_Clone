@@ -115,7 +115,7 @@ def verify_firebase_token_manually(id_token: str) -> Dict[str, Any]:
         raise ValueError("No 'kid' claim found in token header")
 
     # 2. Fetch Google's public x509 certificates
-    res = requests.get("https://www.googleapis.com/robot/v1/metadata/x509/securetoken-system@system.gserviceaccount.com", timeout=5)
+    res = requests.get("https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com", timeout=5)
     if not res.ok:
         raise ValueError("Failed to fetch Google public certificates")
     certs = res.json()
