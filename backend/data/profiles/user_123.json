@@ -1,0 +1,254 @@
+{
+  "user_id": "user_123",
+  "birth_details": {
+    "date_of_birth": "1995-05-15",
+    "time_of_birth": "10:30:00",
+    "latitude": 28.61,
+    "longitude": 77.2
+  },
+  "natal_chart": {
+    "natal": {
+      "metadata": {
+        "julian_day": 2449852.7083333335,
+        "ascendant_longitude": 99.62792267675721,
+        "ascendant_sign": "Cancer",
+        "moon_sign": "Scorpio",
+        "nakshatra": "Anuradha",
+        "pada": 1,
+        "ayanamsa": 23.79237181212244
+      },
+      "planets": {
+        "sun": {
+          "name_sanskrit": "Surya",
+          "longitude": 30.1233600336449,
+          "sign": "Taurus",
+          "degree": 0.12336003364490011,
+          "dignity": "Neutral",
+          "house": 11,
+          "nakshatra": {
+            "name": "Krittika",
+            "lord": "sun",
+            "deity": "Agni",
+            "pada": 2,
+            "longitude": 30.1233600336449
+          }
+        },
+        "moon": {
+          "name_sanskrit": "Chandra",
+          "longitude": 214.96032285041238,
+          "sign": "Scorpio",
+          "degree": 4.960322850412382,
+          "dignity": "Debilitated",
+          "house": 5,
+          "nakshatra": {
+            "name": "Anuradha",
+            "lord": "saturn",
+            "deity": "Mitra",
+            "pada": 1,
+            "longitude": 214.96032285041238
+          }
+        },
+        "mercury": {
+          "name_sanskrit": "Budh",
+          "longitude": 51.20788307440087,
+          "sign": "Taurus",
+          "degree": 21.20788307440087,
+          "dignity": "Neutral",
+          "house": 11,
+          "nakshatra": {
+            "name": "Rohini",
+            "lord": "moon",
+            "deity": "Brahma",
+            "pada": 4,
+            "longitude": 51.20788307440087
+          }
+        },
+        "venus": {
+          "name_sanskrit": "Shukra",
+          "longitude": 4.066392168982813,
+          "sign": "Aries",
+          "degree": 4.066392168982813,
+          "dignity": "Neutral",
+          "house": 10,
+          "nakshatra": {
+            "name": "Ashwini",
+            "lord": "ketu",
+            "deity": "Ashwini Kumaras",
+            "pada": 2,
+            "longitude": 4.066392168982813
+          }
+        },
+        "mars": {
+          "name_sanskrit": "Mangal",
+          "longitude": 121.69895641055906,
+          "sign": "Leo",
+          "degree": 1.698956410559063,
+          "dignity": "Neutral",
+          "house": 2,
+          "nakshatra": {
+            "name": "Magha",
+            "lord": "ketu",
+            "deity": "Pitris",
+            "pada": 1,
+            "longitude": 121.69895641055906
+          }
+        },
+        "jupiter": {
+          "name_sanskrit": "Guru",
+          "longitude": 228.840910762496,
+          "sign": "Scorpio",
+          "degree": 18.84091076249601,
+          "dignity": "Neutral",
+          "house": 5,
+          "nakshatra": {
+            "name": "Jyeshtha",
+            "lord": "mercury",
+            "deity": "Indra",
+            "pada": 1,
+            "longitude": 228.840910762496
+          }
+        },
+        "saturn": {
+          "name_sanskrit": "Shani",
+          "longitude": 328.7911280106207,
+          "sign": "Aquarius",
+          "degree": 28.791128010620696,
+          "dignity": "Own Sign",
+          "house": 8,
+          "nakshatra": {
+            "name": "Purva Bhadrapada",
+            "lord": "jupiter",
+            "deity": "Aja Ekapada",
+            "pada": 3,
+            "longitude": 328.7911280106207
+          }
+        },
+        "rahu": {
+          "name_sanskrit": "Rahu",
+          "longitude": 191.77625228585862,
+          "sign": "Libra",
+          "degree": 11.776252285858618,
+          "dignity": "Neutral",
+          "house": 4,
+          "nakshatra": {
+            "name": "Swati",
+            "lord": "rahu",
+            "deity": "Vayu",
+            "pada": 2,
+            "longitude": 191.77625228585862
+          }
+        },
+        "ketu": {
+          "name_sanskrit": "Ketu",
+          "longitude": 11.776252285858618,
+          "sign": "Aries",
+          "degree": 11.776252285858618,
+          "dignity": "Neutral",
+          "house": 10,
+          "nakshatra": {
+            "name": "Ashwini",
+            "lord": "ketu",
+            "deity": "Ashwini Kumaras",
+            "pada": 4,
+            "longitude": 11.776252285858618
+          }
+        }
+      },
+      "houses": {
+        "1": {
+          "sign": "Cancer",
+          "lord": "moon",
+          "signification": "Self, personality, physical body, appearance, health, beginning of life."
+        },
+        "2": {
+          "sign": "Leo",
+          "lord": "sun",
+          "signification": "Wealth, family, speech, primary education, food, assets, face."
+        },
+        "3": {
+          "sign": "Virgo",
+          "lord": "mercury",
+          "signification": "Courage, short travels, siblings, communication, writing, efforts, hands."
+        },
+        "4": {
+          "sign": "Libra",
+          "lord": "venus",
+          "signification": "Mother, home, happiness, vehicle, lands, emotions, heart, inner peace."
+        },
+        "5": {
+          "sign": "Scorpio",
+          "lord": "mars",
+          "signification": "Intellect, children, creativity, past life merits (Purvapunya), romance, speculation."
+        },
+        "6": {
+          "sign": "Sagittarius",
+          "lord": "jupiter",
+          "signification": "Debts, enemies, diseases, service, daily routine, competition, obstacles."
+        },
+        "7": {
+          "sign": "Capricorn",
+          "lord": "saturn",
+          "signification": "Spouse, partnership, business partners, relationship, travel, public life."
+        },
+        "8": {
+          "sign": "Aquarius",
+          "lord": "saturn",
+          "signification": "Longevity, secrets, inheritance, sudden transformations, occult, mysteries."
+        },
+        "9": {
+          "sign": "Pisces",
+          "lord": "jupiter",
+          "signification": "Dharma, fortune (Bhagya), father, higher education, long journeys, philosophy, religion."
+        },
+        "10": {
+          "sign": "Aries",
+          "lord": "mars",
+          "signification": "Career, status, reputation, public life, authority, karma, actions in society."
+        },
+        "11": {
+          "sign": "Taurus",
+          "lord": "venus",
+          "signification": "Gains, desires fulfillment, friends, elder siblings, cash flow, achievements."
+        },
+        "12": {
+          "sign": "Gemini",
+          "lord": "mercury",
+          "signification": "Losses, liberation (Moksha), foreign travels, isolation, dreams, bedroom pleasures."
+        }
+      },
+      "yogas": [
+        {
+          "name": "Gaja Kesari Yoga",
+          "meaning": "Jupiter in a quadrant from the Moon. Brings intelligence, wisdom, prosperity, reputation, and virtuous qualities.",
+          "type": "Auspicious"
+        },
+        {
+          "name": "Budhaditya Yoga",
+          "meaning": "Sun and Mercury conjunction. Gives intelligence, learning ability, professional success, and mental agility.",
+          "type": "Intellectual"
+        }
+      ],
+      "doshas": {
+        "manglik": {
+          "is_present": true,
+          "house": 2,
+          "description": "Mars in 2nd house can cause harsh speech and friction in family life."
+        },
+        "kaal_sarp": {
+          "is_present": false,
+          "description": "No Kaal Sarp Dosha found."
+        },
+        "sade_sati": {
+          "is_present": false,
+          "phase": "Not Active",
+          "description": "Sade Sati is not active for this Moon sign right now."
+        }
+      }
+    }
+  },
+  "chart_response": {
+    "ascendant_sign": "Cancer"
+  },
+  "created_at": "2026-07-23T05:04:15.946570+00:00",
+  "updated_at": "2026-07-23T05:04:48.132426+00:00"
+}
