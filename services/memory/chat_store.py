@@ -12,7 +12,7 @@ from typing import List, Dict, Any
 from db import SessionLocal
 from db.models.identity import User
 from db.models.ai_chat import ChatSession, ChatMessage
-from services.memory.profile_store import get_valid_uuid
+from services.memory.profile_store import get_valid_uuid, resolve_db_user
 
 
 class ChatStore:
@@ -24,12 +24,11 @@ class ChatStore:
             raise ValueError("Authentication required: user_id is missing")
 
         db_session_id = get_valid_uuid(session_id)
-        db_user_id = get_valid_uuid(user_id)
 
         db = SessionLocal()
         try:
             # 1. Ensure User exists in platform.users (needed for Foreign Key constraint)
-            user = db.query(User).filter(User.id == db_user_id).first()
+            user = resolve_db_user(db, user_id)
             if not user:
                 raise ValueError("User not synchronized in database")
 
@@ -38,7 +37,7 @@ class ChatStore:
             if not session:
                 session = ChatSession(
                     id=db_session_id,
-                    user_id=db_user_id,
+                    user_id=user.id,
                     tab_context=tab_context[:50] if tab_context else "general",
                     status="active",
                     message_count=0

@@ -30,15 +30,37 @@ def get_valid_uuid(user_id: str) -> uuid.UUID:
         return uuid.uuid5(uuid.NAMESPACE_DNS, user_id)
 
 
+def resolve_db_user(db, user_id: str) -> User | None:
+    """
+    Looks up a database User record by:
+    1. firebase_uid (if user_id matches a Firebase UID)
+    2. id (using get_valid_uuid(user_id))
+    """
+    if not user_id:
+        return None
+    # 1. Search by firebase_uid
+    user = db.query(User).filter(User.firebase_uid == user_id).first()
+    if user:
+        return user
+    # 2. Fallback to parsing as UUID
+    try:
+        db_user_id = get_valid_uuid(user_id)
+        return db.query(User).filter(User.id == db_user_id).first()
+    except Exception:
+        return None
+
+
 class ProfileStore:
     """SQLAlchemy-based persistent storage for user astrology profiles."""
 
     def has_profile(self, user_id: str) -> bool:
         """Check whether a profile exists for the given user ID."""
-        db_user_id = get_valid_uuid(user_id)
         db = SessionLocal()
         try:
-            profile = db.query(AstroProfile).filter(AstroProfile.user_id == db_user_id).first()
+            user = resolve_db_user(db, user_id)
+            if not user:
+                return False
+            profile = db.query(AstroProfile).filter(AstroProfile.user_id == user.id).first()
             return profile is not None
         except Exception as e:
             print(f"[ProfileStore] Error in has_profile: {e}")
@@ -67,12 +89,13 @@ class ProfileStore:
         chart_response : dict
             The summary response sent back to the frontend.
         """
-        db_user_id = get_valid_uuid(user_id)
         db = SessionLocal()
         try:
-            # 1. Ensure user exists in platform.users
-            user = db.query(User).filter(User.id == db_user_id).first()
+            # 1. Resolve database User
+            user = resolve_db_user(db, user_id)
             if not user:
+                # Create new anonymous guest user
+                db_user_id = get_valid_uuid(user_id)
                 user = User(
                     id=db_user_id,
                     email=f"anonymous_{user_id}@astrosutra.ai",
@@ -82,6 +105,8 @@ class ProfileStore:
                 )
                 db.add(user)
                 db.commit()
+            
+            db_user_id = user.id
 
             # 2. Find or create AstroProfile
             profile = db.query(AstroProfile).filter(AstroProfile.user_id == db_user_id).first()
@@ -166,10 +191,12 @@ class ProfileStore:
 
     def load_profile(self, user_id: str) -> dict | None:
         """Load a profile from the database. Returns None if not found."""
-        db_user_id = get_valid_uuid(user_id)
         db = SessionLocal()
         try:
-            profile = db.query(AstroProfile).filter(AstroProfile.user_id == db_user_id).first()
+            user = resolve_db_user(db, user_id)
+            if not user:
+                return None
+            profile = db.query(AstroProfile).filter(AstroProfile.user_id == user.id).first()
             if not profile:
                 return None
 
