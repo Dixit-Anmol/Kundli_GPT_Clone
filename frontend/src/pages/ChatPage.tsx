@@ -50,47 +50,16 @@ export default function ChatPage() {
 
     setProfiles(saved)
 
-    // User account key: use user.uid if available
-    const userKey = user?.uid || savedActiveId
-
-    if (saved.length > 0) {
-      const active = saved.find((p) => p.id === userKey || p.id === savedActiveId) || saved[0]
-      setActiveId(active.id)
-      setActiveProfileId(active.id)
-      setBirthData(active.birthData || null)
-
-      if (active.chartData && active.chartData.ascendant_sign) {
-        setChartData(active.chartData)
-        setStep('ready')
-      } else if (active.id) {
-        // Attempt to load from backend profile store
-        authenticatedFetch(`${API_BASE_URL}/api/profile/${active.id}`)
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data) => {
-            if (data && data.exists && data.chart_summary) {
-              setChartData(data.chart_summary)
-              setStep('ready')
-            } else if (active.birthData) {
-              // Re-trigger chart calculation from saved birth details
-              handleBirthSubmit(active.birthData, active.id)
-            } else {
-              setStep('welcome')
-            }
-          })
-          .catch(() => setStep('welcome'))
-      } else {
-        setStep('ready')
-      }
-    } else if (userKey) {
-      // Check backend profile store for existing user profile
-      authenticatedFetch(`${API_BASE_URL}/api/profile/${userKey}`)
+    if (user?.uid) {
+      // 1. Authenticated User flow: Always prioritize checking database profile
+      authenticatedFetch(`${API_BASE_URL}/api/profile/${user.uid}`)
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data && data.exists && (data.chart_summary || data.natal_chart)) {
             const chart = data.chart_summary || data.natal_chart
             const restoredProfile: UserProfile = {
-              id: userKey,
-              name: user?.displayName || data.birth_details?.name || 'Seeker',
+              id: user.uid,
+              name: user.displayName || data.birth_details?.name || 'Seeker',
               relationship: 'Self',
               birthData: data.birth_details || null,
               chartData: chart,
@@ -98,19 +67,54 @@ export default function ChatPage() {
               createdAt: new Date().toISOString(),
             }
             saveProfile(restoredProfile)
-            setProfiles([restoredProfile])
-            setActiveId(userKey)
-            setActiveProfileId(userKey)
+            
+            // Keep local profiles updated with the resolved database profile
+            const updatedSaved = getSavedProfiles()
+            setProfiles(updatedSaved)
+
+            setActiveId(user.uid)
+            setActiveProfileId(user.uid)
             setChartData(chart)
             setBirthData(data.birth_details || null)
             setStep('ready')
           } else {
+            // New user, or database details are missing -> redirect to onboarding welcome step
             setStep('welcome')
           }
         })
         .catch(() => setStep('welcome'))
     } else {
-      setStep('welcome')
+      // 2. Anonymous/Guest User flow: Use localStorage
+      if (saved.length > 0) {
+        const active = saved.find((p) => p.id === savedActiveId) || saved[0]
+        setActiveId(active.id)
+        setActiveProfileId(active.id)
+        setBirthData(active.birthData || null)
+
+        if (active.chartData && active.chartData.ascendant_sign) {
+          setChartData(active.chartData)
+          setStep('ready')
+        } else if (active.id) {
+          // Fallback check profile store for active id
+          authenticatedFetch(`${API_BASE_URL}/api/profile/${active.id}`)
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+              if (data && data.exists && data.chart_summary) {
+                setChartData(data.chart_summary)
+                setStep('ready')
+              } else if (active.birthData) {
+                handleBirthSubmit(active.birthData, active.id)
+              } else {
+                setStep('welcome')
+              }
+            })
+            .catch(() => setStep('welcome'))
+        } else {
+          setStep('ready')
+        }
+      } else {
+        setStep('welcome')
+      }
     }
   }, [user?.uid])
 
