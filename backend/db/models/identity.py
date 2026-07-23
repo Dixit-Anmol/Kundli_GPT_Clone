@@ -55,8 +55,7 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     auth_providers = relationship("AuthProvider", back_populates="user", cascade="all, delete-orphan")
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     preferences = relationship("UserPreference", back_populates="user", uselist=False, cascade="all, delete-orphan")
-    devices = relationship("UserDevice", back_populates="user", cascade="all, delete-orphan")
-    sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
+
 
 
 # ---------------------------------------------------------------------------

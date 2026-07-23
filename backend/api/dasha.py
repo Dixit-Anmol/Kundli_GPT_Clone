@@ -1,12 +1,13 @@
 import datetime
 from typing import Optional, Dict, Any
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 
 from services.memory.session import session_store
 from services.memory.profile_store import profile_store
 from services.astrology.dasha import calculate_full_dasha_package, lookup_dasha_by_year, PLANET_METADATA
 from services.astrology.chart_resolver import resolve_chart_data
+from core.auth import verify_firebase_token
 
 router = APIRouter()
 
@@ -18,8 +19,18 @@ class DashaTimelineRequest(BaseModel):
     chart_data: Optional[Dict[str, Any]] = None
 
 @router.post("/dasha-timeline")
-def get_dasha_timeline(req: DashaTimelineRequest):
+def get_dasha_timeline(req: DashaTimelineRequest, authorization: Optional[str] = Header(None)):
     try:
+        # Resolve authenticated user_id from token if present
+        if authorization and authorization.startswith("Bearer "):
+            token = authorization.split(" ")[1]
+            try:
+                claims = verify_firebase_token(token)
+                if claims and "uid" in claims:
+                    req.user_id = claims["uid"]
+            except Exception as e:
+                print(f"[Dasha] Token verification failed: {e}")
+
         chart_data, birth_details = resolve_chart_data(
             session_id=req.session_id,
             user_id=req.user_id,
@@ -77,7 +88,7 @@ def get_dasha_timeline(req: DashaTimelineRequest):
 
         # Perform optional year lookup if requested
         if req.lookup_year:
-            year_info = lookup_dasha_by_year(dasha_package["mahadashas"], req.lookup_year)
+            year_info = lookup_dasha_by_year(dasha_package["timeline"], req.lookup_year)
             dasha_package["year_lookup"] = year_info
 
         # Add active planet guidance text
