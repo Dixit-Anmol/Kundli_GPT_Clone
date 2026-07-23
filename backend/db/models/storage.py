@@ -29,7 +29,7 @@ class FileAsset(Base, SoftDeleteMixin):
         ),
         Index("idx_files_user", "user_id"),
         Index("idx_files_type", "file_type"),
-        {"schema": "storage"},
+        {"schema": "filestorage"},
     )
 
     id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=new_uuid)

@@ -23,7 +23,7 @@ database_url = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@lo
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
-config.set_main_option("sqlalchemy.url", database_url)
+config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -43,7 +43,7 @@ SCHEMAS = [
     "astrology",
     "ai",
     "billing",
-    "storage",
+    "filestorage",
     "comms",
     "analytics",
     "audit"

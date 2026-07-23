@@ -27,7 +27,7 @@ def upgrade() -> None:
     # Pre-create all core target schemas (excluding system)
     schemas = [
         "platform", "authz", "catalog", "astrology", "ai", "billing",
-        "storage", "comms", "analytics", "audit"
+        "filestorage", "comms", "analytics", "audit"
     ]
     for schema in schemas:
         connection.execute(sa.text(f"CREATE SCHEMA IF NOT EXISTS {schema}"))
@@ -48,7 +48,7 @@ def downgrade() -> None:
     # Drop all core schemas
     schemas = [
         "platform", "authz", "catalog", "astrology", "ai", "billing",
-        "storage", "comms", "analytics", "audit"
+        "filestorage", "comms", "analytics", "audit"
     ]
     for schema in schemas:
         connection.execute(sa.text(f"DROP SCHEMA IF EXISTS {schema} CASCADE"))
