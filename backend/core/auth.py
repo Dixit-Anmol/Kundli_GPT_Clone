@@ -30,35 +30,54 @@ def initialize_firebase_admin():
         _firebase_app_initialized = True
         return
 
-    # Check for service account JSON file path from environment variable or standard local paths
-    sa_path = os.environ.get("FIREBASE_SERVICE_ACCOUNT_PATH")
-    default_paths = [
-        sa_path,
-        os.path.join(os.path.dirname(__file__), "..", "service_account.json"),
-        os.path.join(os.path.dirname(__file__), "..", "firebase-service-account.json"),
-        "service_account.json",
-        "firebase-service-account.json",
-    ]
-
-    cert_file = None
-    for path in default_paths:
-        if path and os.path.exists(path):
-            cert_file = path
-            break
+    private_key = os.environ.get("FIREBASE_PRIVATE_KEY")
+    client_email = os.environ.get("FIREBASE_CLIENT_EMAIL")
+    project_id = os.environ.get("FIREBASE_PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT") or "astrosutraai-b524e"
 
     try:
+        # Priority 1: Environment Variables (e.g. Render)
+        if private_key and client_email:
+            print("[Firebase Admin] Initializing using credentials from environment variables...")
+            formatted_key = private_key.replace("\\n", "\n")
+            sa_info = {
+                "type": "service_account",
+                "project_id": project_id,
+                "private_key": formatted_key,
+                "client_email": client_email,
+                "token_uri": "https://oauth2.googleapis.com/token",
+            }
+            cred = credentials.Certificate(sa_info)
+            firebase_admin.initialize_app(cred)
+            _firebase_app_initialized = True
+            return
+
+        # Priority 2: Service Account JSON file path
+        sa_path = os.environ.get("FIREBASE_SERVICE_ACCOUNT_PATH")
+        default_paths = [
+            sa_path,
+            os.path.join(os.path.dirname(__file__), "..", "service_account.json"),
+            os.path.join(os.path.dirname(__file__), "..", "firebase-service-account.json"),
+            "service_account.json",
+            "firebase-service-account.json",
+        ]
+
+        cert_file = None
+        for path in default_paths:
+            if path and os.path.exists(path):
+                cert_file = path
+                break
+
         if cert_file:
             print(f"[Firebase Admin] Initializing with Service Account: {cert_file}")
             cred = credentials.Certificate(cert_file)
             firebase_admin.initialize_app(cred)
             _firebase_app_initialized = True
         else:
-            project_id = os.environ.get("FIREBASE_PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT") or "astrosutraai-b524e"
             if project_id:
-                print(f"[Firebase Admin] Service Account JSON not found. Initializing with Project ID: {project_id}")
+                print(f"[Firebase Admin] Credentials not found. Initializing with project options Project ID: {project_id}")
                 firebase_admin.initialize_app(options={"projectId": project_id})
             else:
-                print("[Firebase Admin] Service Account JSON and Project ID not found. Attempting default credentials...")
+                print("[Firebase Admin] Credentials and Project ID not found. Attempting default credentials...")
                 firebase_admin.initialize_app()
             _firebase_app_initialized = True
     except Exception as e:
