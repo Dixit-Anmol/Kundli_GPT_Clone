@@ -135,7 +135,11 @@ export default function DashaTimelineView({ sessionId, userId, birthData, chartD
       else setSearchingYear(true)
       setError(null)
 
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
+      const backendUrl =
+        import.meta.env.VITE_BACKEND_URL ||
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? 'http://localhost:8000'
+          : 'https://kundli-gpt-clone-back.onrender.com')
       const res = await fetch(`${backendUrl}/api/dasha-timeline`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

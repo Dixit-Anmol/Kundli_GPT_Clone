@@ -48,7 +48,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const promise = (async () => {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
+      const backendUrl =
+        import.meta.env.VITE_BACKEND_URL ||
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? 'http://localhost:8000'
+          : 'https://kundli-gpt-clone-back.onrender.com')
       const res = await fetch(`${backendUrl}/api/auth/verify`, {
         method: 'POST',
         headers: {
