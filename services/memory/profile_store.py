@@ -1,69 +1,50 @@
 """
-Persistent profile storage using JSON files on disk.
+Database-backed profile store using SQLAlchemy.
 
-Each user profile is stored as {user_id}.json in the profiles directory.
-Profiles survive server restarts and contain natal chart data + birth details.
+Saves birth details and calculated natal charts directly to the PostgreSQL database
+instead of storing JSON files on disk. Survives server restarts and integrates
+seamlessly with our multi-schema database architecture.
 """
 
 import os
-import json
-import tempfile
-import threading
-from datetime import datetime, timezone
+import uuid
+import sys
+from datetime import datetime, time, date
+
+# Ensure backend directory is in path
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
+from db import SessionLocal
+from db.models.identity import User
+from db.models.astrology import AstroProfile, AstroBirthDetails, AstroChart
 
 
-# Resolve profiles directory relative to the backend/data folder
-_BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_PROFILES_DIR = os.path.join(
-    os.path.dirname(_BACKEND_DIR),  # project root from services/
-    "backend", "data", "profiles"
-)
+def get_valid_uuid(user_id: str) -> uuid.UUID:
+    """Safely cast any input string into a deterministic UUID."""
+    try:
+        return uuid.UUID(user_id)
+    except ValueError:
+        # Generate deterministic UUID based on namespace to support arbitrary session IDs
+        return uuid.uuid5(uuid.NAMESPACE_DNS, user_id)
 
 
 class ProfileStore:
-    """Thread-safe JSON-file-based persistent storage for anonymous user profiles."""
-
-    def __init__(self, profiles_dir: str = None):
-        self.profiles_dir = profiles_dir or _PROFILES_DIR
-        os.makedirs(self.profiles_dir, exist_ok=True)
-        self._lock = threading.Lock()
-
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
-
-    def _path(self, user_id: str) -> str:
-        """Return the absolute path to a user's profile JSON file."""
-        # Sanitize to prevent directory traversal
-        safe_id = "".join(c for c in user_id if c.isalnum() or c in "-_")
-        return os.path.join(self.profiles_dir, f"{safe_id}.json")
-
-    def _atomic_write(self, path: str, data: dict):
-        """Write JSON atomically using tempfile + rename to avoid corruption."""
-        dir_name = os.path.dirname(path)
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".tmp", dir=dir_name, delete=False
-        ) as tmp:
-            json.dump(data, tmp, indent=2, default=str)
-            tmp_path = tmp.name
-        # Atomic rename (on Windows, need to remove target first)
-        try:
-            if os.path.exists(path):
-                os.replace(tmp_path, path)
-            else:
-                os.rename(tmp_path, path)
-        except OSError:
-            # Fallback: direct overwrite if atomic rename fails
-            import shutil
-            shutil.move(tmp_path, path)
-
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
+    """SQLAlchemy-based persistent storage for user astrology profiles."""
 
     def has_profile(self, user_id: str) -> bool:
         """Check whether a profile exists for the given user ID."""
-        return os.path.isfile(self._path(user_id))
+        db_user_id = get_valid_uuid(user_id)
+        db = SessionLocal()
+        try:
+            profile = db.query(AstroProfile).filter(AstroProfile.user_id == db_user_id).first()
+            return profile is not None
+        except Exception as e:
+            print(f"[ProfileStore] Error in has_profile: {e}")
+            return False
+        finally:
+            db.close()
 
     def save_profile(
         self,
@@ -73,82 +54,207 @@ class ProfileStore:
         chart_response: dict,
     ):
         """
-        Persist a user profile to disk.
+        Persist a user profile to the database.
 
         Parameters
         ----------
         user_id : str
-            The anonymous UUID from the client's localStorage.
+            The anonymous UUID from client localStorage or verified Firebase uid.
         birth_details : dict
-            Raw birth inputs: name, dob, tob, lat, lon, timezone_offset.
+            Raw birth inputs: name, date_of_birth, time_of_birth, latitude, longitude, timezone_offset.
         natal_chart : dict
-            The full natal chart context (planets, houses, yogas, doshas).
-            This is the *static* portion — never recalculated unless details change.
+            The full calculated natal chart context (planets, houses, yogas, doshas).
         chart_response : dict
-            The summary response sent back to the frontend (ascendant_sign, moon_sign, etc.).
+            The summary response sent back to the frontend.
         """
-        now = datetime.now(timezone.utc).isoformat()
+        db_user_id = get_valid_uuid(user_id)
+        db = SessionLocal()
+        try:
+            # 1. Ensure user exists in platform.users
+            user = db.query(User).filter(User.id == db_user_id).first()
+            if not user:
+                user = User(
+                    id=db_user_id,
+                    email=f"anonymous_{user_id}@astrosutra.ai",
+                    display_name=birth_details.get("name", "Astro User"),
+                    status="active",
+                    email_verified=False
+                )
+                db.add(user)
+                db.commit()
 
-        profile = {
-            "user_id": user_id,
-            "birth_details": birth_details,
-            "natal_chart": natal_chart,
-            "chart_response": chart_response,
-            "created_at": now,
-            "updated_at": now,
-        }
+            # 2. Find or create AstroProfile
+            profile = db.query(AstroProfile).filter(AstroProfile.user_id == db_user_id).first()
+            if not profile:
+                profile = AstroProfile(
+                    user_id=db_user_id,
+                    name=birth_details.get("name", "Profile"),
+                    status="active"
+                )
+                db.add(profile)
+                db.commit()
 
-        # Preserve original creation timestamp if updating
-        existing = self.load_profile(user_id)
-        if existing and "created_at" in existing:
-            profile["created_at"] = existing["created_at"]
+            # 3. Parse date and time values safely
+            dob_str = birth_details.get("date_of_birth")
+            tob_str = birth_details.get("time_of_birth")
+            
+            dob = None
+            if dob_str:
+                try:
+                    dob = datetime.strptime(dob_str, "%Y-%m-%d").date()
+                except ValueError:
+                    pass
+                    
+            tob = None
+            if tob_str:
+                try:
+                    parts = tob_str.split(":")
+                    if len(parts) == 2:
+                        tob = time(int(parts[0]), int(parts[1]))
+                    elif len(parts) >= 3:
+                        tob = time(int(parts[0]), int(parts[1]), int(parts[2].split(".")[0]))
+                except ValueError:
+                    pass
 
-        with self._lock:
-            self._atomic_write(self._path(user_id), profile)
+            # 4. Insert or update AstroBirthDetails
+            details = db.query(AstroBirthDetails).filter(AstroBirthDetails.profile_id == profile.id).first()
+            if not details:
+                details = AstroBirthDetails(
+                    profile_id=profile.id,
+                    name=birth_details.get("name", "Birth Details"),
+                    date_of_birth=dob,
+                    time_of_birth=tob,
+                    latitude=birth_details.get("latitude"),
+                    longitude=birth_details.get("longitude"),
+                    timezone_offset=birth_details.get("timezone_offset")
+                )
+                db.add(details)
+            else:
+                details.name = birth_details.get("name", details.name)
+                details.date_of_birth = dob or details.date_of_birth
+                details.time_of_birth = tob or details.time_of_birth
+                details.latitude = birth_details.get("latitude", details.latitude)
+                details.longitude = birth_details.get("longitude", details.longitude)
+                details.timezone_offset = birth_details.get("timezone_offset", details.timezone_offset)
+
+            # 5. Insert or update AstroChart
+            chart = db.query(AstroChart).filter(AstroChart.profile_id == profile.id, AstroChart.chart_type == "birth").first()
+            
+            raw_payload = {
+                "natal_chart": natal_chart,
+                "chart_response": chart_response
+            }
+
+            if not chart:
+                chart = AstroChart(
+                    profile_id=profile.id,
+                    chart_type="birth",
+                    raw_data=raw_payload
+                )
+                db.add(chart)
+            else:
+                chart.raw_data = raw_payload
+
+            db.commit()
+            print(f"[ProfileStore] Saved database profile details successfully for {user_id}")
+        except Exception as e:
+            db.rollback()
+            print(f"[ProfileStore] Failed to save profile to database: {e}")
+            raise e
+        finally:
+            db.close()
 
     def load_profile(self, user_id: str) -> dict | None:
-        """
-        Load a profile from disk. Returns None if not found or corrupted.
-        """
-        path = self._path(user_id)
-        if not os.path.isfile(path):
-            return None
+        """Load a profile from the database. Returns None if not found."""
+        db_user_id = get_valid_uuid(user_id)
+        db = SessionLocal()
         try:
-            with self._lock:
-                with open(path, "r", encoding="utf-8") as f:
-                    return json.load(f)
-        except (json.JSONDecodeError, IOError) as e:
-            print(f"[ProfileStore] Corrupted profile for {user_id}: {e}")
+            profile = db.query(AstroProfile).filter(AstroProfile.user_id == db_user_id).first()
+            if not profile:
+                return None
+
+            details = db.query(AstroBirthDetails).filter(AstroBirthDetails.profile_id == profile.id).first()
+            chart = db.query(AstroChart).filter(AstroChart.profile_id == profile.id, AstroChart.chart_type == "birth").first()
+
+            if not details or not chart:
+                return None
+
+            # Reconstruct birth details
+            birth_details = {
+                "name": details.name,
+                "date_of_birth": details.date_of_birth.isoformat() if details.date_of_birth else None,
+                "time_of_birth": details.time_of_birth.isoformat() if details.time_of_birth else None,
+                "latitude": float(details.latitude) if details.latitude is not None else None,
+                "longitude": float(details.longitude) if details.longitude is not None else None,
+                "timezone_offset": float(details.timezone_offset) if details.timezone_offset is not None else None
+            }
+
+            payload = chart.raw_data or {}
+            
+            return {
+                "user_id": user_id,
+                "birth_details": birth_details,
+                "natal_chart": payload.get("natal_chart"),
+                "chart_response": payload.get("chart_response"),
+                "created_at": chart.created_at.isoformat() if hasattr(chart, "created_at") and chart.created_at else datetime.now().isoformat(),
+                "updated_at": chart.updated_at.isoformat() if hasattr(chart, "updated_at") and chart.updated_at else datetime.now().isoformat()
+            }
+        except Exception as e:
+            print(f"[ProfileStore] Failed to load profile from database: {e}")
             return None
+        finally:
+            db.close()
 
     def delete_profile(self, user_id: str) -> bool:
-        """Delete a profile from disk. Returns True if deleted, False if not found."""
-        path = self._path(user_id)
-        with self._lock:
-            if os.path.isfile(path):
-                os.remove(path)
-                return True
-        return False
+        """Delete a profile from the database. Returns True if deleted, False if not found."""
+        db_user_id = get_valid_uuid(user_id)
+        db = SessionLocal()
+        try:
+            profile = db.query(AstroProfile).filter(AstroProfile.user_id == db_user_id).first()
+            if not profile:
+                return False
+            
+            db.delete(profile)
+            db.commit()
+            print(f"[ProfileStore] Deleted database profile for {user_id}")
+            return True
+        except Exception as e:
+            db.rollback()
+            print(f"[ProfileStore] Failed to delete profile: {e}")
+            return False
+        finally:
+            db.close()
 
     def update_profile(self, user_id: str, **updates):
-        """
-        Partially update fields in an existing profile.
-        Useful for updating only natal_chart or chart_response without
-        touching birth_details.
-        """
-        profile = self.load_profile(user_id)
-        if not profile:
+        """Partially update fields in an existing database profile."""
+        db_user_id = get_valid_uuid(user_id)
+        db = SessionLocal()
+        try:
+            profile = db.query(AstroProfile).filter(AstroProfile.user_id == db_user_id).first()
+            if not profile:
+                return False
+
+            chart = db.query(AstroChart).filter(AstroChart.profile_id == profile.id, AstroChart.chart_type == "birth").first()
+            if not chart:
+                return False
+
+            raw_data = chart.raw_data or {}
+            
+            if "natal_chart" in updates:
+                raw_data["natal_chart"] = updates["natal_chart"]
+            if "chart_response" in updates:
+                raw_data["chart_response"] = updates["chart_response"]
+                
+            chart.raw_data = raw_data
+            db.commit()
+            print(f"[ProfileStore] Updated profile snapshot in database for {user_id}")
+            return True
+        except Exception as e:
+            db.rollback()
+            print(f"[ProfileStore] Failed to update profile: {e}")
             return False
-
-        for key, value in updates.items():
-            if key in profile:
-                profile[key] = value
-
-        profile["updated_at"] = datetime.now(timezone.utc).isoformat()
-
-        with self._lock:
-            self._atomic_write(self._path(user_id), profile)
-        return True
+        finally:
+            db.close()
 
 
 # Global singleton instance
