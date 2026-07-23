@@ -84,7 +84,6 @@ const ALL_64_KALAS_RULES: ClassicalKalaRule[] = [
 
 export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProps) {
   const explorerRef = useRef<HTMLDivElement>(null)
-  const receptivityRef = useRef<HTMLDivElement>(null)
 
   const houses = chartData?.houses || {}
   const rawPositions = chartData?.raw_positions || chartData?.planets || {}
@@ -96,7 +95,6 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
   const h9 = houses['9'] || {}
 
   const [selectedKalaName, setSelectedKalaName] = useState<string>(ALL_64_KALAS_RULES[50].name)
-  const [selectedPillarIndex, setSelectedPillarIndex] = useState<number>(0)
 
   // Dynamic Kala evaluation algorithm
   const evaluatedKalas = ALL_64_KALAS_RULES.map((item) => {
@@ -156,17 +154,12 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
     }, 50)
   }
 
-  const handleSelectPillar = (idx: number) => {
-    setSelectedPillarIndex(idx)
-    setTimeout(() => {
-      receptivityRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }, 50)
-  }
+
 
   // Enriched Receptivity Pillars with Deep Horoscope Analysis
   const receptivityPillars = [
     {
-      devanagari: 'Smriti Shakti (स्मृति शक्ति)',
+      devanagari: 'Smriti Shakti',
       name: 'Smriti Shakti',
       title: 'Memory Retention & Recall Power',
       astrologicalDriver: `Governed by 5th House in ${h5.sign ? formatSignWithHindi(h5.sign) : 'Active'} (Lord: ${h5.lord || 'Jupiter'}) & Jupiter alignment.`,
@@ -181,7 +174,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
       studyMethod: 'Abhyasa-Smriti (Spaced active recall with interval self-testing and mnemonic visualization).'
     },
     {
-      devanagari: 'Grahana Capacity (ग्रहण क्षमता)',
+      devanagari: 'Grahana Capacity',
       name: 'Grahana Capacity',
       title: 'Cognitive Absorption Speed',
       astrologicalDriver: `Powered by Mercury logic processing, 3rd House skills, and 4th House Vidya in ${h4.sign ? formatSignWithHindi(h4.sign) : 'Active'}.`,
@@ -196,7 +189,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
       studyMethod: 'Drishya-Tarka (Socratic active inquiry combined with interactive concept mapping).'
     },
     {
-      devanagari: 'Ekagrata & Dhyana (एकाग्रता एवं ध्यान)',
+      devanagari: 'Ekagrata & Dhyana',
       name: 'Ekagrata & Dhyana',
       title: 'Focus & Mental Tranquility',
       astrologicalDriver: `Supported by Moon emotional stability and 4th House mental composure (${h4.sign ? formatSignWithHindi(h4.sign) : 'Tranquil'}).`,
@@ -211,7 +204,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
       studyMethod: 'Pranayama-Dhyana (5-minute breath grounding before study sessions & 50/10 Pomodoro flow).'
     },
     {
-      devanagari: 'Guru Receptivity (गुरु उपदेश ग्रहण)',
+      devanagari: 'Guru Receptivity',
       name: 'Guru Receptivity',
       title: 'Mentor Wisdom & Sacred Vidya Assimilation',
       astrologicalDriver: `Governed by 9th House in ${h9.sign ? formatSignWithHindi(h9.sign) : 'Dharma'} (Lord: ${h9.lord || 'Jupiter'}) for higher learning.`,
@@ -227,7 +220,55 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
     }
   ]
 
-  const activePillar = receptivityPillars[selectedPillarIndex]
+  const getReceptivityPower = (pillarName: string) => {
+    let score = 75
+    const h5Lord = (h5.lord || '').toLowerCase()
+    const h9Lord = (h9.lord || '').toLowerCase()
+    const p5Data = rawPositions[h5Lord]
+    const p9Data = rawPositions[h9Lord]
+    const mercData = rawPositions['mercury']
+    const moonData = rawPositions['moon']
+    const jupData = rawPositions['jupiter']
+
+    if (pillarName === 'Smriti Shakti') {
+      if (p5Data) {
+        const dig = (p5Data.dignity || '').toLowerCase()
+        if (dig === 'exalted' || dig === 'own') score += 15
+        else if (dig === 'debilitated') score -= 15
+      }
+    } else if (pillarName === 'Grahana Capacity') {
+      if (mercData) {
+        const dig = (mercData.dignity || '').toLowerCase()
+        if (dig === 'exalted' || dig === 'own') score += 15
+        else if (dig === 'debilitated') score -= 15
+      }
+    } else if (pillarName === 'Ekagrata & Dhyana') {
+      if (moonData) {
+        const dig = (moonData.dignity || '').toLowerCase()
+        if (dig === 'exalted' || dig === 'own') score += 15
+        else if (dig === 'debilitated') score -= 15
+      }
+    } else if (pillarName === 'Guru Receptivity') {
+      if (p9Data) {
+        const dig = (p9Data.dignity || '').toLowerCase()
+        if (dig === 'exalted' || dig === 'own') score += 8
+      }
+      if (jupData) {
+        const dig = (jupData.dignity || '').toLowerCase()
+        if (dig === 'exalted' || dig === 'own') score += 8
+        else if (dig === 'debilitated') score -= 10
+      }
+    }
+    const finalScore = Math.min(98, Math.max(50, score))
+    let level = 'Moderate'
+    if (finalScore >= 88) level = 'Outstanding'
+    else if (finalScore >= 78) level = 'Strong'
+    else if (finalScore >= 65) level = 'Moderate'
+    else level = 'Average'
+    return { score: finalScore, level }
+  }
+
+
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -419,127 +460,62 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
         )}
       </div>
 
-      {/* Student Receptivity Pillars Grid & Detailed Analysis Section */}
-      <div
-        ref={receptivityRef}
-        className="celestial-card p-6 rounded-3xl bg-surface border border-outline-variant/60 shadow-xs space-y-5 scroll-mt-6"
-      >
+      {/* Student Receptivity Pillars Grid */}
+      <div className="celestial-card p-6 rounded-3xl bg-surface border border-outline-variant/60 shadow-xs space-y-5">
         <div className="flex items-center justify-between border-b border-outline-variant/40 pb-3">
           <div>
             <h4 className="font-display text-lg font-bold text-primary flex items-center gap-2">
               <span className="material-symbols-outlined text-emerald-600 text-xl">psychology</span>
-              Student Receptivity Pillars & Detailed Analysis (ग्रहण क्षमता स्तंभ एवं विस्तृत विश्लेषण)
+              Student Receptivity Pillars
             </h4>
             <p className="text-xs text-on-surface-variant mt-0.5">
-              Click on any receptivity pillar card below to view its deep horoscope astrological analysis & study retention strategy.
+              Horoscope astrological cognitive analysis & custom study retention strategy per pillar.
             </p>
           </div>
 
           <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-300">
-            Student Receptivity (शिष्य ग्रहण क्षमता)
+            Student Receptivity
           </span>
         </div>
 
-        {/* 4 Interactive Pillar Selection Cards */}
+        {/* 4 Receptivity Cards showing Calculated Receptivity Power */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {receptivityPillars.map((p, idx) => {
-            const isSelected = selectedPillarIndex === idx
+            const power = getReceptivityPower(p.name)
             return (
               <div
                 key={idx}
-                onClick={() => handleSelectPillar(idx)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
-                  isSelected
-                    ? 'bg-emerald-500/10 border-emerald-500/60 ring-2 ring-emerald-500/20 shadow-xs scale-[1.01]'
-                    : 'bg-surface-variant/30 border-outline-variant/50 hover:border-emerald-500/40 hover:bg-surface-variant/50'
-                }`}
+                className="p-5 rounded-2xl border bg-surface-variant/30 border-outline-variant/50 hover:border-emerald-500/30 transition-all flex flex-col justify-between gap-3"
               >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                  isSelected ? 'bg-emerald-600 text-white' : 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20'
-                }`}>
-                  <span className="material-symbols-outlined text-xl">{p.icon}</span>
-                </div>
-                <div className="space-y-1 w-full">
-                  <div className="flex items-center justify-between">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="material-symbols-outlined text-xl">{p.icon}</span>
+                  </div>
+                  <div className="space-y-1 w-full">
                     <h5 className="font-display text-[15px] font-bold text-primary">
                       {p.devanagari}
                     </h5>
-                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
-                      isSelected ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-800'
-                    }`}>
-                      {isSelected ? 'Viewing Analysis' : 'Click to Analyze'}
-                    </span>
+                    <p className="text-xs font-semibold text-emerald-800">
+                      {p.title}
+                    </p>
+                    <p className="text-xs text-on-surface-variant/90 mt-1 leading-relaxed">
+                      {p.desc}
+                    </p>
                   </div>
-                  <p className="text-xs font-bold text-emerald-800">
-                    {p.title}
-                  </p>
-                  <p className="text-xs text-on-surface-variant/90 mt-1">
-                    {p.desc}
-                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant/40 pt-3 mt-1">
+                  <div className="text-xs font-bold text-emerald-800 bg-emerald-500/10 px-2.5 py-1 rounded-xl">
+                    Receptivity Power: {power.score}% ({power.level})
+                  </div>
+                  <span className="text-[10px] text-on-surface-variant/80 italic">
+                    Vedic Engine
+                  </span>
                 </div>
               </div>
             )
           })}
         </div>
-
-        {/* Selected Pillar Detailed Analysis Display Card */}
-        {activePillar && (
-          <div className="bg-surface-variant/30 p-5 rounded-2xl border border-outline-variant/60 space-y-4 animate-fade-in-up">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/40 pb-3">
-              <div>
-                <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                  Deep Astrological Cognitive Analysis
-                </span>
-                <h5 className="font-display text-2xl font-bold text-primary mt-1 flex items-center gap-2">
-                  {activePillar.devanagari} <span className="text-lg font-semibold text-on-surface-variant">({activePillar.title})</span>
-                </h5>
-                <p className="text-xs font-medium text-emerald-900 mt-0.5">
-                  {activePillar.astrologicalDriver}
-                </p>
-              </div>
-            </div>
-
-            {/* Deep Cognitive Breakdown */}
-            <div className="space-y-3">
-              <div className="bg-surface p-4 rounded-xl border border-outline-variant/40 space-y-2">
-                <div className="flex items-center gap-2 font-bold text-sm text-primary">
-                  <span className="material-symbols-outlined text-emerald-600 text-lg">psychology</span>
-                  <h6>Horoscope Cognitive Absorption Analysis</h6>
-                </div>
-                <p className="text-xs text-on-surface leading-relaxed font-medium">
-                  {activePillar.deepAnalysis}
-                </p>
-              </div>
-
-              {/* Characteristics List */}
-              <div className="bg-surface p-4 rounded-xl border border-outline-variant/40 space-y-2">
-                <div className="flex items-center gap-2 font-bold text-sm text-primary">
-                  <span className="material-symbols-outlined text-amber-600 text-lg">checklist</span>
-                  <h6>Key Cognitive Characteristics & Trait Breakdown</h6>
-                </div>
-                <ul className="space-y-1.5 text-xs text-on-surface-variant">
-                  {activePillar.cognitiveCharacteristics.map((c, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <span className="material-symbols-outlined text-emerald-600 text-sm mt-0.5">check_circle</span>
-                      <span>{c}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Retention Strategy */}
-              <div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/30 text-emerald-950 space-y-1.5">
-                <div className="flex items-center gap-2 font-bold text-sm text-emerald-900">
-                  <span className="material-symbols-outlined text-lg">auto_awesome</span>
-                  <h6>Recommended Vedic Retention & Study Strategy</h6>
-                </div>
-                <p className="text-xs font-semibold leading-relaxed">
-                  {activePillar.studyMethod}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )

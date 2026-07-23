@@ -40,7 +40,7 @@ export default function CareerSubTabNavigation({
         }`}
       >
         <span className="material-symbols-outlined text-base">school</span>
-        <span>64 Kalas & Receptivity (६४ कला और ग्रहण क्षमता)</span>
+        <span>64 Kalas & Receptivity</span>
         {!isKalaVidyaAllowed && (
           <span className="material-symbols-outlined text-xs text-amber-600 ml-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>
             lock

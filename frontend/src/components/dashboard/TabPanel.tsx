@@ -97,7 +97,7 @@ export default function TabPanel({
 
   // Sync state if cached item exists or cache key changes
   useEffect(() => {
-    if (!isAllowed || tab === 'matching' || tab === 'dasha_timeline') return // Don't fetch standard text for matching/dasha
+    if (!isAllowed || tab === 'matching') return // Don't fetch standard text for matching
 
     let cancelled = false
     const currentKey = getCacheKey()
@@ -164,13 +164,15 @@ export default function TabPanel({
     return () => {
       cancelled = true
     }
-  }, [tab, relationshipTarget, careerSubTab, isAllowed])
+  }, [cacheKey, tab, relationshipTarget, careerSubTab, apiBaseUrl, sessionId, userId])
 
   const handleSendMessage = async (text: string) => {
     const userMsg: Message = {
       id: Math.random().toString(),
       sender: 'user',
-      text,
+      role: 'user',
+      content: text,
+      text: text,
     }
 
     const updatedMessages = [...messages, userMsg]
@@ -241,7 +243,7 @@ export default function TabPanel({
       return targetObj ? targetObj.label : 'Relationships'
     }
     if (tab === 'career' && careerSubTab === 'kala_vidya') {
-      return '64 Kalas & Receptivity (६४ कला और ग्रहण क्षमता)'
+      return '64 Kalas & Receptivity'
     }
     return tab.charAt(0).toUpperCase() + tab.slice(1)
   }
@@ -257,7 +259,7 @@ export default function TabPanel({
           requiredTier="pro"
           tabLabel={
             !isSubTabAllowed
-              ? '64 Kalas & Receptivity (६४ कला और ग्रहण क्षमता)'
+              ? '64 Kalas & Receptivity'
               : `${relationshipTarget.charAt(0).toUpperCase() + relationshipTarget.slice(1)} Relationship Engine`
           }
           onUpgrade={() => {
