@@ -30,30 +30,38 @@ def resolve_chart_data(
 ) -> tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
     """
     Attempts multi-tiered retrieval and recalculation of chart_data and birth_details.
+    Explicitly passed request parameters have the highest priority.
 
     Returns (chart_data, birth_details) tuple.
     """
     chart_data = None
     birth_details = None
 
-    # Tier 1: Check session_store for session_id
-    if session_id:
+    # Tier 1: Check if chart_data / birth_details are explicitly passed in request (Highest priority!)
+    if req_chart_data and isinstance(req_chart_data, dict) and req_chart_data.get("planets"):
+        chart_data = req_chart_data
+    if req_birth_details and isinstance(req_birth_details, dict) and (req_birth_details.get("date_of_birth") or req_birth_details.get("dateOfBirth")):
+        birth_details = req_birth_details
+
+    # Tier 2: Check session_store for session_id
+    if not chart_data and session_id:
         sess = session_store.get_session(session_id)
         chart_data = sess.get("chart_data")
-        birth_details = sess.get("profile") or sess.get("birth_details")
+        if not birth_details:
+            birth_details = sess.get("profile") or sess.get("birth_details")
 
-    # Tier 2: Check session_store for user_id
+    # Tier 3: Check session_store for user_id
     if not chart_data and user_id:
         user_sess = session_store.get_session(user_id)
         chart_data = user_sess.get("chart_data")
         if not birth_details:
             birth_details = user_sess.get("profile") or user_sess.get("birth_details")
 
-    # Tier 3: Check profile_store on disk for user_id or session_id
+    # Tier 4: Check profile_store on disk for user_id or session_id
     stored = None
-    if user_id:
+    if not chart_data and user_id:
         stored = profile_store.load_profile(user_id)
-    if not stored and session_id:
+    if not chart_data and not stored and session_id:
         stored = profile_store.load_profile(session_id)
 
     if stored:
@@ -63,12 +71,10 @@ def resolve_chart_data(
             natal = stored["natal_chart"]
             chart_data = natal.get("natal", natal)
 
-    # Tier 4: Check if chart_data passed directly in request
+    # Tier 5: Fallback merge if something was half-passed
     if not chart_data and req_chart_data and isinstance(req_chart_data, dict):
         chart_data = req_chart_data
-
-    # Tier 5: Check if birth_details passed directly in request
-    if req_birth_details and isinstance(req_birth_details, dict):
+    if not birth_details and req_birth_details and isinstance(req_birth_details, dict):
         if not birth_details:
             birth_details = req_birth_details
         else:
