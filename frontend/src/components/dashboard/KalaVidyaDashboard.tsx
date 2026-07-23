@@ -166,7 +166,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
   // Enriched Receptivity Pillars with Deep Horoscope Analysis
   const receptivityPillars = [
     {
-      devanagari: 'स्मृति शक्ति',
+      devanagari: 'Smriti Shakti (स्मृति शक्ति)',
       name: 'Smriti Shakti',
       title: 'Memory Retention & Recall Power',
       astrologicalDriver: `Governed by 5th House in ${h5.sign ? formatSignWithHindi(h5.sign) : 'Active'} (Lord: ${h5.lord || 'Jupiter'}) & Jupiter alignment.`,
@@ -181,7 +181,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
       studyMethod: 'Abhyasa-Smriti (Spaced active recall with interval self-testing and mnemonic visualization).'
     },
     {
-      devanagari: 'ग्रहण क्षमता',
+      devanagari: 'Grahana Capacity (ग्रहण क्षमता)',
       name: 'Grahana Capacity',
       title: 'Cognitive Absorption Speed',
       astrologicalDriver: `Powered by Mercury logic processing, 3rd House skills, and 4th House Vidya in ${h4.sign ? formatSignWithHindi(h4.sign) : 'Active'}.`,
@@ -196,7 +196,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
       studyMethod: 'Drishya-Tarka (Socratic active inquiry combined with interactive concept mapping).'
     },
     {
-      devanagari: 'एकाग्रता एवं ध्यान',
+      devanagari: 'Ekagrata & Dhyana (एकाग्रता एवं ध्यान)',
       name: 'Ekagrata & Dhyana',
       title: 'Focus & Mental Tranquility',
       astrologicalDriver: `Supported by Moon emotional stability and 4th House mental composure (${h4.sign ? formatSignWithHindi(h4.sign) : 'Tranquil'}).`,
@@ -211,7 +211,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
       studyMethod: 'Pranayama-Dhyana (5-minute breath grounding before study sessions & 50/10 Pomodoro flow).'
     },
     {
-      devanagari: 'गुरु उपदेश ग्रहण',
+      devanagari: 'Guru Receptivity (गुरु उपदेश ग्रहण)',
       name: 'Guru Receptivity',
       title: 'Mentor Wisdom & Sacred Vidya Assimilation',
       astrologicalDriver: `Governed by 9th House in ${h9.sign ? formatSignWithHindi(h9.sign) : 'Dharma'} (Lord: ${h9.lord || 'Jupiter'}) for higher learning.`,
@@ -241,7 +241,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-display text-2xl font-bold text-primary">
-                  ६४ कलाएँ एवं शिष्य ग्रहण क्षमता (Kala, Vidya & Student Receptivity)
+                  64 Kalas & Student Receptivity (६४ कलाएँ एवं शिष्य ग्रहण क्षमता)
                 </h3>
                 <span className="text-[11px] font-extrabold bg-primary-fixed text-primary px-2.5 py-0.5 rounded-full">
                   Unified Vedic Engine
@@ -279,10 +279,10 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
         <div className="flex items-center justify-between border-b border-outline-variant/40 pb-3">
           <h4 className="font-display text-lg font-bold text-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-amber-500 text-xl">auto_awesome</span>
-            आपकी कुण्डली के अनुसार प्रमुख कलाएँ (Top Predicted Kalas in Devanagari)
+            Top Predicted Kalas (प्रमुख कलाएँ)
           </h4>
           <span className="text-xs font-bold text-primary bg-primary-fixed px-3 py-1 rounded-full border border-primary/20">
-            ६४ कलाएँ
+            64 Kalas (६४ कलाएँ)
           </span>
         </div>
 
@@ -303,11 +303,11 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
               </div>
 
               <div>
-                <h5 className="font-display text-xl font-bold text-primary leading-tight">
-                  {k.devanagari}
-                </h5>
-                <p className="text-xs font-semibold text-on-surface mt-1">
+                <h5 className="font-display text-lg font-bold text-primary leading-tight">
                   {k.name}
+                </h5>
+                <p className="text-xs font-semibold text-amber-700 mt-1">
+                  {k.devanagari}
                 </p>
                 <p className="text-[11px] text-on-surface-variant/80 mt-0.5 italic">
                   {k.meaning}
@@ -327,7 +327,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
           <div>
             <h4 className="font-display text-xl font-bold text-primary flex items-center gap-2">
               <span className="material-symbols-outlined text-amber-600 text-2xl">menu_book</span>
-              ६४ कला खोजक एवं विस्तृत विवरण (Interactive 64 Kalas Explorer)
+              Interactive 64 Kalas Explorer (६४ कला खोजक एवं विस्तृत विवरण)
             </h4>
             <p className="text-xs text-on-surface-variant mt-0.5">
               Select any of the 64 Classical Kalas to read modern real-world examples, mastery methods, and horoscope alignment reasons.
@@ -342,7 +342,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
             >
               {ALL_64_KALAS_RULES.map((k, idx) => (
                 <option key={idx} value={k.name} className="bg-surface text-on-surface text-xs font-medium py-1">
-                  {idx + 1}. {k.devanagari} — {k.name} ({k.meaning})
+                  {idx + 1}. {k.name} ({k.devanagari}) — {k.meaning}
                 </option>
               ))}
             </select>
@@ -358,7 +358,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
                   Selected Classical Kala
                 </span>
                 <h5 className="font-display text-2xl font-bold text-primary mt-1">
-                  {selectedKalaEval.devanagari} <span className="text-lg font-semibold text-on-surface-variant">({selectedKalaEval.name})</span>
+                  {selectedKalaEval.name} <span className="text-lg font-semibold text-on-surface-variant">({selectedKalaEval.devanagari})</span>
                 </h5>
                 <p className="text-xs font-bold text-amber-800 mt-0.5">
                   {selectedKalaEval.meaning}
@@ -428,7 +428,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
           <div>
             <h4 className="font-display text-lg font-bold text-primary flex items-center gap-2">
               <span className="material-symbols-outlined text-emerald-600 text-xl">psychology</span>
-              ग्रहण क्षमता स्तंभ एवं विस्तृत विश्लेषण (Student Receptivity Pillars & Detailed Analysis)
+              Student Receptivity Pillars & Detailed Analysis (ग्रहण क्षमता स्तंभ एवं विस्तृत विश्लेषण)
             </h4>
             <p className="text-xs text-on-surface-variant mt-0.5">
               Click on any receptivity pillar card below to view its deep horoscope astrological analysis & study retention strategy.
@@ -436,7 +436,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
           </div>
 
           <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-300">
-            Shishya Grahana
+            Student Receptivity (शिष्य ग्रहण क्षमता)
           </span>
         </div>
 
@@ -461,7 +461,7 @@ export default function KalaVidyaDashboard({ chartData }: KalaVidyaDashboardProp
                 </div>
                 <div className="space-y-1 w-full">
                   <div className="flex items-center justify-between">
-                    <h5 className="font-display text-lg font-bold text-primary">
+                    <h5 className="font-display text-[15px] font-bold text-primary">
                       {p.devanagari}
                     </h5>
                     <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${

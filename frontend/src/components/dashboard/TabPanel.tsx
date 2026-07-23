@@ -241,7 +241,7 @@ export default function TabPanel({
       return targetObj ? targetObj.label : 'Relationships'
     }
     if (tab === 'career' && careerSubTab === 'kala_vidya') {
-      return 'Kala, Vidya & Student Receptivity'
+      return '64 Kalas & Receptivity (६४ कला और ग्रहण क्षमता)'
     }
     return tab.charAt(0).toUpperCase() + tab.slice(1)
   }
@@ -257,7 +257,7 @@ export default function TabPanel({
           requiredTier="pro"
           tabLabel={
             !isSubTabAllowed
-              ? '🎓 Kala, Vidya & Student Receptivity (64 Kalas)'
+              ? '64 Kalas & Receptivity (६४ कला और ग्रहण क्षमता)'
               : `${relationshipTarget.charAt(0).toUpperCase() + relationshipTarget.slice(1)} Relationship Engine`
           }
           onUpgrade={() => {
