@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface RemediesDashboardProps {
   chartData: any
@@ -221,6 +221,12 @@ export default function RemediesDashboard({ chartData }: RemediesDashboardProps)
   const activeDashaData = PLANET_REMEDIES_DATABASE[activeDashaKey]
 
   const [selectedPlanetKey, setSelectedPlanetKey] = useState<string>(activeDashaKey)
+
+  // Reset selected planet when active Dasha key changes (e.g. on profile switch or birth detail updates)
+  useEffect(() => {
+    setSelectedPlanetKey(activeDashaKey)
+  }, [activeDashaKey])
+
   const selectedPlanet = PLANET_REMEDIES_DATABASE[selectedPlanetKey] || activeDashaData
 
   return (
