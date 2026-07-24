@@ -149,8 +149,8 @@ def update_profile(profile_id: str, req: ProfileUpdateRequest, authorization: Op
         prakriti = estimate_prakriti(chart_data)
         elements = calculate_element_distribution(chart_data)
         lucky = calculate_lucky_attributes(chart_data)
-        
-        from astrology.chart_selector import rank_planets, generate_remedy_data
+        from services.astrology.planet_ranking import rank_planets
+        from services.astrology.remedies_calc import generate_remedy_data
         rankings = rank_planets(chart_data)
         remedies = generate_remedy_data(chart_data, rankings)
 
@@ -277,7 +277,8 @@ def recalculate_chart(user_id: str, authorization: Optional[str] = Header(None))
         elements = calculate_element_distribution(chart_data)
         lucky = calculate_lucky_attributes(chart_data)
         
-        from astrology.chart_selector import rank_planets, generate_remedy_data
+        from services.astrology.planet_ranking import rank_planets
+        from services.astrology.remedies_calc import generate_remedy_data
         rankings = rank_planets(chart_data)
         remedies = generate_remedy_data(chart_data, rankings)
 
