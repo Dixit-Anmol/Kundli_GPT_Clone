@@ -32,11 +32,17 @@ function AppContent() {
       if (user) {
         setView('app')
       } else {
-        setView('landing')
-        setHasClickedSign(false)
+        // If they were on the dashboard side but are no longer authenticated,
+        // send them to the landing page. Otherwise, show the login screen.
+        if (view === 'app') {
+          setView('landing')
+          setHasClickedSign(false)
+        } else {
+          setView('login')
+        }
       }
     }
-  }, [hasClickedSign, loading, user])
+  }, [hasClickedSign, loading, user, view])
 
   // Handle logout transition
   useEffect(() => {
