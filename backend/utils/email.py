@@ -12,6 +12,8 @@ def send_subscription_email(user_email: str, user_name: str, tier: str, amount: 
     smtp_port = os.environ.get("SMTP_PORT")
     smtp_user = os.environ.get("SMTP_USER")
     smtp_pass = os.environ.get("SMTP_PASSWORD")
+    if smtp_pass:
+        smtp_pass = smtp_pass.replace(" ", "")
     smtp_from = os.environ.get("SMTP_FROM", "billing@astrosutra.ai")
 
     subject = f"🌌 AstroSutra AI — Welcome to the {tier.upper()} Tier!"
