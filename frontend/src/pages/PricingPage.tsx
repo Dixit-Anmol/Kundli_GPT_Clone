@@ -4,17 +4,123 @@
 import { useState } from 'react'
 import { TIER_CONFIG, type SubscriptionTier } from '../config/subscriptionConfig'
 import { getCurrentTier, setCurrentTier } from '../utils/subscriptionManager'
+import { authenticatedFetch } from '../utils/apiClient'
+import { useAuth } from '../context/AuthContext'
 
 interface PricingPageProps {
   onNavigateBack: () => void
 }
 
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true)
+      return
+    }
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.onload = () => resolve(true)
+    script.onerror = () => resolve(false)
+    document.body.appendChild(script)
+  })
+}
+
 export default function PricingPage({ onNavigateBack }: PricingPageProps) {
   const [activeTier, setActiveTier] = useState<SubscriptionTier>(getCurrentTier())
+  const { user } = useAuth()
 
-  const handleSelectTier = (tier: SubscriptionTier) => {
-    setCurrentTier(tier)
-    setActiveTier(tier)
+  const handleSelectTier = async (tier: SubscriptionTier) => {
+    if (tier === 'free') {
+      setCurrentTier('free')
+      setActiveTier('free')
+      alert("Downgraded to Free tier successfully.")
+      onNavigateBack()
+      return
+    }
+
+    if (!user) {
+      alert("Please sign in or register to purchase a subscription.")
+      return
+    }
+
+    const scriptLoaded = await loadRazorpayScript()
+    if (!scriptLoaded) {
+      alert("Failed to load Razorpay SDK. Please check your internet connection.")
+      return
+    }
+
+    const backendUrl =
+      import.meta.env.VITE_BACKEND_URL ||
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8000'
+        : 'https://kundli-gpt-clone-back.onrender.com')
+
+    try {
+      const res = await authenticatedFetch(`${backendUrl}/api/billing/create-order`, {
+        method: 'POST',
+        body: JSON.stringify({ tier }),
+      })
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.detail || 'Failed to create payment order')
+      }
+
+      const orderData = await res.json()
+      
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "AstroSutra AI",
+        description: `Upgrade to ${tier === 'pro' ? 'Pro' : 'Standard'} Plan`,
+        order_id: orderData.order_id,
+        handler: async function (response: any) {
+          try {
+            const verifyRes = await authenticatedFetch(`${backendUrl}/api/billing/verify-payment`, {
+              method: 'POST',
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            })
+
+            if (!verifyRes.ok) {
+              const errVerify = await verifyRes.json().catch(() => ({}))
+              throw new Error(errVerify.detail || 'Payment verification failed')
+            }
+
+            const verifyData = await verifyRes.json()
+            if (verifyData.success) {
+              setCurrentTier(verifyData.tier)
+              setActiveTier(verifyData.tier)
+              alert(`Congratulations! You have successfully upgraded to ${verifyData.tier.toUpperCase()} tier.`)
+              onNavigateBack()
+              window.location.reload()
+            }
+          } catch (verifyErr: any) {
+            console.error("Verification error:", verifyErr)
+            alert(`Verification failed: ${verifyErr.message}`)
+          }
+        },
+        prefill: {
+          name: orderData.user.name,
+          email: orderData.user.email,
+          contact: orderData.user.phone,
+        },
+        theme: {
+          color: tier === 'pro' ? '#C89B3C' : '#E67E22',
+        },
+      }
+      
+      const rzp = new (window as any).Razorpay(options)
+      rzp.open()
+      
+    } catch (err: any) {
+      console.error("Order creation error:", err)
+      alert(`Order creation failed: ${err.message}`)
+    }
   }
 
   const tiers = Object.values(TIER_CONFIG)

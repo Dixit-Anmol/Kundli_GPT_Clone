@@ -20,6 +20,7 @@ from api.profile import router as profile_router
 from api.matching import router as matching_router
 from api.dasha import router as dasha_router
 from api.auth import router as auth_router
+from api.billing import router as billing_router
 
 app = FastAPI(
     title="AstroSutra AI API",
@@ -64,6 +65,7 @@ app.include_router(profile_router, prefix="/api", tags=["Profile"])
 app.include_router(matching_router, prefix="/api", tags=["Kundli Matching"])
 app.include_router(dasha_router, prefix="/api", tags=["Dasha Timeline"])
 app.include_router(auth_router, prefix="/api", tags=["Firebase Authentication"])
+app.include_router(billing_router, prefix="/api", tags=["Billing & Payments"])
 
 @app.get("/")
 def root():

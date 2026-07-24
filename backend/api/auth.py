@@ -87,9 +87,28 @@ def verify_token_endpoint(req: TokenVerifyRequest, db: Session = Depends(get_db)
             "email": user.email,
             "display_name": user.display_name,
             "status": user.status,
-            "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None
+            "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
+            "subscription_tier": get_user_subscription_tier(db, user.id)
         }
     }
+
+def get_user_subscription_tier(db: Session, user_id) -> str:
+    from db.models.billing import Subscription, SubscriptionPlan
+    from api.billing import seed_subscription_plans_if_needed
+    try:
+        seed_subscription_plans_if_needed(db)
+    except Exception as e:
+        print(f"[Auth Service] Suppressed plan seeding warning: {e}")
+        
+    sub = db.query(Subscription).filter(
+        Subscription.user_id == user_id,
+        Subscription.status == "active"
+    ).first()
+    if sub:
+        plan = db.query(SubscriptionPlan).filter(SubscriptionPlan.id == sub.plan_id).first()
+        if plan:
+            return plan.tier
+    return "free"
 
 @router.get("/auth/me")
 def get_me(
@@ -111,7 +130,8 @@ def get_me(
             "email": user.email,
             "display_name": user.display_name,
             "status": user.status,
-            "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None
+            "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
+            "subscription_tier": get_user_subscription_tier(db, user.id)
         }
     }
 

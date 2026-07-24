@@ -10,6 +10,7 @@ import {
   onAuthStateChanged,
 } from 'firebase/auth'
 import { auth } from '../firebase/firebase'
+import { setCurrentTier } from '../utils/subscriptionManager'
 
 export interface AuthUser {
   uid: string
@@ -85,7 +86,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const idToken = await user.getIdToken()
     
     try {
-      await syncWithPostgreSQL(idToken)
+      const syncResult = await syncWithPostgreSQL(idToken)
+      if (syncResult && syncResult.db_user && syncResult.db_user.subscription_tier) {
+        setCurrentTier(syncResult.db_user.subscription_tier)
+      }
     } catch (err: any) {
       console.error('PostgreSQL authentication sync failed:', err)
       await signOut(auth)
