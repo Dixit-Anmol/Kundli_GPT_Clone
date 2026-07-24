@@ -52,6 +52,19 @@ export default function ChatPage() {
     setProfiles(saved)
 
     if (user?.uid) {
+      // Check if we have an active local profile (either matching user.uid or a guest profile)
+      const localProfile = saved.find((p) => p.id === user.uid)
+      const guestProfile = saved.find((p) => p.id === savedActiveId || p.id.startsWith('prof_'))
+      const activeLocal = localProfile || guestProfile
+
+      if (activeLocal && activeLocal.chartData) {
+        setActiveId(activeLocal.id)
+        setActiveProfileId(activeLocal.id)
+        setBirthData(activeLocal.birthData || null)
+        setChartData(activeLocal.chartData)
+        setStep('ready')
+      }
+
       // 1. Authenticated User flow: Always prioritize checking database profile
       authenticatedFetch(`${API_BASE_URL}/api/profile/${user.uid}`)
         .then((res) => (res.ok ? res.json() : null))
@@ -67,6 +80,11 @@ export default function ChatPage() {
               computed: data.computed,
               createdAt: new Date().toISOString(),
             }
+            
+            // Clean up the guest profile to avoid duplicates in localStorage
+            if (activeLocal && activeLocal.id && activeLocal.id !== user.uid) {
+              deleteProfile(activeLocal.id)
+            }
             saveProfile(restoredProfile)
             
             // Keep local profiles updated with the resolved database profile
@@ -79,11 +97,26 @@ export default function ChatPage() {
             setBirthData(data.birth_details || null)
             setStep('ready')
           } else {
-            // New user, or database details are missing -> redirect to onboarding welcome step
+            // New user, or database details are missing -> check if we have a local profile to sync
+            if (activeLocal && activeLocal.birthData) {
+              console.log("Migrating and syncing local profile to database for authenticated user:", user.uid)
+              if (activeLocal.id && activeLocal.id !== user.uid) {
+                deleteProfile(activeLocal.id)
+              }
+              handleBirthSubmit(activeLocal.birthData, user.uid)
+            } else {
+              setStep('welcome')
+            }
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to fetch database profile, falling back to local profile:", err)
+          if (activeLocal && activeLocal.chartData) {
+            setStep('ready')
+          } else {
             setStep('welcome')
           }
         })
-        .catch(() => setStep('welcome'))
     } else {
       // 2. Anonymous/Guest User flow: Use localStorage
       if (saved.length > 0) {

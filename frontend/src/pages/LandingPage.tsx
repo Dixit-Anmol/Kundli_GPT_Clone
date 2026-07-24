@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import HeroKundliChart from '../components/landing/HeroKundliChart'
 import GocharaOrbits from '../components/landing/GocharaOrbits'
 
@@ -8,6 +9,42 @@ interface LandingPageProps {
 }
 
 export default function LandingPage({ onSignIn, onGetStarted, onPricing }: LandingPageProps) {
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  const testimonials = [
+    {
+      quote: "AstroSutra AI didn't just give me predictions; it gave me clarity on my purpose. It was like speaking to a guide who knew my soul's map before I even asked the first question.",
+      name: "Ananya Sharma",
+      role: "Creative Director & Yoga Practitioner",
+      initial: "A"
+    },
+    {
+      quote: "The marriage transit calculations were incredibly precise. Shivom's marriage timeline analysis helped clarify astrological timings, smoothing out paths toward a harmonious union.",
+      name: "Shivom Gupta",
+      role: "Marriage Compatibility & Relationship Seeker",
+      initial: "S"
+    },
+    {
+      quote: "My health evaluation mapped element distributions to absolute perfection. Through simple daily remedies, I synchronized my biological rhythm back with natural alignment.",
+      name: "Manish Sharma",
+      role: "Ayurvedic Lifestyle & Health Seeker",
+      initial: "M"
+    },
+    {
+      quote: "The professional career dashboard pinpointed the exact transition period of my Dasha. With this clarity, I moved dynamically into my calling as a founder without hesitation.",
+      name: "Anmol Dixit",
+      role: "Tech Entrepreneur & Career Seeker",
+      initial: "A"
+    }
+  ]
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % testimonials.length)
+    }, 8000)
+    return () => clearInterval(timer)
+  }, [testimonials.length])
+
   return (
     <div className="min-h-screen font-sans text-on-background selection:bg-primary-fixed selection:text-primary overflow-x-hidden"
       style={{
@@ -198,29 +235,57 @@ export default function LandingPage({ onSignIn, onGetStarted, onPricing }: Landi
         {/* ═══════════════════════════════════════════════ */}
         {/* TESTIMONIAL SECTION                             */}
         {/* ═══════════════════════════════════════════════ */}
-        <section id="testimonials" className="py-16 sm:py-24 bg-surface-variant/40 mt-12 sm:mt-16 border-y border-outline-variant relative">
+        <section id="testimonials" className="py-16 sm:py-24 bg-surface-variant/40 mt-12 sm:mt-16 border-y border-outline-variant relative overflow-hidden">
           <div className="max-w-3xl mx-auto px-4 sm:px-6">
-            <div
-              className="relative bg-white p-8 sm:p-12 text-center"
-              style={{ border: '1.5px solid #E9DFC8', boxShadow: '0 10px 40px -10px rgba(230, 126, 34, 0.15)' }}
-            >
-              <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 bg-primary text-white flex items-center justify-center">
-                <span className="material-symbols-outlined text-lg">format_quote</span>
-              </div>
-              <div className="mt-4 sm:mt-6 flex flex-col gap-6 sm:gap-8">
-                <p className="font-display italic text-xl sm:text-2xl md:text-3xl text-on-background leading-relaxed">
-                  "AstroSutra AI didn't just give me predictions; it gave me clarity on my purpose. It was like speaking to a guide who knew my soul's map before I even asked the first question."
-                </p>
-                <div className="flex items-center justify-center gap-4 sm:gap-6">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 border border-outline-variant p-0.5 bg-white overflow-hidden">
-                    <div className="w-full h-full bg-primary-fixed/50 flex items-center justify-center text-primary text-lg sm:text-xl font-bold font-display">A</div>
+            {/* Carousel Viewport (no outer white card container, clean transparent view) */}
+            <div className="overflow-hidden p-4">
+              <div 
+                className="flex transition-transform duration-[2000ms] ease-in-out"
+                style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+              >
+                {testimonials.map((t, idx) => (
+                  <div key={idx} className="w-full shrink-0 px-2 sm:px-4">
+                    {/* Separate individual testimonial card */}
+                    <div
+                      className="relative bg-white p-6 sm:p-10 text-center flex flex-col gap-5 sm:gap-6 mx-auto max-w-2xl rounded-2xl"
+                      style={{ border: '1.5px solid #E9DFC8', boxShadow: '0 10px 30px -10px rgba(230, 126, 34, 0.12)' }}
+                    >
+                      {/* Quote Badge for each card */}
+                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-primary text-white flex items-center justify-center rounded-full shadow-sm">
+                        <span className="material-symbols-outlined text-sm">format_quote</span>
+                      </div>
+                      
+                      <p className="font-display italic text-base sm:text-lg md:text-xl text-on-background leading-relaxed min-h-[120px] flex items-center justify-center pt-2">
+                        "{t.quote}"
+                      </p>
+                      
+                      <div className="flex items-center justify-center gap-3 sm:gap-4 border-t border-outline-variant/60 pt-4 mt-2">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 border border-outline-variant p-0.5 bg-white overflow-hidden rounded-full">
+                          <div className="w-full h-full bg-primary-fixed/40 flex items-center justify-center text-primary text-sm sm:text-base font-bold font-display rounded-full">{t.initial}</div>
+                        </div>
+                        <div className="text-left">
+                          <p className="text-xs sm:text-sm text-on-background font-bold tracking-[0.12em] uppercase">{t.name}</p>
+                          <p className="text-[10px] sm:text-xs text-on-surface-variant italic font-light">{t.role}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <p className="text-xs sm:text-sm text-on-background font-bold tracking-[0.12em] uppercase">Ananya Sharma</p>
-                    <p className="text-[11px] sm:text-xs text-on-surface-variant italic">Creative Director & Yoga Practitioner</p>
-                  </div>
-                </div>
+                ))}
               </div>
+            </div>
+
+            {/* Dots Indicator */}
+            <div className="flex justify-center gap-2 mt-8">
+              {testimonials.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveIndex(idx)}
+                  className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
+                    activeIndex === idx ? 'bg-primary w-4' : 'bg-outline-variant hover:bg-primary/50'
+                  }`}
+                  aria-label={`Go to testimonial ${idx + 1}`}
+                />
+              ))}
             </div>
           </div>
         </section>
