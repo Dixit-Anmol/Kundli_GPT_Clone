@@ -63,6 +63,8 @@ def get_profile(user_id: str, authorization: Optional[str] = Header(None)):
     natal_chart = profile.get("natal_chart")
     birth_details = profile.get("birth_details", {})
 
+    chart_summary = profile.get("chart_response") or {}
+
     if natal_chart:
         # Reconstruct the chart_data format the session/prompt system expects
         # Support both new (natal/dynamic split) and legacy flat formats
@@ -84,11 +86,83 @@ def get_profile(user_id: str, authorization: Optional[str] = Header(None)):
         sess["profile"] = birth_details
 
         # Ensure computed_analyses is available in session
-        computed = chart_data.get("computed") or profile.get("chart_response", {}).get("computed")
+        computed = chart_data.get("computed") or chart_summary.get("computed")
+        
+        # Self-healing: Recalculate full chart if planets or computed values are missing
+        if not computed or not chart_summary.get("planets"):
+            try:
+                prakriti = estimate_prakriti(chart_data)
+                elements = calculate_element_distribution(chart_data)
+                lucky = calculate_lucky_attributes(chart_data)
+                
+                from services.astrology.planet_ranking import rank_planets
+                from services.astrology.remedies_calc import generate_remedy_data
+                rankings = rank_planets(chart_data)
+                remedies = generate_remedy_data(chart_data, rankings)
+                
+                computed = {
+                    "prakriti": prakriti,
+                    "elements": elements,
+                    "lucky": lucky,
+                    "planet_rankings": rankings,
+                    "remedy_data": remedies,
+                }
+                
+                # Calculate current Vimshottari Mahadasha planet
+                planets = chart_data.get("planets", {})
+                moon_data = planets.get("moon", {})
+                moon_long = moon_data.get("longitude", 120.0)
+                
+                from services.astrology.dasha import calculate_full_dasha_package
+                try:
+                    import datetime
+                    from backend.utils.date_parser import parse_date_str
+                    raw_dob = birth_details.get("date_of_birth") or "2000-01-01"
+                    dob_dt = parse_date_str(str(raw_dob))
+                    dasha_package = calculate_full_dasha_package(
+                        moon_long, 
+                        dob_dt.date() if isinstance(dob_dt, datetime.datetime) else dob_dt
+                    )
+                    active_dasha = dasha_package.get("current_mahadasha", {})
+                    current_dasha_planet = active_dasha.get("planet", "jupiter").capitalize()
+                except Exception:
+                    current_dasha_planet = "Jupiter"
+                
+                meta = chart_data.get("metadata", {})
+                chart_summary = {
+                    "name": birth_details.get("name", "Seeker"),
+                    "ascendant_sign": meta.get("ascendant_sign", ""),
+                    "moon_sign": meta.get("moon_sign", ""),
+                    "nakshatra": meta.get("nakshatra", ""),
+                    "pada": meta.get("pada", 1),
+                    "current_dasha": current_dasha_planet,
+                    "metadata": meta,
+                    "houses": chart_data.get("houses", {}),
+                    "planets": chart_data.get("planets", {}),
+                    "yogas": chart_data.get("yogas", []),
+                    "doshas": chart_data.get("doshas", {}),
+                    "raw_positions": chart_data.get("planets", {}),
+                    "computed": computed,
+                }
+                
+                # Resave the updated complete profile back to postgres
+                new_natal = _extract_natal(chart_data, computed=computed)
+                profile_store.save_profile(
+                    user_id=user_id,
+                    birth_details=birth_details,
+                    natal_chart=new_natal,
+                    chart_response=chart_summary
+                )
+                print(f"[Profile GET] Successfully repaired and persisted profile for {user_id}")
+            except Exception as repair_err:
+                print(f"[Profile GET] Suppressed dynamic repair failure: {repair_err}")
+                
         if not computed:
             prakriti = estimate_prakriti(chart_data)
             elements = calculate_element_distribution(chart_data)
             lucky = calculate_lucky_attributes(chart_data)
+            from services.astrology.planet_ranking import rank_planets
+            from services.astrology.remedies_calc import generate_remedy_data
             rankings = rank_planets(chart_data)
             remedies = generate_remedy_data(chart_data, rankings)
             computed = {
@@ -100,11 +174,10 @@ def get_profile(user_id: str, authorization: Optional[str] = Header(None)):
             }
         sess["computed_analyses"] = computed
 
-
     return {
         "exists": True,
         "birth_details": birth_details,
-        "chart_summary": profile.get("chart_response"),
+        "chart_summary": chart_summary,
     }
 
 
