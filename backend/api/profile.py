@@ -146,7 +146,40 @@ def update_profile(profile_id: str, req: ProfileUpdateRequest, authorization: Op
             lat=lat, lon=lon, timezone_offset=offset
         )
 
-        natal = _extract_natal(chart_data)
+        prakriti = estimate_prakriti(chart_data)
+        elements = calculate_element_distribution(chart_data)
+        lucky = calculate_lucky_attributes(chart_data)
+        
+        from astrology.chart_selector import rank_planets, generate_remedy_data
+        rankings = rank_planets(chart_data)
+        remedies = generate_remedy_data(chart_data, rankings)
+
+        computed = {
+            "prakriti": prakriti,
+            "elements": elements,
+            "lucky": lucky,
+            "planet_rankings": rankings,
+            "remedy_data": remedies,
+        }
+
+        # Calculate current Vimshottari Mahadasha planet
+        planets = chart_data.get("planets", {})
+        moon_data = planets.get("moon", {})
+        moon_long = moon_data.get("longitude", 120.0)
+
+        from services.astrology.dasha import calculate_full_dasha_package
+        try:
+            dasha_package = calculate_full_dasha_package(
+                moon_long, 
+                dt.date() if isinstance(dt, datetime.datetime) else dt
+            )
+            active_dasha = dasha_package.get("current_mahadasha", {})
+            current_dasha_planet = active_dasha.get("planet", "jupiter").capitalize()
+        except Exception as dasha_err:
+            print(f"[Profile Update] Dasha calculation failed: {dasha_err}")
+            current_dasha_planet = "Jupiter"
+
+        natal = _extract_natal(chart_data, computed=computed)
         meta = chart_data.get("metadata", {})
 
         chart_response = {
@@ -155,8 +188,14 @@ def update_profile(profile_id: str, req: ProfileUpdateRequest, authorization: Op
             "moon_sign": meta.get("moon_sign", ""),
             "nakshatra": meta.get("nakshatra", ""),
             "pada": meta.get("pada", 1),
+            "current_dasha": current_dasha_planet,
+            "metadata": meta,
+            "houses": chart_data.get("houses", {}),
+            "planets": chart_data.get("planets", {}),
             "yogas": chart_data.get("yogas", []),
             "doshas": chart_data.get("doshas", {}),
+            "raw_positions": chart_data.get("planets", {}),
+            "computed": computed,
         }
 
         birth_details = {
@@ -234,8 +273,41 @@ def recalculate_chart(user_id: str, authorization: Optional[str] = Header(None))
             lat=lat, lon=lon, timezone_offset=offset
         )
 
+        prakriti = estimate_prakriti(chart_data)
+        elements = calculate_element_distribution(chart_data)
+        lucky = calculate_lucky_attributes(chart_data)
+        
+        from astrology.chart_selector import rank_planets, generate_remedy_data
+        rankings = rank_planets(chart_data)
+        remedies = generate_remedy_data(chart_data, rankings)
+
+        computed = {
+            "prakriti": prakriti,
+            "elements": elements,
+            "lucky": lucky,
+            "planet_rankings": rankings,
+            "remedy_data": remedies,
+        }
+
+        # Calculate current Vimshottari Mahadasha planet
+        planets = chart_data.get("planets", {})
+        moon_data = planets.get("moon", {})
+        moon_long = moon_data.get("longitude", 120.0)
+
+        from services.astrology.dasha import calculate_full_dasha_package
+        try:
+            dasha_package = calculate_full_dasha_package(
+                moon_long, 
+                dt.date() if isinstance(dt, datetime.datetime) else dt
+            )
+            active_dasha = dasha_package.get("current_mahadasha", {})
+            current_dasha_planet = active_dasha.get("planet", "jupiter").capitalize()
+        except Exception as dasha_err:
+            print(f"[Recalculate] Dasha calculation failed: {dasha_err}")
+            current_dasha_planet = "Jupiter"
+
         # Extract natal vs dynamic
-        natal = _extract_natal(chart_data)
+        natal = _extract_natal(chart_data, computed=computed)
         meta = chart_data.get("metadata", {})
 
         chart_response = {
@@ -244,8 +316,14 @@ def recalculate_chart(user_id: str, authorization: Optional[str] = Header(None))
             "moon_sign": meta.get("moon_sign", ""),
             "nakshatra": meta.get("nakshatra", ""),
             "pada": meta.get("pada", 1),
+            "current_dasha": current_dasha_planet,
+            "metadata": meta,
+            "houses": chart_data.get("houses", {}),
+            "planets": chart_data.get("planets", {}),
             "yogas": chart_data.get("yogas", []),
             "doshas": chart_data.get("doshas", {}),
+            "raw_positions": chart_data.get("planets", {}),
+            "computed": computed,
         }
 
         # Update persistent profile
@@ -276,7 +354,7 @@ def recalculate_chart(user_id: str, authorization: Optional[str] = Header(None))
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _extract_natal(chart_data: dict) -> dict:
+def _extract_natal(chart_data: dict, computed: dict = None) -> dict:
     """Extract only the static natal portion from full chart data."""
     natal_doshas = {}
     all_doshas = chart_data.get("doshas", {})
@@ -286,7 +364,7 @@ def _extract_natal(chart_data: dict) -> dict:
     if "kaal_sarp" in all_doshas:
         natal_doshas["kaal_sarp"] = all_doshas["kaal_sarp"]
 
-    return {
+    res = {
         "natal": {
             "metadata": chart_data.get("metadata", {}),
             "planets": chart_data.get("planets", {}),
@@ -295,6 +373,9 @@ def _extract_natal(chart_data: dict) -> dict:
             "doshas": natal_doshas,
         }
     }
+    if computed:
+        res["natal"]["computed"] = computed
+    return res
 
 
 def _recalculate_dynamic(chart_data: dict, birth_details: dict) -> dict | None:

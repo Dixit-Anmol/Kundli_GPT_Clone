@@ -38,18 +38,18 @@ export default function BirthDetailsForm({ onSubmit, initialData }: BirthDetails
   )
 
   // Form State
-  const [name, setName] = useState(initialData?.fullName || '')
-  const [gender, setGender] = useState<'male' | 'female' | 'other'>(initialData?.gender || 'male')
-  const [relationship, setRelationship] = useState<RelationshipType>(initialData?.relationship || 'Self')
-  const [dob, setDob] = useState(initialData?.dateOfBirth || '1995-01-01')
-  const [tob, setTob] = useState(initialData?.timeOfBirth || '12:00')
+  const [name, setName] = useState(initialData?.fullName || (initialData as any)?.name || '')
+  const [gender, setGender] = useState<'male' | 'female' | 'other'>(initialData?.gender || (initialData as any)?.gender || 'male')
+  const [relationship, setRelationship] = useState<RelationshipType>(initialData?.relationship || (initialData as any)?.relationship || 'Self')
+  const [dob, setDob] = useState(((initialData?.dateOfBirth || (initialData as any)?.date_of_birth || '1995-01-01') as string).slice(0, 10))
+  const [tob, setTob] = useState(((initialData?.timeOfBirth || (initialData as any)?.time_of_birth || '12:00') as string).slice(0, 5))
 
   // Location & Map State (Embedded on Same Page)
-  const [searchQuery, setSearchQuery] = useState(initialData?.placeName || '')
-  const [selectedPlace, setSelectedPlace] = useState(initialData?.placeName || 'Delhi, India')
+  const [searchQuery, setSearchQuery] = useState(initialData?.placeName || (initialData as any)?.placeName || '')
+  const [selectedPlace, setSelectedPlace] = useState(initialData?.placeName || (initialData as any)?.placeName || 'Delhi, India')
   const [coordinates, setCoordinates] = useState({
-    lat: initialData?.latitude ?? 28.6139,
-    lon: initialData?.longitude ?? 77.2090,
+    lat: initialData?.latitude ?? (initialData as any)?.latitude ?? 28.6139,
+    lon: initialData?.longitude ?? (initialData as any)?.longitude ?? 77.2090,
   })
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loadingGeo, setLoadingGeo] = useState(false)
