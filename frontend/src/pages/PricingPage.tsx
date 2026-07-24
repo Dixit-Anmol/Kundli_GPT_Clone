@@ -28,6 +28,7 @@ function loadRazorpayScript(): Promise<boolean> {
 export default function PricingPage({ onNavigateBack }: PricingPageProps) {
   const [activeTier, setActiveTier] = useState<SubscriptionTier>(getCurrentTier())
   const [loadingTier, setLoadingTier] = useState<SubscriptionTier | null>(null)
+  const [successTier, setSuccessTier] = useState<SubscriptionTier | null>(null)
   const { user } = useAuth()
 
   const handleSelectTier = async (tier: SubscriptionTier) => {
@@ -104,9 +105,7 @@ export default function PricingPage({ onNavigateBack }: PricingPageProps) {
             if (verifyData.success) {
               setCurrentTier(verifyData.tier)
               setActiveTier(verifyData.tier)
-              alert(`Congratulations! You have successfully upgraded to ${verifyData.tier.toUpperCase()} tier.`)
-              onNavigateBack()
-              window.location.reload()
+              setSuccessTier(verifyData.tier)
             }
           } catch (verifyErr: any) {
             console.error("Verification error:", verifyErr)
@@ -319,6 +318,57 @@ export default function PricingPage({ onNavigateBack }: PricingPageProps) {
           </p>
         </div>
       </div>
+      {successTier && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[100] px-4">
+          <div className="bg-surface rounded-3xl p-8 max-w-md w-full border border-primary/30 text-center relative overflow-hidden shadow-2xl animate-scale-in">
+            {/* Background elements */}
+            <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
+            <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
+            
+            {/* Animated Checkmark */}
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-primary/20">
+              <span className="material-symbols-outlined text-4xl text-primary font-bold animate-bounce" style={{ fontVariationSettings: "'FILL' 1" }}>
+                verified
+              </span>
+            </div>
+
+            <h3 className="font-display text-2xl font-bold text-primary mb-2">
+              Upgrade Successful!
+            </h3>
+            <p className="text-on-surface-variant text-sm mb-6 max-w-xs mx-auto leading-relaxed">
+              Your consciousness has ascended. You are now subscribed to the <strong>{successTier.toUpperCase()} Plan</strong>!
+            </p>
+
+            {/* Receipt Summary Table */}
+            <div className="bg-surface-variant/30 rounded-2xl p-4 mb-6 text-left border border-outline-variant/30">
+              <div className="flex justify-between py-1.5 border-b border-outline-variant/30 text-xs">
+                <span className="text-on-surface-variant font-medium">Cosmic Tier</span>
+                <span className="text-primary font-bold">{successTier.charAt(0).toUpperCase() + successTier.slice(1)}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-outline-variant/30 text-xs">
+                <span className="text-on-surface-variant font-medium">Billing Cycle</span>
+                <span className="text-on-surface font-semibold">Monthly</span>
+              </div>
+              <div className="flex justify-between py-1.5 text-xs">
+                <span className="text-on-surface-variant font-medium">Status</span>
+                <span className="text-emerald-700 bg-emerald-500/10 px-2 py-0.5 rounded-full font-bold text-[10px]">Active</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setSuccessTier(null)
+                onNavigateBack()
+                window.location.reload()
+              }}
+              className="w-full bg-primary text-white font-bold py-3.5 rounded-2xl text-sm shadow-lg shadow-primary/25 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>Go to Dashboard</span>
+              <span className="material-symbols-outlined text-lg">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
