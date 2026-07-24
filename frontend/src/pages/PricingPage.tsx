@@ -27,6 +27,7 @@ function loadRazorpayScript(): Promise<boolean> {
 
 export default function PricingPage({ onNavigateBack }: PricingPageProps) {
   const [activeTier, setActiveTier] = useState<SubscriptionTier>(getCurrentTier())
+  const [loadingTier, setLoadingTier] = useState<SubscriptionTier | null>(null)
   const { user } = useAuth()
 
   const handleSelectTier = async (tier: SubscriptionTier) => {
@@ -43,9 +44,12 @@ export default function PricingPage({ onNavigateBack }: PricingPageProps) {
       return
     }
 
+    setLoadingTier(tier)
+
     const scriptLoaded = await loadRazorpayScript()
     if (!scriptLoaded) {
       alert("Failed to load Razorpay SDK. Please check your internet connection.")
+      setLoadingTier(null)
       return
     }
 
@@ -75,6 +79,11 @@ export default function PricingPage({ onNavigateBack }: PricingPageProps) {
         name: "AstroSutra AI",
         description: `Upgrade to ${tier === 'pro' ? 'Pro' : 'Standard'} Plan`,
         order_id: orderData.order_id,
+        modal: {
+          ondismiss: function () {
+            setLoadingTier(null)
+          }
+        },
         handler: async function (response: any) {
           try {
             const verifyRes = await authenticatedFetch(`${backendUrl}/api/billing/verify-payment`, {
@@ -102,6 +111,8 @@ export default function PricingPage({ onNavigateBack }: PricingPageProps) {
           } catch (verifyErr: any) {
             console.error("Verification error:", verifyErr)
             alert(`Verification failed: ${verifyErr.message}`)
+          } finally {
+            setLoadingTier(null)
           }
         },
         prefill: {
@@ -120,6 +131,7 @@ export default function PricingPage({ onNavigateBack }: PricingPageProps) {
     } catch (err: any) {
       console.error("Order creation error:", err)
       alert(`Order creation failed: ${err.message}`)
+      setLoadingTier(null)
     }
   }
 
@@ -278,12 +290,20 @@ export default function PricingPage({ onNavigateBack }: PricingPageProps) {
                   ) : (
                     <button
                       onClick={() => handleSelectTier(tier.id)}
-                      className="w-full py-3 px-6 rounded-2xl text-white font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                      disabled={loadingTier !== null}
+                      className="w-full py-3 px-6 rounded-2xl text-white font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                       style={{
                         background: `linear-gradient(135deg, ${tier.color}, ${tier.color}CC)`,
                       }}
                     >
-                      {tier.id === 'free' ? 'Downgrade to Free' : `Upgrade to ${tier.label}`}
+                      {loadingTier === tier.id ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Processing...</span>
+                        </>
+                      ) : (
+                        <span>{tier.id === 'free' ? 'Downgrade to Free' : `Upgrade to ${tier.label}`}</span>
+                      )}
                     </button>
                   )}
                 </div>
